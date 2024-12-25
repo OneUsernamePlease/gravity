@@ -3,10 +3,30 @@ import { Vector2D, IVector2D } from "tcellib-vectors";
 export class Body2d {
     private _mass!: number;
     private _radius!: number;
+    private _color!: string;
     private _movable!: boolean; //whether the body will move from effects of gravity
     private defaultDensity = 1;
 
     //#region constructor, get, set
+
+    constructor(mass?: number, radius?: number, color?: string)  {
+        if (mass === undefined) {
+            mass = 1;
+        }
+        this.mass = mass;
+
+        if (radius === undefined) {
+            radius = ((3 * this.mass)/(4 * Math.PI * this.defaultDensity)) ** (1/3);
+        }
+        this.radius = radius;
+
+        if (color === undefined) {
+            color = "green"
+        }
+        this.color = color;
+
+        this.movable = true;
+    }
     public get mass() {
         return this._mass;
     }
@@ -25,23 +45,20 @@ export class Body2d {
     public set movable(affected: boolean) {
         this._movable = affected
     }
-    public constructor(mass?: number, radius?: number) {
-        
-        if (mass === undefined) {
-            mass = 0;
-        }
-        this.mass = mass;
 
-        if (radius === undefined) {
-            radius = ((3 * this.mass)/(4 * Math.PI * this.defaultDensity)) ** (1/3);
-        }
-        this.radius = radius;
-        
-        this.movable = true;
+    
+    public get color() : string {
+        return this._color
     }
+    
+    public set color(c : string) {
+        this._color = c;
+    } 
+    
 }
 
 export interface SimulationState {
-    objectsState: { body: Body2d, position: IVector2D, velocity: IVector2D }[];
-
+    objectStates: { body: Body2d, position: IVector2D, velocity: IVector2D }[];
+    running: boolean;
+    tickCount: number;
 }

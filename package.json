@@ -8,5 +8,6 @@
     "build": "vite build",
     "serve": "vite preview",
     "postinstall": "npm link tcellib-vectors"
-  }
+  },
+  "type": "module"
 }

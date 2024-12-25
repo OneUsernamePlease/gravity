@@ -5,6 +5,7 @@ export default defineConfig({
   // Configure build options
   build: {
     outDir: '../dist',
-    emptyOutDir: true
+    emptyOutDir: true,
+    sourcemap: true
   },
 });
