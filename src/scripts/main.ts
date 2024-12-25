@@ -24,7 +24,7 @@ function registerEvents() {
 function genericTest() {
     setStatusMessage("generate an element, add to bodies, draw bodies");
     let newB = new Body2d(1, 5);
-    let newPos: IVector2D = {x: 50, y: 50};
+    let newPos: IVector2D = {x: 100, y: 150};
     drawBody(newB, newPos)
 }
 function genericTest2() {

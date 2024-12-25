@@ -12,7 +12,7 @@ export class Body2d {
     }
     public set mass(newMass: number) {
         this._mass = newMass;
-    }    
+    }
     public get radius() {
         return this._radius;
     }
