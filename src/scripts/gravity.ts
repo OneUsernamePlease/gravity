@@ -8,10 +8,9 @@ export class Body2d {
     private defaultDensity = 1;
 
     //#region constructor, get, set
-
     constructor(mass?: number, radius?: number, color?: string)  {
         if (mass === undefined) {
-            mass = 1;
+            mass = 25;
         }
         this.mass = mass;
 
@@ -44,21 +43,78 @@ export class Body2d {
     }
     public set movable(affected: boolean) {
         this._movable = affected
-    }
-
-    
+    }   
     public get color() : string {
         return this._color
     }
-    
     public set color(c : string) {
         this._color = c;
     } 
-    
+    //#endregion
+}
+export interface ObjectState {
+    body: Body2d, 
+    position: IVector2D,
+    /**
+     * units per tick
+     */
+    velocity: IVector2D,
+    acceleration: IVector2D
+}
+export class Simulation {
+    private _objectStates: ObjectState[];
+    public running: boolean;
+    public tickCount: number;
+    constructor() {
+        this._objectStates = [];
+        this.running = false;
+        this.tickCount = 0;
+    }
+    public get objectStates() {
+        return this._objectStates;
+    }
+    public nextBodyState(state: ObjectState, tickLength: number) {
+        const newX = state.position.x + state.velocity.x * tickLength + ((state.acceleration.x * (tickLength^2)) / 2);
+        const newY = state.position.y + state.velocity.y * tickLength + ((state.acceleration.y * (tickLength^2)) / 2);
+
+        const newVelX = state.velocity.x + state.acceleration.x * tickLength;
+        const newVelY = state.velocity.y + state.acceleration.y * tickLength;
+        
+        state.position.x = newX;
+        state.position.y = newY;
+        state.velocity.x = newVelX;
+        state.velocity.y = newVelY;
+    }
+    public addObject(body: Body2d, position?: IVector2D, velocity?: IVector2D): number
+    {
+        if (position === undefined) {
+            position = {x: 0, y: 0};
+        }
+        if (velocity === undefined) {
+            velocity = {x: 0, y: 0};
+        }
+        const acc: IVector2D = {x: 0, y: 0};
+        const objectState = {body: body, position: position, velocity: velocity, acceleration: acc};
+        this._objectStates.push(objectState);
+        return this._objectStates.length;
+    }
+    public clearObjects() {
+        this._objectStates = [];
+    }
+    public pause() {
+        this.running = false;
+    }
+
+
 }
 
-export interface SimulationState {
-    objectStates: { body: Body2d, position: IVector2D, velocity: IVector2D }[];
-    running: boolean;
-    tickCount: number;
+
+
+//#region other stuff
+/**
+ * min and max included
+ * @returns random number
+ */
+function  rng(min: number, max: number) {
+    return Math.floor(Math.random() * (max - min + 1) + min);
 }

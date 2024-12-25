@@ -1,5 +1,5 @@
 import { InferCustomEventPayload } from "vite";
-import { Body2d, SimulationState } from "./gravity";
+import { Body2d, Simulation } from "./gravity";
 import { Vector2D, IVector2D } from "tcellib-vectors";
 
 document.addEventListener("DOMContentLoaded", initialize);
@@ -8,20 +8,20 @@ let visibleCanvas: HTMLCanvasElement;
 //let offscreenCanvasCtx: OffscreenCanvasRenderingContext2D; //coming soon
 let visibleCanvasCtx: CanvasRenderingContext2D;
 let statusBar: HTMLElement;
-let simState: SimulationState;
+let simState: Simulation;
 let tickLength = 100; //ms
 //#region page stuff
 function initialize() {
     registerEvents();
     initCanvas();
-    initSimState();
+    simState = new Simulation();
     statusBar = document.getElementById("statusText")!;
     document.removeEventListener("DOMContentLoaded", initialize);
 }
 function registerEvents() {
     document.getElementById("canvasBtn1")?.addEventListener("click", genericTest);
     document.getElementById("canvasBtn2")?.addEventListener("click", genericTest2);
-    document.getElementById("canvasBtnStartSim")?.addEventListener("click", startSimulation);
+    document.getElementById("canvasBtnStartSim")?.addEventListener("click", startNewSimulation);
     document.getElementById("canvasBtnToggleSim")?.addEventListener("click", toggleSimulation);
 }
 function setStatusMessage(newMessage: string) {
@@ -50,7 +50,7 @@ function initCanvas() {
 //#endregion
 function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
     if (simState.running) {
-        pauseSimulation();
+        simState.pause();
         document.getElementById("canvasBtnToggleSim")!.innerHTML = "Resume";
     } else {
         resumeSimulation();
@@ -80,18 +80,30 @@ function drawSimulationState() {
     drawBodies();
 }
 //#region simulation
-function initSimState() {
-    simState = {objectStates: [], running: false, tickCount: 0};
-}
 function setupSimulationState() {
     addBody();
 }
-function startSimulation() {
+function addBody(body?: Body2d) {
+    if (body === undefined) {
+        body = newBody();
+     }
+    const x = rng(body.radius, visibleCanvas.width - body.radius);
+    const y = rng(body.radius, visibleCanvas.height - body.radius);
+    const pos: IVector2D = {x: x, y: y};
+    const vel: IVector2D = {x: 0, y: 0};
+    const acc: IVector2D = {x: 0, y: 0};
+    const objectState = {body: body, position: pos, velocity: vel, acceleration: acc};
+
+    simState.addObject(body, pos, vel);
+
+}
+function startNewSimulation() {
     //setup sim state
     simState.running = true;
     simState.tickCount = 0;
-    setupSimulationState();
     setStatusMessage("Simulation running");
+    document.getElementById("canvasBtnToggleSim")!.innerHTML = "Pause";
+    setupSimulationState();
     runSimulation();
 }
 function runSimulation() {
@@ -108,31 +120,20 @@ function runSimulation() {
     }, tickLength);
 }
 
-function pauseSimulation() {
-    simState.running = false;
-}
 function resumeSimulation() {
     simState.running = true;
     runSimulation();
 }
 function advanceSimState() {
-    let nextState: SimulationState;
+    let nextState: Simulation;
     nextState = simState;
     simState = nextState;
     simState.tickCount++;
 }
-function addBody(body?: Body2d) {
-    if (body === undefined) {
-       body = newBody();
-    }
-    const x = rng(body.radius, visibleCanvas.width - body.radius);
-    const y = rng(body.radius, visibleCanvas.height - body.radius);
-    const pos: IVector2D = {x: x, y: y};
-    const vel: IVector2D = {x: 0, y: 0};
-    const objectState = {body: body, position: pos, velocity: vel};
-    simState.objectStates.push(objectState);
-
+function clearAllSimulationObjects() {
+    simState.clearObjects();
 }
+
 function newBody(): Body2d 
 function newBody(mass: number, radius: number): Body2d 
 function newBody(mass?: number, radius?: number): Body2d {
@@ -144,22 +145,12 @@ function newBody(mass?: number, radius?: number): Body2d {
     }
     return body1;
 }
-function stopSimulation() {
-    simState.running = false;
-    clearAllSimulationObjects();
-    setStatusMessage("Simulation stopped");
-}
-function clearAllSimulationObjects() {
-    simState.objectStates = [];
-}
-//#endregion
 //#region other stuff
-
 /**
  * min and max included
  * @returns random number
  */
-function rng(min: number, max: number) {
+function  rng(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
 //#endregion
