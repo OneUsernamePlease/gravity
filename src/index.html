@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Gravity</title>
         <link rel="stylesheet" type="text/css" href="main.css">
-        <script src="scripts/out/main.js"></script>
+        <script src="scripts/out/main.js" type="module"></script>
     </head>
     <body>
         <div>
@@ -16,9 +16,11 @@
                 <div class="canvasControls">
                     <label for="input1">Just an input</label>
                     <input type="text" id="input1">
-                    <button id="canvasBtn1">Button</button>
+                    <button id="canvasBtn1">Draw Test</button>
+                    <button id="canvasBtn2">Get some info</button>
                 </div>
                 <div id="canvasContainer">
+                    <!---canvas id="theCanvas" width="480" height="320"></canvas--->
                     <canvas id="theCanvas"></canvas>
                 </div>
             </div>
