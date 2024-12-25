@@ -1,3 +1,5 @@
+import { Vector2D, IVector2D } from "tcellib-vectors";
+
 export class Body2d {
     private _mass!: number;
     private _radius!: number;
@@ -40,5 +42,6 @@ export class Body2d {
 }
 
 export interface SimulationState {
-    
+    objectsState: { body: Body2d, position: IVector2D, velocity: IVector2D }[];
+
 }
