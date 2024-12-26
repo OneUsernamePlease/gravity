@@ -65,13 +65,21 @@ export class Simulation {
     private _objectStates: ObjectState[];
     public running: boolean;
     public tickCount: number;
+    private _tickLength: number;
     constructor() {
         this._objectStates = [];
         this.running = false;
         this.tickCount = 0;
+        this._tickLength = 100;
     }
     public get objectStates() {
         return this._objectStates;
+    }
+    public get tickLength() {
+        return this._tickLength;
+    }
+    public set tickLength(t: number) {
+        this._tickLength = t;
     }
     public nextBodyState(state: ObjectState, tickLength: number) {
         const newX = state.position.x + state.velocity.x * tickLength + ((state.acceleration.x * (tickLength^2)) / 2);
@@ -85,16 +93,7 @@ export class Simulation {
         state.velocity.x = newVelX;
         state.velocity.y = newVelY;
     }
-    public addObject(body: Body2d, position?: IVector2D, velocity?: IVector2D): number
-    {
-        if (position === undefined) {
-            position = {x: 0, y: 0};
-        }
-        if (velocity === undefined) {
-            velocity = {x: 0, y: 0};
-        }
-        const acc: IVector2D = {x: 0, y: 0};
-        const objectState = {body: body, position: position, velocity: velocity, acceleration: acc};
+    public addObject(objectState: ObjectState): number {
         this._objectStates.push(objectState);
         return this._objectStates.length;
     }
@@ -104,17 +103,51 @@ export class Simulation {
     public pause() {
         this.running = false;
     }
+    public nextState() {
+        this._objectStates.forEach(objectState => {
+            this.nextBodyState(objectState, this.tickLength)
+        });
+        //calculate new accelerations vectors
+        
+        this.tickCount++;
+    }
+    public run() {
+    /* old version
 
+        if (!this.running) {
+            return;
+        }
+        setTimeout(() => {
+            if (this.running) { //dont need this if i think
+                this.run();
+            }
+            this.nextState();
+        }, this.tickLength);
+    */
+        if (this.running) {
+            return;
+        }
+        this.running = true;
 
+        const runSimulationStep = () => {
+            if (this.running) {
+                this.nextState();
+                setTimeout(runSimulationStep, this.tickLength);
+                //this.log("running simulation step")
+            }
+        };
+        runSimulationStep();
+    }
+    public log(message: string) {
+        const timestamp = new Date();
+        const hours = timestamp.getHours().toString().padStart(2, '0');
+        const minutes = timestamp.getMinutes().toString().padStart(2, '0');
+        const seconds = timestamp.getSeconds().toString().padStart(2, '0');
+        const milliseconds = timestamp.getMilliseconds().toString().padStart(3, '0');
+    
+        const formattedTimestamp = `${hours}:${minutes}:${seconds}.${milliseconds}`;
+        console.log(`[${formattedTimestamp}] ${message}`);
+    };
+    
 }
 
-
-
-//#region other stuff
-/**
- * min and max included
- * @returns random number
- */
-function  rng(min: number, max: number) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
-}

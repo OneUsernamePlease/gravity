@@ -9,7 +9,8 @@ let visibleCanvas: HTMLCanvasElement;
 let visibleCanvasCtx: CanvasRenderingContext2D;
 let statusBar: HTMLElement;
 let simState: Simulation;
-let tickLength = 100; //ms
+let frameLength = 100; //ms
+let animationRunning = false; //whether the simState should be drawn every frame; set to true while the sim is running
 //#region page stuff
 function initialize() {
     registerEvents();
@@ -38,7 +39,6 @@ function genericTest2() {
     let h = visibleCanvas.height;
     setStatusMessage(`Canvas dimension: ${w} * ${h}`);
 }
-
 function initCanvas() {
     visibleCanvas = (document.getElementById("theCanvas")) as HTMLCanvasElement;
     visibleCanvas.width = 480;
@@ -47,18 +47,21 @@ function initCanvas() {
     //offscreenCanvas = new OffscreenCanvas(visibleCanvas.clientWidth, visibleCanvas.clientHeight);
     //offscreenCanvasCtx = offscreenCanvas.getContext("2d")!;
 }
+function log(message: string) {
+    const timestamp = new Date();
+    const hours = timestamp.getHours().toString().padStart(2, '0');
+    const minutes = timestamp.getMinutes().toString().padStart(2, '0');
+    const seconds = timestamp.getSeconds().toString().padStart(2, '0');
+    const milliseconds = timestamp.getMilliseconds().toString().padStart(3, '0');
+
+    const formattedTimestamp = `${hours}:${minutes}:${seconds}.${milliseconds}`;
+    console.log(`[${formattedTimestamp}] ${message}`);
+};
+
 //#endregion
-function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
-    if (simState.running) {
-        simState.pause();
-        document.getElementById("canvasBtnToggleSim")!.innerHTML = "Resume";
-    } else {
-        resumeSimulation();
-        document.getElementById("canvasBtnToggleSim")!.innerHTML = "Pause";
-    }
-}
+//#region canvas and drawing stuff
 function drawBody(body: Body2d, position: IVector2D, color?: string) {
-    if (color === undefined) {
+    if (color === undefined || !(CSS.supports("color", color))) {
         color = "green";
     }
     visibleCanvasCtx.beginPath();
@@ -79,59 +82,83 @@ function drawSimulationState() {
     visibleCanvasCtx.clearRect(0, 0, visibleCanvas.width, visibleCanvas.height)
     drawBodies();
 }
+//#endregion
 //#region simulation
 function setupSimulationState() {
     addBody();
 }
-function addBody(body?: Body2d) {
+function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
+    if (simState.running) {
+        animationRunning = false;
+        simState.pause();
+        document.getElementById("canvasBtnToggleSim")!.innerHTML = "Resume";
+    } else {
+        animationRunning = true;
+        resumeSimulation();
+        document.getElementById("canvasBtnToggleSim")!.innerHTML = "Pause";
+    }
+}
+
+function addBody(body?: Body2d, position?: IVector2D) {
     if (body === undefined) {
         body = newBody();
-     }
-    const x = rng(body.radius, visibleCanvas.width - body.radius);
-    const y = rng(body.radius, visibleCanvas.height - body.radius);
-    const pos: IVector2D = {x: x, y: y};
+    }
+    if (position === undefined) {
+        const x = rng(body.radius, visibleCanvas.width - body.radius);
+        const y = rng(body.radius, visibleCanvas.height - body.radius);
+        position = {x: x, y: y}
+    }
     const vel: IVector2D = {x: 0, y: 0};
     const acc: IVector2D = {x: 0, y: 0};
-    const objectState = {body: body, position: pos, velocity: vel, acceleration: acc};
+    const objectState = {body: body, position: position, velocity: vel, acceleration: acc};
 
-    simState.addObject(body, pos, vel);
+    simState.addObject(objectState);
 
 }
 function startNewSimulation() {
-    //setup sim state
-    simState.running = true;
+    //simState.running = true;
+    //animationRunning = true;
     simState.tickCount = 0;
     setStatusMessage("Simulation running");
     document.getElementById("canvasBtnToggleSim")!.innerHTML = "Pause";
     setupSimulationState();
-    runSimulation();
+    simState.run();
+    drawRunningSimulation();
 }
-function runSimulation() {
-    if (!simState.running) {
+function drawRunningSimulation() {
+/*
+    if (!animationRunning) {
         return;
     }
     setTimeout(() => {
-        advanceSimState();
+        if (animationRunning) {
+            drawRunningSimulation();
+        }
         drawSimulationState();
         setStatusMessage(`Simulation Tick: ${simState.tickCount}`)
-        if (simState.running) {
-            runSimulation();
+    }, frameLength);
+*/
+    if (animationRunning) {
+        return;
+    }
+    animationRunning = true;
+    const runDrawLoop = () => {
+        if (animationRunning) {
+            drawSimulationState();
+            setStatusMessage(`Simulation Tick: ${simState.tickCount}`);
+            setTimeout(runDrawLoop, frameLength);
+            //log("Draw simulation step");
         }
-    }, tickLength);
+    };
+    runDrawLoop();
 }
 
 function resumeSimulation() {
-    simState.running = true;
-    runSimulation();
-}
-function advanceSimState() {
-    let nextState: Simulation;
-    nextState = simState;
-    simState = nextState;
-    simState.tickCount++;
-}
-function clearAllSimulationObjects() {
-    simState.clearObjects();
+    if (!simState.running) {
+        simState.running = true;
+        simState.run();
+        drawRunningSimulation();
+    }
 }
 
 function newBody(): Body2d 
@@ -150,7 +177,7 @@ function newBody(mass?: number, radius?: number): Body2d {
  * min and max included
  * @returns random number
  */
-function  rng(min: number, max: number) {
+function rng(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
 //#endregion
