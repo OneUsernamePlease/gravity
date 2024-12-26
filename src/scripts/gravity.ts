@@ -1,4 +1,4 @@
-import { Vector2D, IVector2D } from "tcellib-vectors";
+import { Vector2D } from "tcellib-vectors";
 
 export class Body2d {
     private _mass!: number;
@@ -54,12 +54,12 @@ export class Body2d {
 }
 export interface ObjectState {
     body: Body2d, 
-    position: IVector2D,
+    position: Vector2D,
     /**
      * units per tick
      */
-    velocity: IVector2D,
-    acceleration: IVector2D
+    velocity: Vector2D,
+    acceleration: Vector2D
 }
 export class Simulation {
     private _objectStates: ObjectState[];
@@ -70,7 +70,7 @@ export class Simulation {
         this._objectStates = [];
         this.running = false;
         this.tickCount = 0;
-        this._tickLength = 100;
+        this._tickLength = 20;
     }
     public get objectStates() {
         return this._objectStates;
@@ -81,12 +81,18 @@ export class Simulation {
     public set tickLength(t: number) {
         this._tickLength = t;
     }
-    public nextBodyState(state: ObjectState, tickLength: number) {
-        const newX = state.position.x + state.velocity.x * tickLength + ((state.acceleration.x * (tickLength^2)) / 2);
-        const newY = state.position.y + state.velocity.y * tickLength + ((state.acceleration.y * (tickLength^2)) / 2);
+    /**
+     * Calculates the next **position** and **velocity** of the object in state, and updates state accordingly.
+     * Does **NOT** update acceleration.
+     * @param state *ObjectState* containing the body
+     */
+    public nextBodyState(state: ObjectState) {
+        let deltaT = (this.tickLength / 1000); //tickLength (ms) / 1000 ms/s -> timeDiff in seconds
+        const newX = state.position.x + state.velocity.x * deltaT + ((state.acceleration.x * (deltaT^2)) / 2);
+        const newY = state.position.y + state.velocity.y * deltaT + ((state.acceleration.y * (deltaT^2)) / 2);
 
-        const newVelX = state.velocity.x + state.acceleration.x * tickLength;
-        const newVelY = state.velocity.y + state.acceleration.y * tickLength;
+        const newVelX = state.velocity.x + state.acceleration.x * deltaT;
+        const newVelY = state.velocity.y + state.acceleration.y * deltaT;
         
         state.position.x = newX;
         state.position.y = newY;
@@ -105,25 +111,19 @@ export class Simulation {
     }
     public nextState() {
         this._objectStates.forEach(objectState => {
-            this.nextBodyState(objectState, this.tickLength)
+            this.nextBodyState(objectState)
         });
         //calculate new accelerations vectors
-        
+        this.updateAccelerationVectors();
         this.tickCount++;
     }
+    public updateAccelerationVectors() {
+        this._objectStates.forEach(objectState => {
+            
+            objectState.acceleration
+        });
+    }
     public run() {
-    /* old version
-
-        if (!this.running) {
-            return;
-        }
-        setTimeout(() => {
-            if (this.running) { //dont need this if i think
-                this.run();
-            }
-            this.nextState();
-        }, this.tickLength);
-    */
         if (this.running) {
             return;
         }

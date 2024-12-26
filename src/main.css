@@ -6,6 +6,8 @@ body, html {
     font-family: Arial, sans-serif;
     display: flex;
     flex-direction: column;
+    background-color: #252525;
+    color: #ccc;
 }
 
 .content {
@@ -40,7 +42,7 @@ body, html {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #f0f0f0;
+    background-color: #000000;
     border: 1px solid #ccc;
     padding: 5px;
 }
@@ -69,12 +71,31 @@ body, html {
     height: 30px; /* One line height */
     background-color: #333; /* Dark background */
     color: white;
-    text-align: center; /* Centered text */
-    line-height: 30px; /* Vertically center the text */
+    display: flex; /* Use flexbox for layout */
+    justify-content: space-between; /* Distribute space equally */
+    padding: 0 10px; /* Add some horizontal padding */
     font-size: 14px; /* Text size */
-    /* z-index: 9999; /* Ensure it's on top of other content */
+    line-height: 30px; /* Vertically center the text */
 }
-#statusText {
+
+/* Status text fields */
+#statusText1, #statusText2, #statusText3 {
     display: inline-block;
     padding: 0 10px;
+    text-align: center;
+    flex-grow: 1; /* Make each span grow equally to fill space */
+    border: solid black;
+    border-width: 1px;
+}
+
+#statusText1 {
+    text-align: right;
+}
+
+#statusText2 {
+    text-align: center;
+}
+
+#statusText3 {
+    text-align: left;
 }

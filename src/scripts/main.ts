@@ -1,22 +1,24 @@
 import { InferCustomEventPayload } from "vite";
 import { Body2d, Simulation } from "./gravity";
-import { Vector2D, IVector2D } from "tcellib-vectors";
+import { Vector2D } from "tcellib-vectors";
 
 document.addEventListener("DOMContentLoaded", initialize);
 //let offscreenCanvas: OffscreenCanvas; //use this in a worker thread to render or draw on, then transfer content to the visible html-canvas
 let visibleCanvas: HTMLCanvasElement;
 //let offscreenCanvasCtx: OffscreenCanvasRenderingContext2D; //coming soon
 let visibleCanvasCtx: CanvasRenderingContext2D;
-let statusBar: HTMLElement;
+let statusBar1: HTMLElement, statusBar2: HTMLElement, statusBar3: HTMLElement;
 let simState: Simulation;
-let frameLength = 100; //ms
+let frameLength = 25; //ms
 let animationRunning = false; //whether the simState should be drawn every frame; set to true while the sim is running
 //#region page stuff
 function initialize() {
+    statusBar1 = document.getElementById("statusText1")!;
+    statusBar2 = document.getElementById("statusText2")!;
+    statusBar3 = document.getElementById("statusText3")!;
     registerEvents();
-    initCanvas();
+    initCanvas(1280, 720);
     simState = new Simulation();
-    statusBar = document.getElementById("statusText")!;
     document.removeEventListener("DOMContentLoaded", initialize);
 }
 function registerEvents() {
@@ -25,25 +27,29 @@ function registerEvents() {
     document.getElementById("canvasBtnStartSim")?.addEventListener("click", startNewSimulation);
     document.getElementById("canvasBtnToggleSim")?.addEventListener("click", toggleSimulation);
 }
-function setStatusMessage(newMessage: string) {
-    statusBar.innerHTML = newMessage;
+function setStatusMessage(newMessage: string, element?: HTMLElement) {
+    if (element === undefined) {
+        element = statusBar1;
+    }
+    element.innerHTML = newMessage;
 }
 function genericTest() {
     setStatusMessage("generate an element, add to bodies, draw bodies");
     let newB = new Body2d(1, 5);
-    let newPos: IVector2D = {x: 100, y: 100};
+    let newPos: Vector2D = {x: 100, y: 100};
     drawBody(newB, newPos)
 }
 function genericTest2() {
     let w = visibleCanvas.width;
     let h = visibleCanvas.height;
-    setStatusMessage(`Canvas dimension: ${w} * ${h}`);
+    setStatusMessage(`Canvas dimension: ${w} * ${h}`, statusBar3);
 }
-function initCanvas() {
+function initCanvas(width: number, height: number) {
     visibleCanvas = (document.getElementById("theCanvas")) as HTMLCanvasElement;
-    visibleCanvas.width = 480;
-    visibleCanvas.height = 320;
+    visibleCanvas.width = width;
+    visibleCanvas.height = height;
     visibleCanvasCtx = visibleCanvas.getContext("2d")!;
+    setStatusMessage(`Canvas dimension: ${width} * ${height}`, statusBar3);
     //offscreenCanvas = new OffscreenCanvas(visibleCanvas.clientWidth, visibleCanvas.clientHeight);
     //offscreenCanvasCtx = offscreenCanvas.getContext("2d")!;
 }
@@ -60,9 +66,9 @@ function log(message: string) {
 
 //#endregion
 //#region canvas and drawing stuff
-function drawBody(body: Body2d, position: IVector2D, color?: string) {
+function drawBody(body: Body2d, position: Vector2D, color?: string) {
     if (color === undefined || !(CSS.supports("color", color))) {
-        color = "green";
+        color = "white";
     }
     visibleCanvasCtx.beginPath();
     visibleCanvasCtx.arc(position.x, position.y, body.radius, 0, Math.PI * 2);
@@ -92,14 +98,16 @@ function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
         animationRunning = false;
         simState.pause();
         document.getElementById("canvasBtnToggleSim")!.innerHTML = "Resume";
+        setStatusMessage("Simulation paused");
     } else {
-        animationRunning = true;
-        resumeSimulation();
         document.getElementById("canvasBtnToggleSim")!.innerHTML = "Pause";
+        resumeSimulation();
+        drawRunningSimulation();
+        setStatusMessage("Simulation running");
     }
 }
 
-function addBody(body?: Body2d, position?: IVector2D) {
+function addBody(body?: Body2d, position?: Vector2D) {
     if (body === undefined) {
         body = newBody();
     }
@@ -108,16 +116,14 @@ function addBody(body?: Body2d, position?: IVector2D) {
         const y = rng(body.radius, visibleCanvas.height - body.radius);
         position = {x: x, y: y}
     }
-    const vel: IVector2D = {x: 0, y: 0};
-    const acc: IVector2D = {x: 0, y: 0};
+    const vel: Vector2D = {x: 10, y: 10};
+    const acc: Vector2D = {x: 0, y: 0};
     const objectState = {body: body, position: position, velocity: vel, acceleration: acc};
 
     simState.addObject(objectState);
 
 }
 function startNewSimulation() {
-    //simState.running = true;
-    //animationRunning = true;
     simState.tickCount = 0;
     setStatusMessage("Simulation running");
     document.getElementById("canvasBtnToggleSim")!.innerHTML = "Pause";
@@ -125,19 +131,13 @@ function startNewSimulation() {
     simState.run();
     drawRunningSimulation();
 }
-function drawRunningSimulation() {
-/*
-    if (!animationRunning) {
-        return;
+function resumeSimulation() {
+    if (!simState.running) {
+        simState.run();
+        drawRunningSimulation();
     }
-    setTimeout(() => {
-        if (animationRunning) {
-            drawRunningSimulation();
-        }
-        drawSimulationState();
-        setStatusMessage(`Simulation Tick: ${simState.tickCount}`)
-    }, frameLength);
-*/
+}
+function drawRunningSimulation() {
     if (animationRunning) {
         return;
     }
@@ -145,22 +145,16 @@ function drawRunningSimulation() {
     const runDrawLoop = () => {
         if (animationRunning) {
             drawSimulationState();
-            setStatusMessage(`Simulation Tick: ${simState.tickCount}`);
+            setStatusMessage(`Simulation Tick: ${simState.tickCount}`, statusBar2);
             setTimeout(runDrawLoop, frameLength);
             //log("Draw simulation step");
         }
     };
     runDrawLoop();
 }
+function drawVectors() {
 
-function resumeSimulation() {
-    if (!simState.running) {
-        simState.running = true;
-        simState.run();
-        drawRunningSimulation();
-    }
 }
-
 function newBody(): Body2d 
 function newBody(mass: number, radius: number): Body2d 
 function newBody(mass?: number, radius?: number): Body2d {
