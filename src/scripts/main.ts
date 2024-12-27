@@ -10,7 +10,7 @@ let visibleCanvasCtx: CanvasRenderingContext2D;
 let statusBar1: HTMLElement, statusBar2: HTMLElement, statusBar3: HTMLElement;
 let simState: Simulation;
 let frameLength = 25; //ms
-let animationRunning = false; //whether the simState should be drawn every frame; set to true while the sim is running
+let animationRunning = false; //set to true while the sim is running
 //#region page stuff
 function initialize() {
     statusBar1 = document.getElementById("statusText1")!;
@@ -33,6 +33,12 @@ function setStatusMessage(newMessage: string, element?: HTMLElement) {
     }
     element.innerHTML = newMessage;
 }
+function appendStatusMessage(newMessage: string, element?: HTMLElement) {
+    if (element === undefined) {
+        element = statusBar1;
+    }
+    element.innerHTML += newMessage;
+}
 function genericTest() {
     setStatusMessage("generate an element, add to bodies, draw bodies");
     let newB = new Body2d(1, 5);
@@ -49,7 +55,7 @@ function initCanvas(width: number, height: number) {
     visibleCanvas.width = width;
     visibleCanvas.height = height;
     visibleCanvasCtx = visibleCanvas.getContext("2d")!;
-    setStatusMessage(`Canvas dimension: ${width} * ${height}`, statusBar3);
+    appendStatusMessage(`Canvas dimension: ${width} * ${height}`, statusBar3);
     //offscreenCanvas = new OffscreenCanvas(visibleCanvas.clientWidth, visibleCanvas.clientHeight);
     //offscreenCanvasCtx = offscreenCanvas.getContext("2d")!;
 }
@@ -68,8 +74,11 @@ function log(message: string) {
 //#region canvas and drawing stuff
 function drawVector(position: Vector2D, direction: Vector2D, color?: string) {
     //optionally normalize the direction and scale later
+    if (color === undefined) { color = "white" }
     let endPosition: Vector2D = Vector2D.add(position, direction);
     visibleCanvasCtx.beginPath();
+    visibleCanvasCtx.lineWidth = 3;
+    visibleCanvasCtx.strokeStyle = color;
     visibleCanvasCtx.moveTo(position.x, position.y);
     visibleCanvasCtx.lineTo(endPosition.x, endPosition.y);
     visibleCanvasCtx.stroke();
@@ -80,14 +89,11 @@ function drawVector(position: Vector2D, direction: Vector2D, color?: string) {
  * @param position 
  * @param color default white
  */
-function drawBody(body: Body2d, position: Vector2D, color?: string) {
-    if (color === undefined || !(CSS.supports("color", color))) {
-        color = "white";
-    }
+function drawBody(body: Body2d, position: Vector2D) {
     visibleCanvasCtx.beginPath();
     visibleCanvasCtx.arc(position.x, position.y, body.radius, 0, Math.PI * 2);
     visibleCanvasCtx.closePath();
-    visibleCanvasCtx.fillStyle = color;
+    visibleCanvasCtx.fillStyle = body.color;
     visibleCanvasCtx.fill();
 }
 function drawBodies() {
@@ -101,6 +107,13 @@ function drawBodies() {
 function drawSimulationState() {
     visibleCanvasCtx.clearRect(0, 0, visibleCanvas.width, visibleCanvas.height)
     drawBodies();
+    drawVectors();
+}
+function drawVectors() {
+    simState.objectStates.forEach(objectState => {
+        drawVector(objectState.position, objectState.acceleration, "green");
+        drawVector(objectState.position, objectState.velocity, "red");
+    });
 }
 //#endregion
 //#region simulation
@@ -108,42 +121,37 @@ function setupSimulationState() {
     let width = visibleCanvas.width;
     let height = visibleCanvas.height;
     let middle: Vector2D = { x: width / 2, y: height / 2 };
-    /* setup one - looks like something is not working correctly. maybe units?*/
-    /*
+
+    /* setup one - looks like something is not working correctly*/
     let startA: Vector2D = { x: middle.x - 50 , y: middle.y + 20};
     let startB: Vector2D = { x: middle.x + 50 , y: middle.y - 20};
-    let velA: Vector2D = {x: 0, y: 200 };
-    let velB: Vector2D = {x: 0, y: -200 };
+    let velA: Vector2D = {x: 0, y: 100 };
+    let velB: Vector2D = {x: 0, y: -100 };
     addBody(newBody(100, 10), startA, velA);
     addBody(newBody(10, 10), startB, velB);
-    */
 
     /* setup two */
-    /*
-    let startA: Vector2D = { x: middle.x - width / 4 , y: middle.y};
-    let startB: Vector2D = { x: middle.x + width / 4 , y: middle.y};
-    addBody(newBody(10, 10), startA);
-    addBody(newBody(10, 10), startB);
-    */
+    //let startA: Vector2D = { x: middle.x - width / 4 , y: middle.y};
+    //let startB: Vector2D = { x: middle.x + width / 4 , y: middle.y};
+    //addBody(newBody(10, 10), startA);
+    //addBody(newBody(10, 10), startB);
    
     /* setup three */
-    /*
-    let startA: Vector2D = { x: middle.x , y: middle.y - height / 4};
-    let startB: Vector2D = { x: middle.x , y: middle.y + height / 4};
-    addBody(newBody(10, 10), startA);
-    addBody(newBody(10, 10), startB);
-    */
-    
-    /* setup four */
-    
-    let startA: Vector2D = { x: 200, y: 100};
-    let startB: Vector2D = { x: 400, y: 100};
-    let startC: Vector2D = { x: 300, y: 200};
-    addBody(newBody(10, 10), startA);
-    addBody(newBody(10, 10), startB);
-    addBody(newBody(10, 10), startC);
-    
+    //let startA: Vector2D = { x: 200, y: 100};
+    //let startB: Vector2D = { x: 400, y: 100};
+    //let startC: Vector2D = { x: 300, y: 200};
+    //addBody(newBody(10, 10), startA);
+    //addBody(newBody(10, 10), startB);
+    //addBody(newBody(10, 10), startC);    
    
+    /* setup four */   
+    //let startA: Vector2D = { x: middle.x, y: middle.y};
+    //let startB: Vector2D = { x: middle.x + 400 , y: middle.y - 50};
+    //let velA: Vector2D = {x: 0, y: 0 };
+    //let velB: Vector2D = {x: -300, y: 300 };
+    //addBody(newBody(180, 10), startA, velA);
+    //addBody(newBody(6, 10), startB, velB);
+    
 }
 function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
     if (simState.running) {
@@ -174,8 +182,7 @@ function addBody(body?: Body2d, position?: Vector2D, velocity?: Vector2D, accele
     if (acceleration === undefined) {
         acceleration = {x: 0, y: 0};
     }
-    const acc: Vector2D = {x: 0, y: 0};
-    const objectState = {body: body, position: position, velocity: velocity, acceleration: acc};
+    const objectState = {body: body, position: position, velocity: velocity, acceleration: acceleration};
 
     simState.addObject(objectState);
 
@@ -210,9 +217,6 @@ function drawRunningSimulation() {
         }
     };
     runDrawLoop();
-}
-function drawVectors() {
-
 }
 function newBody(): Body2d 
 function newBody(mass: number, radius: number): Body2d 

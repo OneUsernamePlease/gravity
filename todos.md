@@ -1,5 +1,6 @@
 # bugs
 - due to no collision detection, when two bodies are at the same position or very close, acceleration and velocity can go crazy.
+- there is some problem with how things move
 
 # feets:
 - collision detection

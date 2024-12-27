@@ -20,7 +20,7 @@ export class Body2d {
         this.radius = radius;
 
         if (color === undefined) {
-            color = "green"
+            color = "white"
         }
         this.color = color;
 
@@ -47,7 +47,10 @@ export class Body2d {
     public get color() : string {
         return this._color
     }
-    public set color(c : string) {
+    public set color(c: string) {
+        if (!(CSS.supports("color", c))) {
+            c = "white";
+        }
         this._color = c;
     } 
     //#endregion
@@ -129,15 +132,12 @@ export class Simulation {
         this.tickCount++;
     }
     public updateAccelerationVectors() {
-        //compute gravitational forces
-        let resultingForces: Vector2D[] = []; //resulting sum of forces for each body
         this.objectStates.forEach((objectState, index) => {
-            resultingForces.push(this.calculateForcesForBody(index));
-        });
-
-        //compute acceleration and update objectStates
-        this.objectStates.forEach((objectState, index) => {
-            const newAcceleration: Vector2D = Vector2D.scale(resultingForces[index], 1/objectState.body.mass)
+            //compute sum of gravitational forces
+            const resultingForceOnBody = this.calculateForcesForBody(index)
+            
+            //compute acceleration and update objectStates
+            const newAcceleration: Vector2D = Vector2D.scale(resultingForceOnBody, 1 / objectState.body.mass)
             objectState.acceleration = newAcceleration;
         });
     };
@@ -189,8 +189,3 @@ export class Simulation {
     };
     
 }
-
-function barnesHut() {
-    throw new Error("Yea right lol. Function not implemented. Coming soon.");
-}
-
