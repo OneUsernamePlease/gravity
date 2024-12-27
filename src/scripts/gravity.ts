@@ -56,7 +56,7 @@ export interface ObjectState {
     body: Body2d, 
     position: Vector2D,
     /**
-     * units per tick
+     * canvasUnits per second
      */
     velocity: Vector2D,
     acceleration: Vector2D
@@ -66,11 +66,13 @@ export class Simulation {
     public running: boolean;
     public tickCount: number;
     private _tickLength: number;
+    private _g: number; //gravitational constant
     constructor() {
         this._objectStates = [];
         this.running = false;
         this.tickCount = 0;
-        this._tickLength = 20;
+        this._tickLength = 50;
+        this._g = 1;
     }
     public get objectStates() {
         return this._objectStates;
@@ -80,6 +82,12 @@ export class Simulation {
     }
     public set tickLength(t: number) {
         this._tickLength = t;
+    }
+    public get g() {
+        return this._g;
+    }
+    public set g(g: number) {
+        this._g = Math.max(g, Number.MIN_VALUE);
     }
     /**
      * Calculates the next **position** and **velocity** of the object in state, and updates state accordingly.
@@ -110,18 +118,48 @@ export class Simulation {
         this.running = false;
     }
     public nextState() {
-        this._objectStates.forEach(objectState => {
+        //calculate new accelerations vectors and update objectStates accordingly
+        this.updateAccelerationVectors();
+
+        //update position and velocity arising therefrom
+        this.objectStates.forEach(objectState => {
             this.nextBodyState(objectState)
         });
-        //calculate new accelerations vectors
-        this.updateAccelerationVectors();
+        
         this.tickCount++;
     }
     public updateAccelerationVectors() {
-        this._objectStates.forEach(objectState => {
-            
-            objectState.acceleration
+        //compute gravitational forces
+        let resultingForces: Vector2D[] = []; //resulting sum of forces for each body
+        this.objectStates.forEach((objectState, index) => {
+            resultingForces.push(this.calculateForcesForBody(index));
         });
+
+        //compute acceleration and update objectStates
+        this.objectStates.forEach((objectState, index) => {
+            const newAcceleration: Vector2D = Vector2D.scale(resultingForces[index], 1/objectState.body.mass)
+            objectState.acceleration = newAcceleration;
+        });
+    };
+    /**
+     * calculates the force applied to one body in objectStates, resulting from gravity from all other bodies
+     * @param i index of the body in this.objectStates
+     */
+    public calculateForcesForBody(cur: number): Vector2D {
+        let appliedForces: Vector2D[] = [];
+        const targetBody = this.objectStates[cur];
+
+        //calculate each force applied to target body by every other body
+        for (let i = 0; i < this.objectStates.length; i++) {
+            if (i === cur) { continue; }
+            const curForceApplyingBody = this.objectStates[i]; //the body whose force on the target is being calculated
+            const distance: number = Vector2D.distance(targetBody.position, curForceApplyingBody.position);
+            let netForceFromBody: number = this.g * ((targetBody.body.mass * curForceApplyingBody.body.mass)/(Math.sqrt(Math.abs(distance)))); //net force from the body as scalar
+            let unitVectorFromApplyingToTargetBody = Vector2D.scale(Vector2D.subtract(curForceApplyingBody.position, targetBody.position), 1 / distance); //is this not just the normalized vector from body to body? pls check, future me
+            let forceVectorFromBody = Vector2D.scale(unitVectorFromApplyingToTargetBody, netForceFromBody); //net force multiplied by unit vector from the applying body to the target body
+            appliedForces.push(forceVectorFromBody);
+        }
+        return Vector2D.add(...appliedForces); //sum all forces on target body and return resulting force
     }
     public run() {
         if (this.running) {
@@ -133,7 +171,8 @@ export class Simulation {
             if (this.running) {
                 this.nextState();
                 setTimeout(runSimulationStep, this.tickLength);
-                //this.log("running simulation step")
+
+                this.log("running simulation step " + this.tickCount);
             }
         };
         runSimulationStep();
@@ -149,5 +188,9 @@ export class Simulation {
         console.log(`[${formattedTimestamp}] ${message}`);
     };
     
+}
+
+function barnesHut() {
+    throw new Error("Yea right lol. Function not implemented. Coming soon.");
 }
 
