@@ -133,8 +133,8 @@ function setupSimulationState() {
     /* setup two */
     //let startA: Vector2D = { x: middle.x - width / 8 , y: middle.y};
     //let startB: Vector2D = { x: middle.x + width / 8 , y: middle.y};
-    //addBody(newBody(10000, 10), startA);
-    //addBody(newBody(10000, 10), startB);
+    //addBody(newBody(100000), startA);
+    //addBody(newBody(100000), startB);
    
     /* setup three */
     //let startA: Vector2D = { x: 200, y: 100};

@@ -132,6 +132,44 @@ export class Simulation {
         this.tickCount++;
     }
     public updateAccelerationVectors() {
+        const forces: Map<number, Vector2D> = new Map(); //to keep track of the resulting force (sum of forces) on each body (by each other body) in objectStates[]
+        
+        for (let i = 0; i < this.objectStates.length; i++) {
+            for (let j = i+1; j < this.objectStates.length; j++) {
+                const forceOnI = this.calculateForceBetweenBodies(i, j); //Calc force on i
+                const forceOnJ = Vector2D.scale(forceOnI, -1); //force on i = (-1) * (force on j) -- opposite direction
+
+                //Update the force on both bodies
+                forces.set(i, (forces.has(i) ? Vector2D.add(forces.get(i)!, forceOnI) : forceOnI));
+                forces.set(j, (forces.has(j) ? Vector2D.add(forces.get(j)!, forceOnJ) : forceOnJ));
+            }
+        }
+
+        //update acceleration
+        this.objectStates.forEach((objectState, index) => {
+            const totalForceOnBody = forces.get(index);
+            let newAcceleration = (totalForceOnBody !== undefined) ? (totalForceOnBody) : (new Vector2D(0, 0));
+            newAcceleration = Vector2D.scale(newAcceleration, 1 / objectState.body.mass);
+            objectState.acceleration = newAcceleration;
+        });
+    };
+    /**
+     * Calculates the force-vector between the bodies in objectStates[i] and [j]
+     * @returns a vector representing the force applied ***to*** body at objectStates[i]
+     */
+    public calculateForceBetweenBodies(i: number, j: number): Vector2D {
+        const objectStateI = this.objectStates[i];
+        const objectStateJ = this.objectStates[j];
+
+        const distance = Vector2D.distance(objectStateI.position, objectStateJ.position);
+        if (distance < 1e-10) { return new Vector2D(0, 0); } //if the bodies are too close, skip the calculation
+        const netForceBetweenBodies: number = this.g * ((objectStateI.body.mass * objectStateJ.body.mass)/(distance * distance)); //net force between bodies as scalar
+        const unitVectorIToJ = Vector2D.normalize(Vector2D.subtract(objectStateJ.position, objectStateI.position)); //normalized vector from I to J
+        return Vector2D.scale(unitVectorIToJ, netForceBetweenBodies); //return force-vector applied to j, which is (unitVector from I to J) multiplied by (netForce)
+    }
+
+    public updateAccelerationVectors_old() {
+        //keeping this for now to compare this and the new algorithm
         this.objectStates.forEach((objectState, index) => {
             //compute sum of gravitational forces
             const resultingForceOnBody = this.calculateForcesForBody(index)
@@ -145,7 +183,8 @@ export class Simulation {
      * calculates the force applied to one body in objectStates, resulting from gravity from all other bodies
      * @param i index of the body in this.objectStates
      */
-    public calculateForcesForBody(cur: number): Vector2D {      
+    public calculateForcesForBody(cur: number): Vector2D {
+        //soon to be obsolete    
         let totalForce: Vector2D = {x: 0, y: 0};
         const targetBody = this.objectStates[cur];
         for (let i = 0; i < this.objectStates.length; i++) {
