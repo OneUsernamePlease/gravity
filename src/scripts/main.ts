@@ -122,19 +122,19 @@ function setupSimulationState() {
     let height = visibleCanvas.height;
     let middle: Vector2D = { x: width / 2, y: height / 2 };
 
-    /* setup one - looks like something is not working correctly*/
-    let startA: Vector2D = { x: middle.x - 50 , y: middle.y + 20};
-    let startB: Vector2D = { x: middle.x + 50 , y: middle.y - 20};
-    let velA: Vector2D = {x: 0, y: 100 };
-    let velB: Vector2D = {x: 0, y: -100 };
-    addBody(newBody(100, 10), startA, velA);
-    addBody(newBody(10, 10), startB, velB);
+    /* setup one*/
+    //let startA: Vector2D = { x: middle.x - 50 , y: middle.y + 50};
+    //let startB: Vector2D = { x: middle.x + 50 , y: middle.y - 50};
+    //let velA: Vector2D = {x: 40, y: 50 };
+    //let velB: Vector2D = {x: -40, y: -50 };
+    //addBody(newBody(40000), startA, velA);
+    //addBody(newBody(40000), startB, velB);
 
     /* setup two */
-    //let startA: Vector2D = { x: middle.x - width / 4 , y: middle.y};
-    //let startB: Vector2D = { x: middle.x + width / 4 , y: middle.y};
-    //addBody(newBody(10, 10), startA);
-    //addBody(newBody(10, 10), startB);
+    //let startA: Vector2D = { x: middle.x - width / 8 , y: middle.y};
+    //let startB: Vector2D = { x: middle.x + width / 8 , y: middle.y};
+    //addBody(newBody(10000, 10), startA);
+    //addBody(newBody(10000, 10), startB);
    
     /* setup three */
     //let startA: Vector2D = { x: 200, y: 100};
@@ -145,12 +145,12 @@ function setupSimulationState() {
     //addBody(newBody(10, 10), startC);    
    
     /* setup four */   
-    //let startA: Vector2D = { x: middle.x, y: middle.y};
-    //let startB: Vector2D = { x: middle.x + 400 , y: middle.y - 50};
-    //let velA: Vector2D = {x: 0, y: 0 };
-    //let velB: Vector2D = {x: -300, y: 300 };
-    //addBody(newBody(180, 10), startA, velA);
-    //addBody(newBody(6, 10), startB, velB);
+    let startA: Vector2D = { x: middle.x, y: middle.y};
+    let startB: Vector2D = { x: middle.x + 500 , y: middle.y - 50};
+    let velA: Vector2D = {x: 0, y: 0 };
+    let velB: Vector2D = {x: -120, y: 140 };
+    addBody(newBody(250000), startA, velA);
+    addBody(newBody(500), startB, velB);
     
 }
 function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
@@ -220,11 +220,15 @@ function drawRunningSimulation() {
 }
 function newBody(): Body2d 
 function newBody(mass: number, radius: number): Body2d 
+function newBody(mass: number, radius?: number): Body2d 
 function newBody(mass?: number, radius?: number): Body2d {
     let body1: Body2d;
     if (mass === undefined && radius === undefined) {
         body1 = new Body2d(rng(20, 200));    
-    } else {
+    } else if (radius === undefined) {
+        body1 = new Body2d(mass);
+    } 
+    else {
         body1 = new Body2d(mass, radius);
     }
     return body1;

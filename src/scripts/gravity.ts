@@ -145,21 +145,20 @@ export class Simulation {
      * calculates the force applied to one body in objectStates, resulting from gravity from all other bodies
      * @param i index of the body in this.objectStates
      */
-    public calculateForcesForBody(cur: number): Vector2D {
-        let appliedForces: Vector2D[] = [];
+    public calculateForcesForBody(cur: number): Vector2D {      
+        let totalForce: Vector2D = {x: 0, y: 0};
         const targetBody = this.objectStates[cur];
-
-        //calculate each force applied to target body by every other body
         for (let i = 0; i < this.objectStates.length; i++) {
             if (i === cur) { continue; }
             const curForceApplyingBody = this.objectStates[i]; //the body whose force on the target is being calculated
             const distance: number = Vector2D.distance(targetBody.position, curForceApplyingBody.position);
-            let netForceFromBody: number = this.g * ((targetBody.body.mass * curForceApplyingBody.body.mass)/(Math.sqrt(Math.abs(distance)))); //net force from the body as scalar
-            let unitVectorFromApplyingToTargetBody = Vector2D.scale(Vector2D.subtract(curForceApplyingBody.position, targetBody.position), 1 / distance); //is this not just the normalized vector from body to body? pls check, future me
+            if (distance < 1e-10) { continue; }
+            let netForceFromBody: number = this.g * ((targetBody.body.mass * curForceApplyingBody.body.mass)/(distance * distance)); //net force from the body as scalar
+            let unitVectorFromApplyingToTargetBody = Vector2D.normalize(Vector2D.subtract(curForceApplyingBody.position, targetBody.position)); //normalized vector from target to applying
             let forceVectorFromBody = Vector2D.scale(unitVectorFromApplyingToTargetBody, netForceFromBody); //net force multiplied by unit vector from the applying body to the target body
-            appliedForces.push(forceVectorFromBody);
+            totalForce = Vector2D.add(totalForce, forceVectorFromBody);
         }
-        return Vector2D.add(...appliedForces); //sum all forces on target body and return resulting force
+        return totalForce; //sum all forces on target body and return resulting force
     }
     public run() {
         if (this.running) {
