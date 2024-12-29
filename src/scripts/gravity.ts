@@ -74,7 +74,7 @@ export class Simulation {
         this._objectStates = [];
         this.running = false;
         this.tickCount = 0;
-        this._tickLength = 50;
+        this._tickLength = 10;
         this._g = 1;
     }
     public get objectStates() {
@@ -97,18 +97,13 @@ export class Simulation {
      * Does **NOT** update acceleration.
      * @param state *ObjectState* containing the body
      */
-    public nextBodyState(state: ObjectState) {
-        let deltaT = (this.tickLength / 1000); //tickLength (ms) / 1000 ms/s -> timeDiff in seconds
-        const newX = state.position.x + state.velocity.x * deltaT + ((state.acceleration.x * (deltaT^2)) / 2);
-        const newY = state.position.y + state.velocity.y * deltaT + ((state.acceleration.y * (deltaT^2)) / 2);
+    public nextBodyState(objectState: ObjectState) {
+        // Update velocity based on acceleration: v = v + a * dt
+        const dt = this.tickLength / 1000;  // Assuming tickLength is in ms, convert to seconds
+        objectState.velocity = Vector2D.add(objectState.velocity, Vector2D.scale(objectState.acceleration, dt));
 
-        const newVelX = state.velocity.x + state.acceleration.x * deltaT;
-        const newVelY = state.velocity.y + state.acceleration.y * deltaT;
-        
-        state.position.x = newX;
-        state.position.y = newY;
-        state.velocity.x = newVelX;
-        state.velocity.y = newVelY;
+        // Update position based on velocity: x = x + v * dt
+        objectState.position = Vector2D.add( objectState.position, Vector2D.scale(objectState.velocity, dt) );
     }
     public addObject(objectState: ObjectState): number {
         this._objectStates.push(objectState);
@@ -134,6 +129,7 @@ export class Simulation {
     public updateAccelerationVectors() {
         const forces: Map<number, Vector2D> = new Map(); //to keep track of the resulting force (sum of forces) on each body (by each other body) in objectStates[]
         
+        //calculate forces on each body
         for (let i = 0; i < this.objectStates.length; i++) {
             for (let j = i+1; j < this.objectStates.length; j++) {
                 const forceOnI = this.calculateForceBetweenBodies(i, j); //Calc force on i

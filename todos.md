@@ -1,11 +1,7 @@
 # bugs
-- due to no collision detection, when two bodies are at the same position or very close, acceleration and velocity can go crazy.
 
 # feets:
 - collision detection
-- gravity between bodies
-    - simple (nested loops -> O(n²)) DONE
-    - barnes-Hut (quadtree -> O(n log n))
 - single step forward
 - place bodies
     - via a special interface where you set mass, pos, vel,...
@@ -16,6 +12,9 @@
 - let the user setup a simulationState
 - speed up or slow down the sim.
 - display vectors DONE
+- gravity between bodies
+    - simple (nested loops -> O(n²)) DONE
+    - barnes-Hut (quadtree -> O(n log n))
 
 # refactors/improvements
 

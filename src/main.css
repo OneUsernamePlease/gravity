@@ -16,26 +16,36 @@ body, html {
 }
 
 #mainContent {
-    /* center content with flexbox */
     display: flex;
     flex-direction: column;
-    /*justify-content: center; /* Horizontal */
-    align-items: center; /* Vertical */
-    flex-grow: 1; /* Allow this container to take up the available space */
+    align-items: center;
+    flex-grow: 1;
     margin-top: 50px;
 }
 
-/*Header*/
+/* Header */
 #header {
     text-align: center;
 }
 
-#statusText {
-    display: inline-block;
-    padding: 0 10px;
+/* Canvas controls */
+.canvasControls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 30px; /* Increase space between the canvas controls and the canvas */
 }
 
-/*Canvas*/
+/* Canvas container */
+#canvasWrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 20px; /* Add space between the canvas and the controls */
+}
+
+/* Canvas container styles */
 #canvasContainer {
     width: min-content;
     height: min-content;
@@ -52,14 +62,30 @@ body, html {
     border: 1px solid #ccc;
 }
 
-
-/* canvas controls */
-.canvasControls {
+/* Control bar */
+#controlBar {
     display: flex;
-    justify-content: center; /* horizontal center */
-    align-items: center; /* vertical center */
+    flex-direction: column;
     gap: 10px;
-    margin-bottom: 20px;
+    align-items: flex-start;
+    background-color: #333;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#controlBar button {
+    background-color: #444;
+    border: none;
+    color: #fff;
+    padding: 10px;
+    cursor: pointer;
+    width: 150px;
+    border-radius: 3px;
+    transition: background-color 0.3s;
+}
+
+#controlBar button:hover {
+    background-color: #555;
 }
 
 /* Status bar styling */
@@ -68,14 +94,14 @@ body, html {
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 30px; /* One line height */
-    background-color: #333; /* Dark background */
+    height: 30px;
+    background-color: #333;
     color: white;
-    display: flex; /* Use flexbox for layout */
-    justify-content: space-between; /* Distribute space equally */
-    padding: 0 10px; /* Add some horizontal padding */
-    font-size: 14px; /* Text size */
-    line-height: 30px; /* Vertically center the text */
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px;
+    font-size: 14px;
+    line-height: 30px;
 }
 
 /* Status text fields */
@@ -83,7 +109,7 @@ body, html {
     display: inline-block;
     padding: 0 10px;
     text-align: center;
-    flex-grow: 1; /* Make each span grow equally to fill space */
+    flex-grow: 1;
     border: solid black;
     border-width: 1px;
 }

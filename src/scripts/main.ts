@@ -22,8 +22,6 @@ function initialize() {
     document.removeEventListener("DOMContentLoaded", initialize);
 }
 function registerEvents() {
-    document.getElementById("canvasBtn1")?.addEventListener("click", genericTest);
-    document.getElementById("canvasBtn2")?.addEventListener("click", genericTest2);
     document.getElementById("canvasBtnStartSim")?.addEventListener("click", startNewSimulation);
     document.getElementById("canvasBtnToggleSim")?.addEventListener("click", toggleSimulation);
 }
@@ -45,17 +43,12 @@ function genericTest() {
     let newPos: Vector2D = {x: 100, y: 100};
     drawBody(newB, newPos)
 }
-function genericTest2() {
-    let w = visibleCanvas.width;
-    let h = visibleCanvas.height;
-    setStatusMessage(`Canvas dimension: ${w} * ${h}`, statusBar3);
-}
 function initCanvas(width: number, height: number) {
     visibleCanvas = (document.getElementById("theCanvas")) as HTMLCanvasElement;
     visibleCanvas.width = width;
     visibleCanvas.height = height;
     visibleCanvasCtx = visibleCanvas.getContext("2d")!;
-    appendStatusMessage(`Canvas dimension: ${width} * ${height}`, statusBar3);
+    appendStatusMessage(` - Canvas dimension: ${width} * ${height}`, statusBar3);
     //offscreenCanvas = new OffscreenCanvas(visibleCanvas.clientWidth, visibleCanvas.clientHeight);
     //offscreenCanvasCtx = offscreenCanvas.getContext("2d")!;
 }
@@ -127,8 +120,8 @@ function setupSimulationState() {
     //let startB: Vector2D = { x: middle.x + 50 , y: middle.y - 50};
     //let velA: Vector2D = {x: 40, y: 50 };
     //let velB: Vector2D = {x: -40, y: -50 };
-    //addBody(newBody(40000), startA, velA);
-    //addBody(newBody(40000), startB, velB);
+    //addBody(newBody(1000), startA, velA);
+    //addBody(newBody(1000), startB, velB);
 
     /* setup two */
     //let startA: Vector2D = { x: middle.x - width / 8 , y: middle.y};
@@ -140,18 +133,17 @@ function setupSimulationState() {
     //let startA: Vector2D = { x: 200, y: 100};
     //let startB: Vector2D = { x: 400, y: 100};
     //let startC: Vector2D = { x: 300, y: 200};
-    //addBody(newBody(10, 10), startA);
-    //addBody(newBody(10, 10), startB);
-    //addBody(newBody(10, 10), startC);    
+    //addBody(newBody(10000), startA);
+    //addBody(newBody(10000), startB);
+    //addBody(newBody(10000), startC);    
    
     /* setup four */   
     let startA: Vector2D = { x: middle.x, y: middle.y};
     let startB: Vector2D = { x: middle.x + 500 , y: middle.y - 50};
     let velA: Vector2D = {x: 0, y: 0 };
-    let velB: Vector2D = {x: -120, y: 140 };
-    addBody(newBody(250000), startA, velA);
-    addBody(newBody(500), startB, velB);
-    
+    let velB: Vector2D = {x: -110, y: 110 };
+    addBody(newBody(10000000), startA, velA);
+    addBody(newBody(1000), startB, velB);
 }
 function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
     if (simState.running) {
@@ -233,6 +225,7 @@ function newBody(mass?: number, radius?: number): Body2d {
     }
     return body1;
 }
+//#endregion
 //#region other stuff
 /**
  * min and max included
