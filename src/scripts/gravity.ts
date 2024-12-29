@@ -8,23 +8,16 @@ export class Body2d {
     private defaultDensity = 1;
 
     //#region constructor, get, set
-    constructor(mass?: number, radius?: number, color?: string)  {
-        if (mass === undefined) {
-            mass = 25;
-        }
+    constructor(mass?: number, radius?: number, color?: string, movable?: boolean)  {
+        if (mass === undefined) { mass = 25; }
+        if (radius === undefined) { radius = ((3 * this.mass)/(4 * Math.PI * this.defaultDensity)) ** (1/3); }
+        if (color === undefined) { color = "white" }
+        if (movable === undefined) { movable = true; }
         this.mass = mass;
-
-        if (radius === undefined) {
-            radius = ((3 * this.mass)/(4 * Math.PI * this.defaultDensity)) ** (1/3);
-        }
         this.radius = radius;
-
-        if (color === undefined) {
-            color = "white"
-        }
         this.color = color;
-
-        this.movable = true;
+        this.movable = movable;
+        
     }
     public get mass() {
         return this._mass;
@@ -98,14 +91,19 @@ export class Simulation {
      * @param state *ObjectState* containing the body
      */
     public nextBodyState(objectState: ObjectState) {
-        // Update velocity based on acceleration: v = v + a * dt
-        const dt = this.tickLength / 1000;  // Assuming tickLength is in ms, convert to seconds
+        //update velocity based on acceleration: v = v + a * dt
+        const dt = this.tickLength / 1000;
+        if (!objectState.body.movable) { return; }
         objectState.velocity = Vector2D.add(objectState.velocity, Vector2D.scale(objectState.acceleration, dt));
 
-        // Update position based on velocity: x = x + v * dt
+        //update position based on velocity: x = x + v * dt
         objectState.position = Vector2D.add( objectState.position, Vector2D.scale(objectState.velocity, dt) );
     }
     public addObject(objectState: ObjectState): number {
+        if (!objectState.body.movable) {
+            objectState.velocity = new Vector2D(0, 0);
+            objectState.acceleration = new Vector2D(0, 0);
+        }
         this._objectStates.push(objectState);
         return this._objectStates.length;
     }
@@ -132,8 +130,8 @@ export class Simulation {
         //calculate forces on each body
         for (let i = 0; i < this.objectStates.length; i++) {
             for (let j = i+1; j < this.objectStates.length; j++) {
-                const forceOnI = this.calculateForceBetweenBodies(i, j); //Calc force on i
-                const forceOnJ = Vector2D.scale(forceOnI, -1); //force on i = (-1) * (force on j) -- opposite direction
+                const forceOnI = this.calculateForceBetweenBodies(i, j);
+                const forceOnJ = Vector2D.scale(forceOnI, -1); //force on j = (-1) * (force on i) -- opposite direction
 
                 //Update the force on both bodies
                 forces.set(i, (forces.has(i) ? Vector2D.add(forces.get(i)!, forceOnI) : forceOnI));
@@ -163,18 +161,6 @@ export class Simulation {
         const unitVectorIToJ = Vector2D.normalize(Vector2D.subtract(objectStateJ.position, objectStateI.position)); //normalized vector from I to J
         return Vector2D.scale(unitVectorIToJ, netForceBetweenBodies); //return force-vector applied to j, which is (unitVector from I to J) multiplied by (netForce)
     }
-
-    public updateAccelerationVectors_old() {
-        //keeping this for now to compare this and the new algorithm
-        this.objectStates.forEach((objectState, index) => {
-            //compute sum of gravitational forces
-            const resultingForceOnBody = this.calculateForcesForBody(index)
-            
-            //compute acceleration and update objectStates
-            const newAcceleration: Vector2D = Vector2D.scale(resultingForceOnBody, 1 / objectState.body.mass)
-            objectState.acceleration = newAcceleration;
-        });
-    };
     /**
      * calculates the force applied to one body in objectStates, resulting from gravity from all other bodies
      * @param i index of the body in this.objectStates
@@ -221,5 +207,4 @@ export class Simulation {
         const formattedTimestamp = `${hours}:${minutes}:${seconds}.${milliseconds}`;
         console.log(`[${formattedTimestamp}] ${message}`);
     };
-    
 }

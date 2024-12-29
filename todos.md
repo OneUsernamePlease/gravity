@@ -2,6 +2,7 @@
 
 # feets:
 - collision detection
+    - reflection or merging
 - single step forward
 - place bodies
     - via a special interface where you set mass, pos, vel,...
@@ -17,7 +18,7 @@
     - barnes-Hut (quadtree -> O(n log n))
 
 # refactors/improvements
-
+- units
 
 - currently, we draw every path at every animation step (all the drawBody() calls). with a Path2D object, a path can be saved (and moved for animation). the visual representation of a body should maybe store such a path.
 

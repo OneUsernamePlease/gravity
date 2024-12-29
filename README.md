@@ -14,5 +14,7 @@ If you then have local access to the vectors-lib, run [npm link] in that directo
 run: "npm run dev" to start dev server
 [npm link projectName] needs to be rerun after adding packages w/ npm install, bc /node-modules gets replaced and the symlink needs to be reestablished
 
+
+run "npm run deploy" to redeploy to gh-pages
 # gravity
 

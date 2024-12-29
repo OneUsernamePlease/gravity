@@ -9,6 +9,7 @@ let visibleCanvas: HTMLCanvasElement;
 let visibleCanvasCtx: CanvasRenderingContext2D;
 let statusBar1: HTMLElement, statusBar2: HTMLElement, statusBar3: HTMLElement;
 let simState: Simulation;
+let canvasSpace: {xMin: number, xMax: number, yMin: number, yMax: number}
 let frameLength = 25; //ms
 let animationRunning = false; //set to true while the sim is running
 //#region page stuff
@@ -108,12 +109,22 @@ function drawVectors() {
         drawVector(objectState.position, objectState.velocity, "red");
     });
 }
+function drawCoordinateSystem() {
+
+}
+function simulationSpaceToCanvasSpace(v: Vector2D): Vector2D {
+    let canvasVector: Vector2D = {x: 0, y: 0}
+
+
+    return canvasVector;
+}
 //#endregion
 //#region simulation
 function setupSimulationState() {
     let width = visibleCanvas.width;
     let height = visibleCanvas.height;
     let middle: Vector2D = { x: width / 2, y: height / 2 };
+    let zeroV = new Vector2D(0, 0);
 
     /* setup one*/
     //let startA: Vector2D = { x: middle.x - 50 , y: middle.y + 50};
@@ -137,13 +148,22 @@ function setupSimulationState() {
     //addBody(newBody(10000), startB);
     //addBody(newBody(10000), startC);    
    
-    /* setup four */   
+    /* setup four */ 
+    //this is a stable orbit (g = 1, tickLength = 10. ~3300 ticks)  
+    //let startA: Vector2D = { x: middle.x, y: middle.y};
+    //let startB: Vector2D = { x: middle.x + 500 , y: middle.y - 50};
+    //let velA: Vector2D = {x: 0, y: 0 };
+    //let velB: Vector2D = {x: -110, y: 110 };
+    //addBody(newBody(10000000, 50), startA, velA, zeroV);
+    //addBody(newBody(1000), startB, velB);   
+    
+    /* setup five */ 
     let startA: Vector2D = { x: middle.x, y: middle.y};
     let startB: Vector2D = { x: middle.x + 500 , y: middle.y - 50};
     let velA: Vector2D = {x: 0, y: 0 };
     let velB: Vector2D = {x: -110, y: 110 };
-    addBody(newBody(10000000), startA, velA);
-    addBody(newBody(1000), startB, velB);
+    addBody(newBody(10000000, 50), startA, velA, zeroV, false);
+    addBody(newBody(10000000, 50), startB, velB);
 }
 function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
     if (simState.running) {
@@ -158,8 +178,7 @@ function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
         setStatusMessage("Simulation running");
     }
 }
-
-function addBody(body?: Body2d, position?: Vector2D, velocity?: Vector2D, acceleration?: Vector2D) {
+function addBody(body?: Body2d, position?: Vector2D, velocity?: Vector2D, acceleration?: Vector2D, movable?: boolean) {
     if (body === undefined) {
         body = newBody();
     }
