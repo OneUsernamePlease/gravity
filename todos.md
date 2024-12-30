@@ -1,6 +1,7 @@
 # bugs
 
 # feets:
+- use workers and offscreen canvas, 2 bodies at 100 tps is already too much
 - collision detection
     - reflection or merging
 - single step forward

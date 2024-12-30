@@ -67,7 +67,7 @@ export class Simulation {
         this._objectStates = [];
         this.running = false;
         this.tickCount = 0;
-        this._tickLength = 10;
+        this._tickLength = 10; //ms
         this._g = 1;
     }
     public get objectStates() {
@@ -159,27 +159,7 @@ export class Simulation {
         if (distance < 1e-10) { return new Vector2D(0, 0); } //if the bodies are too close, skip the calculation
         const netForceBetweenBodies: number = this.g * ((objectStateI.body.mass * objectStateJ.body.mass)/(distance * distance)); //net force between bodies as scalar
         const unitVectorIToJ = Vector2D.normalize(Vector2D.subtract(objectStateJ.position, objectStateI.position)); //normalized vector from I to J
-        return Vector2D.scale(unitVectorIToJ, netForceBetweenBodies); //return force-vector applied to j, which is (unitVector from I to J) multiplied by (netForce)
-    }
-    /**
-     * calculates the force applied to one body in objectStates, resulting from gravity from all other bodies
-     * @param i index of the body in this.objectStates
-     */
-    public calculateForcesForBody(cur: number): Vector2D {
-        //soon to be obsolete    
-        let totalForce: Vector2D = {x: 0, y: 0};
-        const targetBody = this.objectStates[cur];
-        for (let i = 0; i < this.objectStates.length; i++) {
-            if (i === cur) { continue; }
-            const curForceApplyingBody = this.objectStates[i]; //the body whose force on the target is being calculated
-            const distance: number = Vector2D.distance(targetBody.position, curForceApplyingBody.position);
-            if (distance < 1e-10) { continue; }
-            let netForceFromBody: number = this.g * ((targetBody.body.mass * curForceApplyingBody.body.mass)/(distance * distance)); //net force from the body as scalar
-            let unitVectorFromApplyingToTargetBody = Vector2D.normalize(Vector2D.subtract(curForceApplyingBody.position, targetBody.position)); //normalized vector from target to applying
-            let forceVectorFromBody = Vector2D.scale(unitVectorFromApplyingToTargetBody, netForceFromBody); //net force multiplied by unit vector from the applying body to the target body
-            totalForce = Vector2D.add(totalForce, forceVectorFromBody);
-        }
-        return totalForce; //sum all forces on target body and return resulting force
+        return Vector2D.scale(unitVectorIToJ, netForceBetweenBodies); //return force-vector applied to i, which is (unitVector from I to J) multiplied by (netForce)
     }
     public run() {
         if (this.running) {

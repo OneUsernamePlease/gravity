@@ -2,6 +2,13 @@ import { InferCustomEventPayload } from "vite";
 import { Body2d, Simulation } from "./gravity";
 import { Vector2D } from "tcellib-vectors";
 
+interface CanvasSpace { 
+    //use this to transform simulationSpace to canvasSpace and back
+    origin: Vector2D, //the canvas' origin in simulation space
+    zoomFactor: number, //simulationUnits (meter) per canvasUnit
+    orientationY: number; //in practice this is -1, as the y-axis of the canvas is in the opposite direction of the simulation
+}
+
 document.addEventListener("DOMContentLoaded", initialize);
 //let offscreenCanvas: OffscreenCanvas; //use this in a worker thread to render or draw on, then transfer content to the visible html-canvas
 let visibleCanvas: HTMLCanvasElement;
@@ -9,7 +16,7 @@ let visibleCanvas: HTMLCanvasElement;
 let visibleCanvasCtx: CanvasRenderingContext2D;
 let statusBar1: HTMLElement, statusBar2: HTMLElement, statusBar3: HTMLElement;
 let simState: Simulation;
-let canvasSpace: {xMin: number, xMax: number, yMin: number, yMax: number}
+let canvasSpace: CanvasSpace;
 let frameLength = 25; //ms
 let animationRunning = false; //set to true while the sim is running
 //#region page stuff
@@ -19,6 +26,7 @@ function initialize() {
     statusBar3 = document.getElementById("statusText3")!;
     registerEvents();
     initCanvas(1280, 720);
+    canvasSpace = {origin: {x: 0, y: 0}, zoomFactor: 1, orientationY: -1};
     simState = new Simulation();
     document.removeEventListener("DOMContentLoaded", initialize);
 }
@@ -112,11 +120,25 @@ function drawVectors() {
 function drawCoordinateSystem() {
 
 }
-function simulationSpaceToCanvasSpace(v: Vector2D): Vector2D {
-    let canvasVector: Vector2D = {x: 0, y: 0}
+function simulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
+    //transformation:
+    //1. shift (point in SimSpace - Origin of C in SimSpace)
+    //2. flip (y axis are in opposite directions - HadamardProduct(ShiftedPoint, OrientationVector) -> {x: shiftedPointX * orientationY, y: shiftedPointY * orientationY}
+    //3. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
+    const shifted: Vector2D = Vector2D.subtract(simVector, canvasSpace.origin);
+    const flipped: Vector2D = {x: shifted.x, y: shifted.y * -1}
+    const scaled: Vector2D = Vector2D.scale(flipped, 1/canvasSpace.zoomFactor);
+    return scaled;
+}
+function canvasSpaceToSimulationSpace(simVector: Vector2D): Vector2D {
+    //transformation:
+    //1. scale (simVector * zoom in simulationUnits/canvasUnit)
+    //2. flip (HadamardProduct(scaledPoint, OrientationVector) -> {x: scaledPointX * orientationY, y: scaledPointY * orientationY})
+    //3. shift (scaledAndFlippedPoint + Origin of C in SimSpace)
+    let simulationVector: Vector2D = {x: 0, y: 0};
+    
 
-
-    return canvasVector;
+    return simulationVector;
 }
 //#endregion
 //#region simulation
@@ -192,6 +214,9 @@ function addBody(body?: Body2d, position?: Vector2D, velocity?: Vector2D, accele
     }
     if (acceleration === undefined) {
         acceleration = {x: 0, y: 0};
+    }
+    if (movable !== undefined) {
+        body.movable = movable;
     }
     const objectState = {body: body, position: position, velocity: velocity, acceleration: acceleration};
 
