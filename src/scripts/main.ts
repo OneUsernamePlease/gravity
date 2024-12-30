@@ -93,7 +93,7 @@ function drawVector(position: Vector2D, direction: Vector2D, color?: string) {
  */
 function drawBody(body: Body2d, position: Vector2D) {
     visibleCanvasCtx.beginPath();
-    visibleCanvasCtx.arc(position.x, position.y, body.radius, 0, Math.PI * 2);
+    visibleCanvasCtx.arc(position.x, position.y, body.radius / canvasSpace.zoomFactor, 0, Math.PI * 2); //zF = m/cu; r...m -> r/zF -> (m)/
     visibleCanvasCtx.closePath();
     visibleCanvasCtx.fillStyle = body.color;
     visibleCanvasCtx.fill();
@@ -102,7 +102,7 @@ function drawBodies() {
     const objects = simState.objectStates;
     objects.forEach(object => {
         if (object !== null) {
-            drawBody(object.body, object.position)
+            drawBody(object.body, simulationSpaceToCanvasSpace(object.position));
         }
     });
 }
@@ -113,8 +113,8 @@ function drawSimulationState() {
 }
 function drawVectors() {
     simState.objectStates.forEach(objectState => {
-        drawVector(objectState.position, objectState.acceleration, "green");
-        drawVector(objectState.position, objectState.velocity, "red");
+        drawVector(simulationSpaceToCanvasSpace(objectState.position), simulationSpaceToCanvasSpace(objectState.acceleration), "green");
+        drawVector(simulationSpaceToCanvasSpace(objectState.position), simulationSpaceToCanvasSpace(objectState.velocity), "red");
     });
 }
 function drawCoordinateSystem() {
@@ -130,14 +130,13 @@ function simulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
     const scaled: Vector2D = Vector2D.scale(flipped, 1/canvasSpace.zoomFactor);
     return scaled;
 }
-function canvasSpaceToSimulationSpace(simVector: Vector2D): Vector2D {
+function canvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
     //transformation:
     //1. scale (simVector * zoom in simulationUnits/canvasUnit)
     //2. flip (HadamardProduct(scaledPoint, OrientationVector) -> {x: scaledPointX * orientationY, y: scaledPointY * orientationY})
     //3. shift (scaledAndFlippedPoint + Origin of C in SimSpace)
-    let simulationVector: Vector2D = {x: 0, y: 0};
-    
-
+    let simulationVector: Vector2D;
+    simulationVector = Vector2D.add(Vector2D.hadamardProduct(Vector2D.scale(canvasVector, canvasSpace.zoomFactor), {x: 1, y: canvasSpace.orientationY}), canvasSpace.origin)
     return simulationVector;
 }
 //#endregion
@@ -145,47 +144,47 @@ function canvasSpaceToSimulationSpace(simVector: Vector2D): Vector2D {
 function setupSimulationState() {
     let width = visibleCanvas.width;
     let height = visibleCanvas.height;
-    let middle: Vector2D = { x: width / 2, y: height / 2 };
+    let canvasMiddle: Vector2D = { x: width / 2, y: height / 2 };
     let zeroV = new Vector2D(0, 0);
 
     /* setup one*/
-    //let startA: Vector2D = { x: middle.x - 50 , y: middle.y + 50};
-    //let startB: Vector2D = { x: middle.x + 50 , y: middle.y - 50};
-    //let velA: Vector2D = {x: 40, y: 50 };
-    //let velB: Vector2D = {x: -40, y: -50 };
+    //let startA: Vector2D = canvasSpaceToSimulationSpace({ x: canvasMiddle.x - 50 , y: canvasMiddle.y + 50});
+    //let startB: Vector2D = canvasSpaceToSimulationSpace({ x: canvasMiddle.x + 50 , y: canvasMiddle.y - 50});
+    //let velA: Vector2D = {x: 40, y: -50 };
+    //let velB: Vector2D = {x: -40, y: 50 };
     //addBody(newBody(1000), startA, velA);
     //addBody(newBody(1000), startB, velB);
 
     /* setup two */
-    //let startA: Vector2D = { x: middle.x - width / 8 , y: middle.y};
-    //let startB: Vector2D = { x: middle.x + width / 8 , y: middle.y};
+    //let startA: Vector2D = canvasSpaceToSimulationSpace({ x: canvasMiddle.x - width / 8 , y: canvasMiddle.y});
+    //let startB: Vector2D = canvasSpaceToSimulationSpace({ x: canvasMiddle.x + width / 8 , y: canvasMiddle.y});
     //addBody(newBody(100000), startA);
     //addBody(newBody(100000), startB);
    
     /* setup three */
-    //let startA: Vector2D = { x: 200, y: 100};
-    //let startB: Vector2D = { x: 400, y: 100};
-    //let startC: Vector2D = { x: 300, y: 200};
+    //let startA: Vector2D = canvasSpaceToSimulationSpace({ x: 200, y: -100});
+    //let startB: Vector2D = canvasSpaceToSimulationSpace({ x: 400, y: -100});
+    //let startC: Vector2D = canvasSpaceToSimulationSpace({ x: 300, y: -200});
     //addBody(newBody(10000), startA);
     //addBody(newBody(10000), startB);
     //addBody(newBody(10000), startC);    
    
-    /* setup four */ 
+    /* setup four */
     //this is a stable orbit (g = 1, tickLength = 10. ~3300 ticks)  
-    //let startA: Vector2D = { x: middle.x, y: middle.y};
-    //let startB: Vector2D = { x: middle.x + 500 , y: middle.y - 50};
-    //let velA: Vector2D = {x: 0, y: 0 };
-    //let velB: Vector2D = {x: -110, y: 110 };
-    //addBody(newBody(10000000, 50), startA, velA, zeroV);
-    //addBody(newBody(1000), startB, velB);   
+    let startA: Vector2D = canvasSpaceToSimulationSpace({ x: canvasMiddle.x, y: canvasMiddle.y});
+    let startB: Vector2D = canvasSpaceToSimulationSpace({ x: canvasMiddle.x + 500 , y: canvasMiddle.y - 50});
+    let velA: Vector2D = {x: 0, y: 0 };
+    let velB: Vector2D = {x: -110, y: -110 };
+    addBody(newBody(10000000, 50), startA, velA, zeroV);
+    addBody(newBody(1000), startB, velB);   
     
     /* setup five */ 
-    let startA: Vector2D = { x: middle.x, y: middle.y};
-    let startB: Vector2D = { x: middle.x + 500 , y: middle.y - 50};
-    let velA: Vector2D = {x: 0, y: 0 };
-    let velB: Vector2D = {x: -110, y: 110 };
-    addBody(newBody(10000000, 50), startA, velA, zeroV, false);
-    addBody(newBody(10000000, 50), startB, velB);
+    //let startA: Vector2D = canvasSpaceToSimulationSpace({ x: canvasMiddle.x, y: canvasMiddle.y});
+    //let startB: Vector2D = canvasSpaceToSimulationSpace({ x: canvasMiddle.x + 500 , y: canvasMiddle.y - 50});
+    //let velA: Vector2D = {x: 0, y: 0 };
+    //let velB: Vector2D = {x: -110, y: -110 };
+    //addBody(newBody(10000000, 50), startA, velA, zeroV, false);
+    //addBody(newBody(10000000, 50), startB, velB);
 }
 function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
     if (simState.running) {

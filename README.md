@@ -1,6 +1,6 @@
 # setup Dev Env
 (i have not yet tried this, so it might not work the way i think)
-1. clone/fork/download (idk the correct term) the repo
+1. clone/fork/download the repository.
 2. run npm install.
     this should install typescript and vite.
 3. you need my library tcellib-vectors, which is not published on npm, but public on github. download it.
