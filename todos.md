@@ -1,6 +1,6 @@
 # currently working on:
     - workers and offscreen canvas
-    - zoom, moving, resize
+    - zoom, moving, resizeCanvas
 
 # bugs
     - when zoomed out, acceleration and velocity vectors are drawn completely wrong (distance, direction)

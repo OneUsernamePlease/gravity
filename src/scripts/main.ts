@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", initialize);
 let visibleCanvas: HTMLCanvasElement;
 //let offscreenCanvasCtx: OffscreenCanvasRenderingContext2D; //coming soon
 let visibleCanvasCtx: CanvasRenderingContext2D;
-let statusBar1: HTMLElement, statusBar2: HTMLElement, statusBar3: HTMLElement;
+let statusBar: { fields: HTMLElement[] } = { fields: [] };
 let simState: Simulation;
 let canvasSpace: CanvasSpace;
 let frameLength = 25; //ms
@@ -22,9 +22,7 @@ let animationRunning = false; //set to true while the sim is running
 let zoomStep = 1; //simUnits that get added to or subtracted from one canvasUnit in a zoom steps
 //#region page stuff
 function initialize() {
-    statusBar1 = document.getElementById("statusText1")!;
-    statusBar2 = document.getElementById("statusText2")!;
-    statusBar3 = document.getElementById("statusText3")!;
+    initStatusBar();
     registerEvents();
     initCanvas(1280, 720);
     canvasSpace = {origin: {x: 0, y: 0}, zoomFactor: 1, orientationY: -1};
@@ -37,20 +35,38 @@ function registerEvents() {
     document.getElementById("cvsBtnZoomOut")?.addEventListener("click", zoomOut);
     document.getElementById("cvsBtnZoomIn")?.addEventListener("click", zoomIn);
 }
-function setStatusMessage(newMessage: string, element?: HTMLElement) {
-    if (element === undefined) {
-        element = statusBar1;
+function initStatusBar() {
+    statusBar.fields;
+    const idStart = "statusText";
+    let i = 1;
+    let statusBarField = document.getElementById(idStart + i);
+    while (statusBarField !== null) {
+        statusBar.fields.push(statusBarField)
+        i++;
+        statusBarField = document.getElementById(idStart + i);
     }
-    element.innerHTML = newMessage;
 }
-function appendStatusMessage(newMessage: string, element?: HTMLElement) {
-    if (element === undefined) {
-        element = statusBar1;
+/**
+ * @param fieldIndexOrId number of field, starting at one. OR id of the field
+ */
+function setStatusMessage(newMessage: string, fieldIndexOrId?: number | string, append: boolean = false) {
+    let element: HTMLElement;
+    if (typeof fieldIndexOrId === "number") {
+        element = statusBar.fields[fieldIndexOrId - 1];
+    } else if (typeof fieldIndexOrId === "string") {
+        element = document.getElementById(fieldIndexOrId)!;
+    } else { //else -> undefined
+        element = statusBar.fields[0];
     }
-    element.innerHTML += newMessage;
+    
+    if (append) {
+        element!.innerHTML += newMessage;
+    } else {
+        element!.innerHTML = newMessage;
+    }
 }
 function genericTest() {
-    setStatusMessage("generate an element, add to bodies, draw bodies");
+    setStatusMessage("generate an element, add to bodies, draw bodies", 1);
     let newB = new Body2d(1, 5);
     let newPos: Vector2D = {x: 100, y: 100};
     drawBody(newB, newPos)
@@ -60,7 +76,7 @@ function initCanvas(width: number, height: number) {
     visibleCanvas.width = width;
     visibleCanvas.height = height;
     visibleCanvasCtx = visibleCanvas.getContext("2d")!;
-    appendStatusMessage(` - Canvas dimension: ${width} * ${height}`, statusBar3);
+    setStatusMessage(`Canvas dimension: ${width} * ${height}`, 5);
     //offscreenCanvas = new OffscreenCanvas(visibleCanvas.clientWidth, visibleCanvas.clientHeight);
     //offscreenCanvasCtx = offscreenCanvas.getContext("2d")!;
 }
@@ -107,7 +123,7 @@ function drawBodies() {
     const objects = simState.objectStates;
     objects.forEach(object => {
         if (object !== null) {
-            drawBody(object.body, simulationSpaceToCanvasSpace(object.position));
+            drawBody(object.body, pointInSimulationSpaceToCanvasSpace(object.position));
         }
     });
 }
@@ -118,11 +134,11 @@ function drawSimulationState() {
 }
 function drawVectors() {
     simState.objectStates.forEach(objectState => {
-        drawVector(simulationSpaceToCanvasSpace(objectState.position), simulationSpaceToCanvasSpace(objectState.acceleration), "green");
-        drawVector(simulationSpaceToCanvasSpace(objectState.position), simulationSpaceToCanvasSpace(objectState.velocity), "red");
+        drawVector(pointInSimulationSpaceToCanvasSpace(objectState.position), directionInSimulationSpaceToCanvasSpace(objectState.acceleration), "green");
+        drawVector(pointInSimulationSpaceToCanvasSpace(objectState.position), directionInSimulationSpaceToCanvasSpace(objectState.velocity), "red");
     });
 }
-function simulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
+function pointInSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
     //transformation:
     //1. shift (point in SimSpace - Origin of C in SimSpace)
     //2. flip (y axis are in opposite directions)
@@ -132,7 +148,15 @@ function simulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
     const scaled: Vector2D = Vector2D.scale(flipped, 1/canvasSpace.zoomFactor);
     return scaled;
 }
-function canvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
+function directionInSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
+    //transformation:
+    //1. flip (y axis are in opposite directions)
+    //2. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
+    const flipped: Vector2D = {x: simVector.x, y: simVector.y * -1}
+    const scaled: Vector2D = Vector2D.scale(flipped, 1/canvasSpace.zoomFactor);
+    return scaled;
+}
+function pointInCanvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
     //transformation:
     //1. scale (canvasVector * zoom in simulationUnits/canvasUnit)
     //2. flip (y axis are in opposite directions)
@@ -143,14 +167,16 @@ function canvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
 }
 
 function zoomOut() {
-    let zoomCenter: Vector2D = {x: visibleCanvas.width/2, y: visibleCanvas.height/2};
-    let newZoom = canvasSpace.zoomFactor + zoomStep;
+    const zoomCenter: Vector2D = {x: visibleCanvas.width/2, y: visibleCanvas.height/2};
+    const newZoom = canvasSpace.zoomFactor + zoomStep;
 
-    let shiftOriginX = zoomCenter.x * zoomStep;
+    let shiftOriginX = zoomCenter.x * zoomStep; //zoom step here is really the difference in zoom change (in case i add sophisticated zoom functionality)
     let shiftOriginY = zoomCenter.y * zoomStep;
 
     canvasSpace.origin = {x: canvasSpace.origin.x - shiftOriginX, y: canvasSpace.origin.y + shiftOriginY};
-    canvasSpace.zoomFactor = newZoom; 
+    canvasSpace.zoomFactor = newZoom;
+
+    setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
 }
 function zoomIn() {
     if (canvasSpace.zoomFactor <= 1) { return; }
@@ -162,6 +188,8 @@ function zoomIn() {
 
     canvasSpace.origin = {x: canvasSpace.origin.x + shiftOriginX, y: canvasSpace.origin.y - shiftOriginY};
     canvasSpace.zoomFactor = newZoom;
+    
+    setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
 }
 function drawCoordinateSystem() {
 
@@ -217,12 +245,12 @@ function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
         animationRunning = false;
         simState.pause();
         document.getElementById("cvsBtnToggleSim")!.innerHTML = "Resume";
-        setStatusMessage("Simulation paused");
+        setStatusMessage("Simulation paused", 1);
     } else {
         document.getElementById("cvsBtnToggleSim")!.innerHTML = "Pause";
         resumeSimulation();
         drawRunningSimulation();
-        setStatusMessage("Simulation running");
+        setStatusMessage("Simulation running", 1);
     }
 }
 /**
@@ -253,7 +281,7 @@ function addBody(body?: Body2d, position?: Vector2D, velocity?: Vector2D, movabl
 function startNewSimulation() {
     simState.clearObjects();
     simState.tickCount = 0;
-    setStatusMessage("Simulation running");
+    setStatusMessage("Simulation running", 1);
     document.getElementById("cvsBtnToggleSim")!.innerHTML = "Pause";
     
     setupSimulationState();
@@ -274,7 +302,7 @@ function drawRunningSimulation() {
     const runDrawLoop = () => {
         if (animationRunning) {
             drawSimulationState();
-            setStatusMessage(`Simulation Tick: ${simState.tickCount}`, statusBar2);
+            setStatusMessage(`Simulation Tick: ${simState.tickCount}`, 2);
             setTimeout(runDrawLoop, frameLength);
             //log("Draw simulation step");
         }
