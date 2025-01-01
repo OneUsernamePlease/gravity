@@ -1,4 +1,9 @@
+# currently working on:
+    - workers and offscreen canvas
+    - zoom, moving, resize
+
 # bugs
+    - when zoomed out, acceleration and velocity vectors are drawn completely wrong (distance, direction)
 
 # feets:
 - improve the drawing implementations (layering, only call draw methods if the object is within bounds, replace path tracing with creating objects from a path once and saving them (if that works - i have no idea, but it seems like this is how it *should* work))

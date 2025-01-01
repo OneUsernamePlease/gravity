@@ -52,7 +52,7 @@ export interface ObjectState {
     body: Body2d, 
     position: Vector2D,
     /**
-     * canvasUnits per second
+     * simulationUnits (meter?) per second
      */
     velocity: Vector2D,
     acceleration: Vector2D
@@ -73,6 +73,9 @@ export class Simulation {
     public get objectStates() {
         return this._objectStates;
     }
+    public set objectStates(objectState: ObjectState[]) {
+        this._objectStates = objectState;
+    }
     public get tickLength() {
         return this._tickLength;
     }
@@ -85,30 +88,17 @@ export class Simulation {
     public set g(g: number) {
         this._g = Math.max(g, Number.MIN_VALUE);
     }
-    /**
-     * Calculates the next **position** and **velocity** of the object in state, and updates state accordingly.
-     * Does **NOT** update acceleration.
-     * @param state *ObjectState* containing the body
-     */
-    public nextBodyState(objectState: ObjectState) {
-        //update velocity based on acceleration: v = v + a * dt
-        const dt = this.tickLength / 1000;
-        if (!objectState.body.movable) { return; }
-        objectState.velocity = Vector2D.add(objectState.velocity, Vector2D.scale(objectState.acceleration, dt));
-
-        //update position based on velocity: x = x + v * dt
-        objectState.position = Vector2D.add( objectState.position, Vector2D.scale(objectState.velocity, dt) );
-    }
+//#endregion
     public addObject(objectState: ObjectState): number {
         if (!objectState.body.movable) {
             objectState.velocity = new Vector2D(0, 0);
             objectState.acceleration = new Vector2D(0, 0);
         }
-        this._objectStates.push(objectState);
-        return this._objectStates.length;
+        this.objectStates.push(objectState);
+        return this.objectStates.length;
     }
     public clearObjects() {
-        this._objectStates = [];
+        this.objectStates = [];
     }
     public pause() {
         this.running = false;
@@ -119,7 +109,7 @@ export class Simulation {
 
         //update position and velocity arising therefrom
         this.objectStates.forEach(objectState => {
-            this.nextBodyState(objectState)
+            this.updateVelocityAndPosition(objectState)
         });
         
         this.tickCount++;
@@ -148,6 +138,19 @@ export class Simulation {
         });
     };
     /**
+     * Calculates the next **position** and **velocity** of the object in state, and updates state accordingly.
+     * @param state *ObjectState* containing the body
+     */
+    public updateVelocityAndPosition(objectState: ObjectState) {
+        //update velocity based on acceleration: v = v + a * dt
+        const dt = this.tickLength / 1000;
+        if (!objectState.body.movable) { return; }
+        objectState.velocity = Vector2D.add(objectState.velocity, Vector2D.scale(objectState.acceleration, dt));
+
+        //update position based on velocity: x = x + v * dt
+        objectState.position = Vector2D.add( objectState.position, Vector2D.scale(objectState.velocity, dt) );
+    }
+    /**
      * Calculates the force-vector between the bodies in objectStates[i] and [j]
      * @returns a vector representing the force applied ***to*** body at objectStates[i]
      */
@@ -169,10 +172,9 @@ export class Simulation {
 
         const runSimulationStep = () => {
             if (this.running) {
-                this.nextState();
                 setTimeout(runSimulationStep, this.tickLength);
-
-                this.log("running simulation step " + this.tickCount);
+                this.nextState();
+                //this.log("running simulation step " + this.tickCount);
             }
         };
         runSimulationStep();
