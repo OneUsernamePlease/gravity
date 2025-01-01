@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gravity</title>
-  <script type="module" crossorigin src="/gravity/assets/index-077CZD6a.js"></script>
-  <link rel="stylesheet" crossorigin href="/gravity/assets/index-CZh8vM41.css">
+  <script type="module" crossorigin src="/gravity/assets/index-ClVLcItH.js"></script>
+  <link rel="stylesheet" crossorigin href="/gravity/assets/index-BBGp5HN-.css">
 </head>
 <body>
     <div>
@@ -14,15 +14,16 @@
         </div>
         <div id="mainContent" class="content">
             <div class="canvasControls">
-                <button id="canvasBtnStartSim">Simulate</button>
-                <button id="canvasBtnToggleSim">Pause</button>
+                <button id="cvsBtnStartSim">Simulate</button>
+                <button id="cvsBtnToggleSim">Pause</button>
             </div>
             <div id="canvasWrapper">
                 <div id="canvasContainer">
                     <canvas id="theCanvas"></canvas>
                 </div>
                 <div id="controlBar">
-                    <button id="cvsBtnGenericTest">Test</button>
+                    <button id="cvsBtnZoomIn">Zoom In</button>
+                    <button id="cvsBtnZoomOut">Zoom Out</button>
                     <button>Control 2</button>
                     <button>Control 3</button>
                     <button>Control 4</button>
@@ -31,9 +32,11 @@
         </div>
         <div id="footer">
             <div id="statusBar">
-                <span id="statusText1">Status message</span>
-                <span id="statusText2">Status message</span>
-                <span id="statusText3">green=acceleration red=velocity</span>
+                <span id="statusText1" class="statusBarItem">Status message</span>
+                <span id="statusText2" class="statusBarItem">Status message</span>
+                <span id="statusText3" class="statusBarItem">Green: acceleration - Red: velocity</span>
+                <span id="statusText4" class="statusBarItem">Zoom</span>
+                <span id="statusText5" class="statusBarItem">Status message</span>
             </div>
         </div>
     </div>
