@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gravity</title>
-  <script type="module" crossorigin src="/gravity/assets/index-ClVLcItH.js"></script>
-  <link rel="stylesheet" crossorigin href="/gravity/assets/index-BBGp5HN-.css">
+  <script type="module" crossorigin src="/gravity/assets/index-oCsXMGfx.js"></script>
+  <link rel="stylesheet" crossorigin href="/gravity/assets/index-C-eMAOBm.css">
 </head>
 <body>
     <div>
@@ -22,10 +22,18 @@
                     <canvas id="theCanvas"></canvas>
                 </div>
                 <div id="controlBar">
-                    <button id="cvsBtnZoomIn">Zoom In</button>
-                    <button id="cvsBtnZoomOut">Zoom Out</button>
-                    <button>Control 2</button>
-                    <button>Control 3</button>
+                    <div class="splitButtonContainer">
+                        <button id="cvsBtnZoomOut">Zoom Out</button>
+                        <button id="cvsBtnZoomIn">Zoom In</button>
+                    </div>
+                    <div class="splitButtonContainer">
+                        <button id="cvsBtnMoveUp">Move Up</button>
+                        <button id="cvsBtnMoveDown">Move Down</button>
+                    </div>
+                    <div class="splitButtonContainer">
+                        <button id="cvsBtnMoveLeft">Move Left</button>
+                        <button id="cvsBtnMoveRight">Move Right</button>
+                    </div>
                     <button>Control 4</button>
                 </div>
             </div>
