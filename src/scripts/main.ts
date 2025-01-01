@@ -20,6 +20,7 @@ let canvasSpace: CanvasSpace;
 let frameLength = 25; //ms
 let animationRunning = false; //set to true while the sim is running
 let zoomStep = 1; //simUnits that get added to or subtracted from one canvasUnit in a zoom steps
+let defaultScrollRate = 0.1; //when scrolling, canvas is moved by this percentage of its height/width in the corresponding direction
 //#region page stuff
 function initialize() {
     initStatusBar();
@@ -34,6 +35,10 @@ function registerEvents() {
     document.getElementById("cvsBtnToggleSim")?.addEventListener("click", toggleSimulation);
     document.getElementById("cvsBtnZoomOut")?.addEventListener("click", zoomOut);
     document.getElementById("cvsBtnZoomIn")?.addEventListener("click", zoomIn);
+    document.getElementById("cvsBtnMoveLeft")?.addEventListener("click", moveLeft);
+    document.getElementById("cvsBtnMoveRight")?.addEventListener("click", moveRight);
+    document.getElementById("cvsBtnMoveUp")?.addEventListener("click", moveUp);
+    document.getElementById("cvsBtnMoveDown")?.addEventListener("click", moveDown);
 }
 function initStatusBar() {
     statusBar.fields;
@@ -128,7 +133,7 @@ function drawBodies() {
     });
 }
 function drawSimulationState() {
-    visibleCanvasCtx.clearRect(0, 0, visibleCanvas.width, visibleCanvas.height)
+    visibleCanvasCtx.clearRect(0, 0, visibleCanvas.width, visibleCanvas.height);
     drawBodies();
     drawVectors();
 }
@@ -165,31 +170,68 @@ function pointInCanvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
     simulationVector = Vector2D.add(Vector2D.hadamardProduct(Vector2D.scale(canvasVector, canvasSpace.zoomFactor), {x: 1, y: canvasSpace.orientationY}), canvasSpace.origin)
     return simulationVector;
 }
-
+/**
+ * Origin {x:0,y:0} is at the top-left
+ */
+function setCanvasOrigin(newOrigin: Vector2D) {
+    canvasSpace.origin = newOrigin;
+    if (!animationRunning) {
+        drawSimulationState();
+    }
+}
+function moveRight() {
+    let scrollDistance = calculateScrollDistance("horizontal"); //in simulationUnits
+    setCanvasOrigin({x: canvasSpace.origin.x + scrollDistance, y: canvasSpace.origin.y });
+}
+function moveLeft() {
+    let scrollDistance = calculateScrollDistance("horizontal"); //in simulationUnits
+    setCanvasOrigin({x: canvasSpace.origin.x - scrollDistance, y: canvasSpace.origin.y });
+}
+function moveUp() {
+    let scrollDistance = calculateScrollDistance("vertical"); //in simulationUnits
+    setCanvasOrigin({x: canvasSpace.origin.x, y: canvasSpace.origin.y + scrollDistance });
+}
+function moveDown() {
+    let scrollDistance = calculateScrollDistance("vertical"); //in simulationUnits
+    setCanvasOrigin({x: canvasSpace.origin.x, y: canvasSpace.origin.y - scrollDistance });
+}
+function calculateScrollDistance(orientation: "horizontal" | "vertical", rate?: number): number {
+    if (rate === undefined) { rate = defaultScrollRate; }
+    switch (orientation) {
+        case "horizontal":
+            return visibleCanvas.width * rate * zoomStep;
+        case "vertical":
+            return visibleCanvas.height * rate * zoomStep;
+    }
+}
 function zoomOut() {
     const zoomCenter: Vector2D = {x: visibleCanvas.width/2, y: visibleCanvas.height/2};
     const newZoom = canvasSpace.zoomFactor + zoomStep;
 
-    let shiftOriginX = zoomCenter.x * zoomStep; //zoom step here is really the difference in zoom change (in case i add sophisticated zoom functionality)
-    let shiftOriginY = zoomCenter.y * zoomStep;
+    let shiftOrigin: Vector2D = Vector2D.scale(zoomCenter, zoomStep); //zoom step here is really the difference in zoom change (zoomFactor now - zoomFactor before)
 
-    canvasSpace.origin = {x: canvasSpace.origin.x - shiftOriginX, y: canvasSpace.origin.y + shiftOriginY};
+    canvasSpace.origin = {x: canvasSpace.origin.x - shiftOrigin.x, y: canvasSpace.origin.y + shiftOrigin.y};
     canvasSpace.zoomFactor = newZoom;
 
     setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
+    if (!animationRunning) {
+        drawSimulationState();
+    }
 }
 function zoomIn() {
     if (canvasSpace.zoomFactor <= 1) { return; }
     let zoomCenter: Vector2D = {x: visibleCanvas.width/2, y: visibleCanvas.height/2};
     let newZoom = canvasSpace.zoomFactor - zoomStep;
 
-    let shiftOriginX = zoomCenter.x * zoomStep; //zoomCenter.x = distance CanvasOrigin to zoomCenter. multiply by zoomStep to get target change in distance in simUnits
-    let shiftOriginY = zoomCenter.y * zoomStep;
+    let shiftOrigin: Vector2D = Vector2D.scale(zoomCenter, zoomStep); //zoom step here is really the difference in zoom change (zoomFactor now - zoomFactor before)
 
-    canvasSpace.origin = {x: canvasSpace.origin.x + shiftOriginX, y: canvasSpace.origin.y - shiftOriginY};
+    canvasSpace.origin = {x: canvasSpace.origin.x + shiftOrigin.x, y: canvasSpace.origin.y - shiftOrigin.y};
     canvasSpace.zoomFactor = newZoom;
     
     setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
+    if (!animationRunning) {
+        drawSimulationState();
+    }
 }
 function drawCoordinateSystem() {
 
@@ -225,20 +267,23 @@ function setupSimulationState() {
    
     /* setup four */
     //this is a stable orbit (g = 1, tickLength = 10. ~3300 ticks)  
-    let startA: Vector2D = { x: 640, y: -360};
-    let startB: Vector2D = { x: 1140, y: -410};
-    let velA: Vector2D = {x: 0, y: 0 };
-    let velB: Vector2D = {x: -110, y: -110 };
-    addBody(newBody(10000000, 50), startA, velA);
-    addBody(newBody(1000), startB, velB);   
-
-    /* setup five - with zoom = 1 */ 
-    //let startA: Vector2D = canvasSpaceToSimulationSpace({ x: width/3, y: height * 2/3});
-    //let startB: Vector2D = canvasSpaceToSimulationSpace({ x: canvasMiddle.x + 500 , y: canvasMiddle.y - 50});
+    //let startA: Vector2D = { x: 640, y: -360};
+    //let startB: Vector2D = { x: 1140, y: -410};
     //let velA: Vector2D = {x: 0, y: 0 };
     //let velB: Vector2D = {x: -110, y: -110 };
     //addBody(newBody(10000000, 50), startA, velA);
-    //addBody(newBody(10000000, 50), startB, velB);
+    //addBody(newBody(1000), startB, velB);   
+
+    /* setup five - with zoom = 1 */ 
+    let startA: Vector2D = { x: 640, y: -360};
+    let startB: Vector2D = { x: 1140, y: -410};
+    let startC: Vector2D = { x: 1010, y: 0};
+    let velA: Vector2D = {x: 0, y: 0 };
+    let velB: Vector2D = {x: -110, y: -110 };
+    let velC: Vector2D = {x: -150, y: -150 };
+    addBody(newBody(10000000, 50), startA, velA);
+    addBody(newBody(1000, 10), startB, velB); 
+    addBody(newBody(1000, 10), startC, velC); 
 }
 function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
     if (simState.running) {
@@ -333,4 +378,3 @@ function newBody(mass?: number, radius?: number): Body2d {
 function rng(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
-//#endregion

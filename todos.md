@@ -1,13 +1,18 @@
-# currently working on:
-    - workers and offscreen canvas
+# currently/next working on:
     - zoom, moving, resizeCanvas
+    - add bodies
+        - click, drag
+    - workers and offscreen canvas
 
 # bugs
-    - when zoomed out, acceleration and velocity vectors are drawn completely wrong (distance, direction)
+    - mobile view
 
 # feets:
 - improve the drawing implementations (layering, only call draw methods if the object is within bounds, replace path tracing with creating objects from a path once and saving them (if that works - i have no idea, but it seems like this is how it *should* work))
 - use workers and offscreen canvas, 2 bodies at 100 tps is already too much
+
+- zoom with mouseWheel (und wamma ganz motiviert san mochma an touchscreen zoom ah nu)
+- move by dragging
 
 - collision detection
     - reflection or merging

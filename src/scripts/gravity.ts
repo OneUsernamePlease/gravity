@@ -63,7 +63,8 @@ export class Simulation {
     public tickCount: number;
     private _tickLength: number;
     private _g: number; //gravitational constant
-    constructor() {
+    private readonly gravityLowerBounds: number = 1; //force calculations for distances lower than this number are skipped
+    constructor() { 
         this._objectStates = [];
         this.running = false;
         this.tickCount = 0;
@@ -159,7 +160,7 @@ export class Simulation {
         const objectStateJ = this.objectStates[j];
 
         const distance = Vector2D.distance(objectStateI.position, objectStateJ.position);
-        if (distance < 1e-10) { return new Vector2D(0, 0); } //if the bodies are too close, skip the calculation
+        if (distance < this.gravityLowerBounds ) { return new Vector2D(0, 0); } //if the bodies are too close, skip the calculation
         const netForceBetweenBodies: number = this.g * ((objectStateI.body.mass * objectStateJ.body.mass)/(distance * distance)); //net force between bodies as scalar
         const unitVectorIToJ = Vector2D.normalize(Vector2D.subtract(objectStateJ.position, objectStateI.position)); //normalized vector from I to J
         return Vector2D.scale(unitVectorIToJ, netForceBetweenBodies); //return force-vector applied to i, which is (unitVector from I to J) multiplied by (netForce)
