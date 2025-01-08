@@ -1,11 +1,18 @@
 # currently/next working on:
+    - CHANGE THE BODY2D CONSTRUCTOR
+        - mass is a must
+
+    - some refactors are probably necessary now
+
     - zoom, moving, resizeCanvas
     - add bodies
         - click, drag
     - workers and offscreen canvas
+    - trace orbit paths
 
 # bugs
-    - mobile view
+    - moving (scrolling) when zoomed far out moves by too little
+    - mobile view (or just narrow width)
 
 # feets:
 - improve the drawing implementations (layering, only call draw methods if the object is within bounds, replace path tracing with creating objects from a path once and saving them (if that works - i have no idea, but it seems like this is how it *should* work))

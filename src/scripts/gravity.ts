@@ -5,12 +5,12 @@ export class Body2d {
     private _radius!: number;
     private _color!: string;
     private _movable!: boolean; //whether the body will move from effects of gravity
-    private defaultDensity = 1;
+    static defaultDensity = 1;
 
     //#region constructor, get, set
     constructor(mass?: number, radius?: number, color?: string, movable?: boolean)  {
         if (mass === undefined) { mass = 25; }
-        if (radius === undefined) { radius = ((3 * this.mass)/(4 * Math.PI * this.defaultDensity)) ** (1/3); }
+        if (radius === undefined) { radius = ((3 * mass)/(4 * Math.PI * Body2d.defaultDensity)) ** (1/3); }
         if (color === undefined) { color = "white" }
         if (movable === undefined) { movable = true; }
         this.mass = mass;
@@ -107,7 +107,7 @@ export class Simulation {
     public nextState() {
         //calculate new accelerations vectors and update objectStates accordingly
         this.updateAccelerationVectors();
-
+        
         //update position and velocity arising therefrom
         this.objectStates.forEach(objectState => {
             this.updateVelocityAndPosition(objectState)
@@ -125,8 +125,8 @@ export class Simulation {
                 const forceOnJ = Vector2D.scale(forceOnI, -1); //force on j = (-1) * (force on i) -- opposite direction
 
                 //Update the force on both bodies
-                forces.set(i, (forces.has(i) ? Vector2D.add(forces.get(i)!, forceOnI) : forceOnI));
-                forces.set(j, (forces.has(j) ? Vector2D.add(forces.get(j)!, forceOnJ) : forceOnJ));
+                forces.set(i, Vector2D.add(forces.get(i) || new Vector2D(0, 0), forceOnI));
+                forces.set(j, Vector2D.add(forces.get(j) || new Vector2D(0, 0), forceOnJ));
             }
         }
 
@@ -149,18 +149,19 @@ export class Simulation {
         objectState.velocity = Vector2D.add(objectState.velocity, Vector2D.scale(objectState.acceleration, dt));
 
         //update position based on velocity: x = x + v * dt
-        objectState.position = Vector2D.add( objectState.position, Vector2D.scale(objectState.velocity, dt) );
+        objectState.position = Vector2D.add( objectState.position, Vector2D.scale(objectState.velocity, dt));
     }
     /**
-     * Calculates the force-vector between the bodies in objectStates[i] and [j]
-     * @returns a vector representing the force applied ***to*** body at objectStates[i]
+     * Calculates the force-vector between the bodies in objectStates at index [i] and [j]
+     * @returns a vector representing the force applied ***to*** body at ***objectStates[i]***
      */
     public calculateForceBetweenBodies(i: number, j: number): Vector2D {
         const objectStateI = this.objectStates[i];
         const objectStateJ = this.objectStates[j];
 
         const distance = Vector2D.distance(objectStateI.position, objectStateJ.position);
-        if (distance < this.gravityLowerBounds ) { return new Vector2D(0, 0); } //if the bodies are too close, skip the calculation
+        if (distance < this.gravityLowerBounds || distance === 0) //if the bodies are too close, skip the calculation
+            { return new Vector2D(0, 0); } 
         const netForceBetweenBodies: number = this.g * ((objectStateI.body.mass * objectStateJ.body.mass)/(distance * distance)); //net force between bodies as scalar
         const unitVectorIToJ = Vector2D.normalize(Vector2D.subtract(objectStateJ.position, objectStateI.position)); //normalized vector from I to J
         return Vector2D.scale(unitVectorIToJ, netForceBetweenBodies); //return force-vector applied to i, which is (unitVector from I to J) multiplied by (netForce)
