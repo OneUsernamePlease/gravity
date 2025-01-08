@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gravity</title>
-  <script type="module" crossorigin src="/gravity/assets/index-oCsXMGfx.js"></script>
-  <link rel="stylesheet" crossorigin href="/gravity/assets/index-C-eMAOBm.css">
+  <script type="module" crossorigin src="/gravity/assets/index-DO7XeseH.js"></script>
+  <link rel="stylesheet" crossorigin href="/gravity/assets/index-xdAKFzYq.css">
 </head>
 <body>
     <div>
@@ -13,28 +13,70 @@
             <h2>Gravity</h2>
         </div>
         <div id="mainContent" class="content">
-            <div class="canvasControls">
+            <div class="canvasControlsTop">
+                <div>
+                    <label>Simulation Preset</label>
+                    <select name="selectSimPreset" id="selectSimPreset" disabled>
+                        <option value="noPreset">None</option>
+                        <option value="preset1" selected>Preset 1</option>
+                    </select>
+                </div>
                 <button id="cvsBtnStartSim">Simulate</button>
                 <button id="cvsBtnToggleSim">Pause</button>
+                <a href="https://github.com/OneUsernamePlease/gravity"><button>To the repository</button></a>
             </div>
             <div id="canvasWrapper">
                 <div id="canvasContainer">
                     <canvas id="theCanvas"></canvas>
                 </div>
                 <div id="controlBar">
-                    <div class="splitButtonContainer">
+                    <div class="splitInputContainer">
                         <button id="cvsBtnZoomOut">Zoom Out</button>
                         <button id="cvsBtnZoomIn">Zoom In</button>
                     </div>
-                    <div class="splitButtonContainer">
-                        <button id="cvsBtnMoveUp">Move Up</button>
-                        <button id="cvsBtnMoveDown">Move Down</button>
+                    <div class="splitInputContainer">
+                        <button id="cvsBtnScrollUp">Move Up</button>
+                        <button id="cvsBtnScrollDown">Move Down</button>
                     </div>
-                    <div class="splitButtonContainer">
-                        <button id="cvsBtnMoveLeft">Move Left</button>
-                        <button id="cvsBtnMoveRight">Move Right</button>
+                    <div class="splitInputContainer">
+                        <button id="cvsBtnScrollLeft"  class="splitInputControl" >Move Left</button>
+                        <button id="cvsBtnScrollRight"  class="splitInputControl">Move Right</button>
                     </div>
-                    <button>Control 4</button>
+                    <!--button>Control 4</button-->
+                    <div class="hSeparator"></div>
+                    <div class="cvsCbxContainer">
+                        <input type="checkbox" id="cvsCbxTracePaths" disabled>
+                        <label for="cvsCbxTracePaths">Trace</label>
+                    </div>
+                    <div class="cvsCbxContainer">
+                        <input type="checkbox" id="cvsCbxDisplayVectors" checked disabled>
+                        <label for="cvsCbxDisplayVectors">Display Vectors</label>
+                    </div>
+                    <div class="hSeparator"></div>
+                    <div>
+                        <div class="splitInputControl">
+                            <label for="massInput">Mass</label>
+                            <input type="number" id="massInput" value="1000" min="100" max="1000000000" step="100">
+                        </div>
+                    </div>
+                    <div class="splitInputContainer">
+                        <div class="splitInputControl">
+                            <label for="xVelocityInput">X-Velocity</label>
+                            <input type="number" id="xVelocityInput" value="0" step="10">
+                        </div>
+                        <div class="splitInputControl">
+                            <label for="yVelocityInput">Y-Velocity</label>
+                            <input type="number" id="yVelocityInput" value="0" step="10">
+                        </div>
+                    </div>
+                    <div>
+                        <input type="radio" id="cvsRdbNone" value="None" name="cvsRdbMouseAction" checked>                        
+                        <label for="cvsRdbNone">None</label>
+                        <input type="radio" id="cvsRdbAdd"  value="AddBody" name="cvsRdbMouseAction">
+                        <label for="cvsRdbAdd">Add</label>
+                        <input type="radio" id="cvsRdbDrag" value="ScrollCvs" name="cvsRdbMouseAction" disabled>
+                        <label for="cvsRdbDrag">Drag</label>
+                    </div>
                 </div>
             </div>
         </div>
