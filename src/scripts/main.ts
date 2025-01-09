@@ -33,7 +33,8 @@ let defaultScrollRate = 0.1; //when scrolling, canvas is moved by this percentag
 
 let tracePaths = false;
 let cvsLMouseState: MouseBtnState = MouseBtnState.Up;
-
+let mainMouseBtnDownLastCvsPosition: Vector2D = new Vector2D (0, 0); //the position on the canvas, where the mouse's main button's last down-event happened
+let selectedCvsClickAction: string;
 //#region page stuff
 document.addEventListener("DOMContentLoaded", initialize);
 function initialize() {
@@ -42,6 +43,7 @@ function initialize() {
     initCanvas(1280, 720);
     canvasSpace = {origin: {x: 0, y: 0}, zoomFactor: 1, orientationY: -1};
     simState = new Simulation();
+    selectedCvsClickAction = (document.querySelector('input[name="cvsRadioBtnMouseAction"]:checked') as HTMLInputElement).value;
     document.removeEventListener("DOMContentLoaded", initialize);
 }
 function registerEvents() {
@@ -55,24 +57,31 @@ function registerEvents() {
     document.getElementById("cvsBtnScrollDown")?.addEventListener("click", scrollDown);
     document.getElementById("theCanvas")?.addEventListener("mousedown", cvsMouseDownHandler);
     document.getElementById("theCanvas")?.addEventListener("mouseup", cvsMouseUpHandler);
+    document.getElementById("theCanvas")?.addEventListener("mouseout", cvsMouseOutHandler);
+    document.getElementById("theCanvas")?.addEventListener("mousemove", cvsMouseMoveHandler);
+    document.querySelectorAll('input[name="cvsRadioBtnMouseAction"]').forEach((radioButton) => {
+        radioButton.addEventListener('change', cvsRadioBtnMouseActionChangeHandler);
+      });
 }
-
+function cvsRadioBtnMouseActionChangeHandler(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    if (target && target.type === 'radio') {
+      selectedCvsClickAction = target.value;
+    }
+  }
 function cvsMouseDownHandler(this: HTMLElement, ev: MouseEvent) {
     if (ev.button !== 0) {
-        return; //do nothing if a button other than the main mouse button (usually left) is clicked
+        return; //do nothing if a button other than the main mouse button is clicked
     }
     cvsLMouseState = MouseBtnState.Down;
     const mousePosition: Vector2D = getCanvasMousePosition(ev);
-    let selectedCvsClickAction: string = ((document.querySelector('input[name="cvsRdbMouseAction"]:checked')!) as HTMLInputElement).value;
-
+    
     switch (CvsClickAction[selectedCvsClickAction as keyof typeof CvsClickAction]) {
         case CvsClickAction.None:
             log("LMouse Button:" + MouseBtnState[cvsLMouseState] + " - at Position: " + mousePosition.toString());
             break;
         case CvsClickAction.AddBody:
-            let body: Body2d = body2dFromInputs();
-            let vel: Vector2D = new Vector2D(tsEssentials.getInputNumber("xVelocityInput"), tsEssentials.getInputNumber("yVelocityInput"));
-            addBodyToSimulation(body, pointInCanvasSpaceToSimulationSpace(mousePosition), vel);
+            mainMouseBtnDownLastCvsPosition = mousePosition;
             break;
         default:
             break;
@@ -80,10 +89,40 @@ function cvsMouseDownHandler(this: HTMLElement, ev: MouseEvent) {
 }
 function cvsMouseUpHandler(this: HTMLElement, ev: MouseEvent) {
     if (ev.button !== 0) {
-        return; //do nothing if a button other than the main mouse button (usually left) is clicked
+        return; //do nothing if a button other than the main mouse button is clicked
+    }
+    const mousePosition: Vector2D = getCanvasMousePosition(ev);
+
+    switch (CvsClickAction[selectedCvsClickAction as keyof typeof CvsClickAction]) {
+        case CvsClickAction.None:
+            break;
+        case CvsClickAction.AddBody:
+            let body: Body2d = body2dFromInputs();
+            let vel: Vector2D = calculateVelocityBetweenPoints(pointInCanvasSpaceToSimulationSpace(mainMouseBtnDownLastCvsPosition), pointInCanvasSpaceToSimulationSpace(mousePosition));
+            addBodyToSimulation(body, pointInCanvasSpaceToSimulationSpace(mousePosition), vel);
+            break;
+        default:
+            break;
+    }
+    if (!animationRunning) {
+        drawSimulationState();
     }
     cvsLMouseState = MouseBtnState.Up;
     log("LMouse Button:" + MouseBtnState[cvsLMouseState]);
+}
+function cvsMouseMoveHandler(this: HTMLElement, ev: MouseEvent) {
+    if (cvsLMouseState = MouseBtnState.Up) {
+        return;
+    }
+    //goal: display vector for a body that is currently being added
+    //draw vector and do some additional shit probably
+    //or add body to simSpace as immovable, with the velocity from moving, then redraw everything
+}
+function cvsMouseOutHandler(this: HTMLElement, ev: MouseEvent) {
+    cvsLMouseState = MouseBtnState.Up;
+    //cancel an ongoing addBodyToSimulation
+    //...
+    //redraw simState to get rid of the adding's velocity-vector
 }
 function getCanvasMousePosition(event: MouseEvent): Vector2D {
     const rect = visibleCanvas.getBoundingClientRect();
@@ -147,7 +186,10 @@ function log(message: string) {
 
 //#endregion
 //#region canvas and drawing stuff
-
+/**
+ * @param position in canvas space
+ * @param direction in canvas space
+ */
 function drawVector(position: Vector2D, direction: Vector2D, color?: string) {
     //optionally normalize the direction and scale later
     if (color === undefined) { color = "white" }
@@ -287,6 +329,18 @@ function drawCoordinateSystem() {
 }
 //#endregion
 //#region simulation
+
+/**
+ * Calculates and returns the velocity vector needed to get from *fromCoordinate* to *toCoordinate* in *timeFrameInSeconds* seconds
+ * @param toCoordinate value in simulation space
+ * @param fromCoordinate value in simulation space
+ * @param timeFrameInSeconds *optional* defaults to one
+ */
+function calculateVelocityBetweenPoints(toCoordinate: Vector2D, fromCoordinate: Vector2D, timeFrameInSeconds: number = 1): Vector2D {
+    if (timeFrameInSeconds <= 0) { timeFrameInSeconds = 1; }
+    let distance: Vector2D = Vector2D.subtract(toCoordinate, fromCoordinate);
+    return Vector2D.scale(distance, 1 / timeFrameInSeconds);
+}
 function setupSimulationState() {
     let width = visibleCanvas.width;
     let height = visibleCanvas.height;

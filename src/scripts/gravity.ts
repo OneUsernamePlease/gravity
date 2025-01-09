@@ -8,16 +8,14 @@ export class Body2d {
     static defaultDensity = 1;
 
     //#region constructor, get, set
-    constructor(mass?: number, radius?: number, color?: string, movable?: boolean)  {
-        if (mass === undefined) { mass = 25; }
+    constructor(mass: number, radius?: number, color?: string, movable?: boolean)  {
         if (radius === undefined) { radius = ((3 * mass)/(4 * Math.PI * Body2d.defaultDensity)) ** (1/3); }
         if (color === undefined) { color = "white" }
         if (movable === undefined) { movable = true; }
         this.mass = mass;
         this.radius = radius;
         this.color = color;
-        this.movable = movable;
-        
+        this.movable = movable;     
     }
     public get mass() {
         return this._mass;
