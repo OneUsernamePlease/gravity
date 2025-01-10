@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gravity</title>
-  <script type="module" crossorigin src="/gravity/assets/index-C9xeB4o8.js"></script>
-  <link rel="stylesheet" crossorigin href="/gravity/assets/index-xdAKFzYq.css">
+  <script type="module" crossorigin src="/gravity/assets/index-DebiYrdB.js"></script>
+  <link rel="stylesheet" crossorigin href="/gravity/assets/index-DXxinmXa.css">
 </head>
 <body>
     <div>
@@ -14,15 +14,8 @@
         </div>
         <div id="mainContent" class="content">
             <div class="canvasControlsTop">
-                <div>
-                    <label>Simulation Preset</label>
-                    <select name="selectSimPreset" id="selectSimPreset" disabled>
-                        <option value="noPreset">None</option>
-                        <option value="preset1" selected>Preset 1</option>
-                    </select>
-                </div>
-                <button id="cvsBtnStartSim">Simulate</button>
-                <button id="cvsBtnToggleSim">Pause</button>
+                <button id="cvsBtnResetSim">Reset</button>
+                <button id="cvsBtnToggleSim">Play</button>
                 <a href="https://github.com/OneUsernamePlease/gravity"><button>To the repository</button></a>
             </div>
             <div id="canvasWrapper">
@@ -45,31 +38,35 @@
                     <!--button>Control 4</button-->
                     <div class="hSeparator"></div>
                     <div class="cvsCbxContainer">
-                        <input type="checkbox" id="cvsCbxTracePaths" disabled>
-                        <label for="cvsCbxTracePaths">Trace</label>
-                    </div>
-                    <div class="cvsCbxContainer">
-                        <input type="checkbox" id="cvsCbxDisplayVectors" checked disabled>
                         <label for="cvsCbxDisplayVectors">Display Vectors</label>
+                        <input type="checkbox" id="cvsCbxDisplayVectors" checked>
                     </div>
-                    <div class="hSeparator"></div>
                     <div>
+                        <div class="hSeparator"></div>
+                        <label class="bold">Click Action:</label>
+                        <div class="hSeparator"></div>
+                        <div>
+                            <label for="cvsRdbAdd">Add (Drag for Velocity)</label>
+                            <input type="radio" id="cvsRdbAdd"  value="AddBody" name="cvsRadioBtnMouseAction" checked>
+                        </div>
+                        <div class="hSeparator"></div>
+                        <div>
+                            <label for="cvsRdbNone">None</label>
+                            <input type="radio" id="cvsRdbNone" value="None" name="cvsRadioBtnMouseAction">                        
+                        </div>
+                    </div>
+                    <div>
+                        <div class="hSeparator"></div>
+                        <label class="bold">New Body:</label>
+                        <div class="hSeparator"></div>
                         <div class="splitInputControl">
                             <label for="massInput">Mass</label>
-                            <input type="number" id="massInput" value="1000" min="100" max="1000000000" step="100">
-                        </div>
-                    </div>
-                    <div>
-                        <div>Click action:</div>
-                        <div class="hSeparator"></div>
-                        <div>
-                            <input type="radio" id="cvsRdbAdd"  value="AddBody" name="cvsRadioBtnMouseAction">
-                            <label for="cvsRdbAdd">Add (drag for velocity)</label>
+                            <input type="number" id="massInput" value="1000" min="1000" max="1000000000" step="1000">
                         </div>
                         <div class="hSeparator"></div>
                         <div>
-                            <input type="radio" id="cvsRdbNone" value="None" name="cvsRadioBtnMouseAction" checked>                        
-                            <label for="cvsRdbNone">None</label>
+                            <label for="cvsCbxBodyMovable">Moveable</label>
+                            <input type="checkbox" id="cvsCbxBodyMovable" checked>
                         </div>
                     </div>
                 </div>
