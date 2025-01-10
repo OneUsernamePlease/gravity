@@ -43,7 +43,7 @@ function initialize() {
     registerEvents();
     initCanvas(1280, 720);
     canvasSpace = {origin: {x: 0, y: 0}, zoomFactor: 1, orientationY: -1};
-    displayVectors = tsEssentials.isChecked("cvsCbxDisplayVectors");
+    displayVectors = tsEssentials.isChecked("cbxDisplayVectors");
     simState = new Simulation();
     selectedCvsClickAction = (document.querySelector('input[name="cvsRadioBtnMouseAction"]:checked') as HTMLInputElement).value;
     document.removeEventListener("DOMContentLoaded", initialize);
@@ -62,22 +62,60 @@ function registerEvents() {
     document.getElementById("theCanvas")?.addEventListener("mouseup", cvsMouseUpHandler);
     document.getElementById("theCanvas")?.addEventListener("mouseout", cvsMouseOutHandler);
     document.getElementById("theCanvas")?.addEventListener("mousemove", cvsMouseMoveHandler);
-    document.getElementById("cvsCbxDisplayVectors")?.addEventListener("change", cvsCbxDisplayVectorsHandler);
+    document.getElementById("theCanvas")?.addEventListener("touchstart", cvsTouchStartHandler);
+    document.getElementById("theCanvas")?.addEventListener("touchend", cvsTouchEndHandler);
+    document.getElementById("cbxDisplayVectors")?.addEventListener("change", cbxDisplayVectorsHandler);
     document.querySelectorAll('input[name="cvsRadioBtnMouseAction"]').forEach((radioButton) => {
-        radioButton.addEventListener('change', cvsRadioBtnMouseActionChangeHandler);
+        radioButton.addEventListener('change', radioBtnMouseActionChangeHandler);
       });
 }
-function cvsCbxDisplayVectorsHandler(event: Event) {
+function cbxDisplayVectorsHandler(event: Event) {
     const checkbox = event.target as HTMLInputElement;
     displayVectors = checkbox ? checkbox.checked : false;
     if (!animationRunning) {
         drawSimulationState();
     }
 }
-function cvsRadioBtnMouseActionChangeHandler(event: Event): void {
+function radioBtnMouseActionChangeHandler(event: Event): void {
     const target = event.target as HTMLInputElement;
     if (target && target.type === 'radio') {
       selectedCvsClickAction = target.value;
+    }
+}
+function cvsTouchStartHandler(this: HTMLElement, ev: TouchEvent) {
+    cvsLMouseState = MouseBtnState.Down;
+    const touchPosition = getCanvasTouchPosition(ev);
+
+    switch (CvsClickAction[selectedCvsClickAction as keyof typeof CvsClickAction]) {
+        case CvsClickAction.None:
+            console.log(touchPosition.toString());
+            break;
+        case CvsClickAction.AddBody:
+            ev.preventDefault();
+            mainMouseBtnDownLastCvsPosition = touchPosition;
+            break;
+        default:
+            break;
+    }
+}
+function cvsTouchEndHandler(this: HTMLElement, ev: TouchEvent) {
+    cvsLMouseState = MouseBtnState.Up;
+    const touchPosition = getCanvasTouchEndPosition(ev);
+
+    switch (CvsClickAction[selectedCvsClickAction as keyof typeof CvsClickAction]) {
+        case CvsClickAction.None:
+            break;
+        case CvsClickAction.AddBody:
+            const body: Body2d = body2dFromInputs();
+            if (body.mass <= 0) { break; }
+            const vel: Vector2D = calculateVelocityBetweenPoints(pointInCanvasSpaceToSimulationSpace(mainMouseBtnDownLastCvsPosition), pointInCanvasSpaceToSimulationSpace(touchPosition));
+            addBodyToSimulation(body, pointInCanvasSpaceToSimulationSpace(touchPosition), vel);
+            break;
+        default:
+            break;
+    }
+    if (!animationRunning) {
+        drawSimulationState();
     }
 }
 function cvsMouseDownHandler(this: HTMLElement, ev: MouseEvent) {
@@ -102,10 +140,12 @@ function cvsMouseUpHandler(this: HTMLElement, ev: MouseEvent) {
     if (ev.button !== 0) {
         return; //do nothing if a button other than the main mouse button is clicked
     }
+    cvsLMouseState = MouseBtnState.Up;
     const mousePosition: Vector2D = getCanvasMousePosition(ev);
 
     switch (CvsClickAction[selectedCvsClickAction as keyof typeof CvsClickAction]) {
         case CvsClickAction.None:
+            log("LMouse Button:" + MouseBtnState[cvsLMouseState]);
             break;
         case CvsClickAction.AddBody:
             const body: Body2d = body2dFromInputs();
@@ -119,8 +159,6 @@ function cvsMouseUpHandler(this: HTMLElement, ev: MouseEvent) {
     if (!animationRunning) {
         drawSimulationState();
     }
-    cvsLMouseState = MouseBtnState.Up;
-    log("LMouse Button:" + MouseBtnState[cvsLMouseState]);
 }
 function cvsMouseMoveHandler(this: HTMLElement, ev: MouseEvent) {
     if (cvsLMouseState = MouseBtnState.Up) {
@@ -141,6 +179,16 @@ function getCanvasMousePosition(event: MouseEvent): Vector2D {
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     return new Vector2D(x, y);
+}
+function getCanvasTouchPosition(event: TouchEvent): Vector2D {
+    const rect = visibleCanvas.getBoundingClientRect();
+    const touch = event.touches[0];
+    return new Vector2D(touch.clientX - rect.left, touch.clientY - rect.top)
+}
+function getCanvasTouchEndPosition(event: TouchEvent): Vector2D {
+    const rect = visibleCanvas.getBoundingClientRect();
+    const touch = event.changedTouches[0];
+    return new Vector2D(touch.clientX - rect.left, touch.clientY - rect.top)
 }
 function initStatusBar() {
     statusBar.fields;
@@ -195,8 +243,7 @@ function log(message: string) {
 
     const formattedTimestamp = `${hours}:${minutes}:${seconds}.${milliseconds}`;
     console.log(`[${formattedTimestamp}] ${message}`);
-};
-
+}
 //#endregion
 //#region canvas and drawing stuff
 /**
@@ -350,7 +397,6 @@ function drawCoordinateSystem() {
 }
 //#endregion
 //#region simulation
-
 /**
  * Calculates and returns the velocity vector needed to get from *fromCoordinate* to *toCoordinate* in *timeFrameInSeconds* seconds
  * @param toCoordinate value in simulation space
@@ -511,4 +557,5 @@ function newBody(mass?: number, radius?: number): Body2d {
 function rng(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
+
 //#endregion
