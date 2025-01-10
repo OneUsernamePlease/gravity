@@ -8,7 +8,7 @@ export class Body2d {
     static defaultDensity = 1;
 
     //#region constructor, get, set
-    constructor(mass: number, radius?: number, color?: string, movable?: boolean)  {
+    constructor(mass: number, movable?: boolean, color?: string, radius?: number)  {
         if (radius === undefined) { radius = ((3 * mass)/(4 * Math.PI * Body2d.defaultDensity)) ** (1/3); }
         if (color === undefined) { color = "white" }
         if (movable === undefined) { movable = true; }
@@ -57,16 +57,19 @@ export interface ObjectState {
 }
 export class Simulation {
     private _objectStates: ObjectState[];
-    public running: boolean;
-    public tickCount: number;
+    public _running: boolean;
+    public _tickCount: number;
     private _tickLength: number;
+    private _collisionDetection: boolean;
     private _g: number; //gravitational constant
     private readonly gravityLowerBounds: number = 1; //force calculations for distances lower than this number are skipped
+    //#region constr, get, set
     constructor() { 
         this._objectStates = [];
-        this.running = false;
-        this.tickCount = 0;
+        this._running = false;
+        this._tickCount = 0;
         this._tickLength = 10; //ms
+        this._collisionDetection = false;
         this._g = 1;
     }
     public get objectStates() {
@@ -75,11 +78,29 @@ export class Simulation {
     public set objectStates(objectState: ObjectState[]) {
         this._objectStates = objectState;
     }
+    public get running() {
+        return this._running;
+    }
+    public set running(running: boolean) {
+        this._running = running;
+    }
+    public get tickCount() {
+        return this._tickCount;
+    }
+    public set tickCount(tickCount: number) {
+        this._tickCount = tickCount;
+    }
     public get tickLength() {
         return this._tickLength;
     }
     public set tickLength(t: number) {
         this._tickLength = t;
+    }
+    public get collisionDetection() {
+        return this._collisionDetection;
+    }
+    public set collisionDetection(collisionDetection: boolean) {
+        this._collisionDetection = collisionDetection;
     }
     public get g() {
         return this._g;
@@ -135,7 +156,7 @@ export class Simulation {
             newAcceleration = Vector2D.scale(newAcceleration, 1 / objectState.body.mass);
             objectState.acceleration = newAcceleration;
         });
-    };
+    }
     /**
      * Calculates the next **position** and **velocity** of the object in state, and updates state accordingly.
      * @param state *ObjectState* containing the body

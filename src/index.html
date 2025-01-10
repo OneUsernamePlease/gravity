@@ -21,8 +21,9 @@
                         <option value="preset1" selected>Preset 1</option>
                     </select>
                 </div>
-                <button id="cvsBtnStartSim">Simulate</button>
-                <button id="cvsBtnToggleSim">Pause</button>
+                <button id="cvsBtnStartSim">Simulate Preset</button>
+                <button id="cvsBtnResetSim">Reset</button>
+                <button id="cvsBtnToggleSim">Resume</button>
                 <a href="https://github.com/OneUsernamePlease/gravity"><button>To the repository</button></a>
             </div>
             <div id="canvasWrapper">
@@ -49,22 +50,29 @@
                         <label for="cvsCbxTracePaths">Trace</label>
                     </div>
                     <div class="cvsCbxContainer">
-                        <input type="checkbox" id="cvsCbxDisplayVectors" checked disabled>
+                        <input type="checkbox" id="cvsCbxDisplayVectors" checked>
                         <label for="cvsCbxDisplayVectors">Display Vectors</label>
                     </div>
                     <div class="hSeparator"></div>
+                    <div>New Body:</div>
                     <div>
                         <div class="splitInputControl">
                             <label for="massInput">Mass</label>
-                            <input type="number" id="massInput" value="1000" min="100" max="1000000000" step="100">
+                            <input type="number" id="massInput" value="1000" min="1000" max="1000000000" step="1000">
+                        </div>
+                        <div class="hSeparator"></div>
+                        <div>
+                            <input type="checkbox" id="cvsCbxBodyMovable" checked>
+                            <label for="cvsCbxBodyMovable">Moveable</label>
                         </div>
                     </div>
                     <div>
+                        <div class="hSeparator"></div>
                         <div>Click action:</div>
                         <div class="hSeparator"></div>
                         <div>
                             <input type="radio" id="cvsRdbAdd"  value="AddBody" name="cvsRadioBtnMouseAction">
-                            <label for="cvsRdbAdd">Add (drag for velocity)</label>
+                            <label for="cvsRdbAdd">Add Body (drag for velocity)</label>
                         </div>
                         <div class="hSeparator"></div>
                         <div>

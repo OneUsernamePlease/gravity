@@ -32,6 +32,7 @@ let zoomStep = 1; //simUnits that get added to or subtracted from one canvasUnit
 let defaultScrollRate = 0.1; //when scrolling, canvas is moved by this percentage of its height/width in the corresponding direction
 
 let tracePaths = false;
+let displayVectors: boolean;
 let cvsLMouseState: MouseBtnState = MouseBtnState.Up;
 let mainMouseBtnDownLastCvsPosition: Vector2D = new Vector2D (0, 0); //the position on the canvas, where the mouse's main button's last down-event happened
 let selectedCvsClickAction: string;
@@ -42,6 +43,7 @@ function initialize() {
     registerEvents();
     initCanvas(1280, 720);
     canvasSpace = {origin: {x: 0, y: 0}, zoomFactor: 1, orientationY: -1};
+    displayVectors = tsEssentials.isChecked("cvsCbxDisplayVectors");
     simState = new Simulation();
     selectedCvsClickAction = (document.querySelector('input[name="cvsRadioBtnMouseAction"]:checked') as HTMLInputElement).value;
     document.removeEventListener("DOMContentLoaded", initialize);
@@ -49,6 +51,7 @@ function initialize() {
 function registerEvents() {
     document.getElementById("cvsBtnStartSim")?.addEventListener("click", startNewSimulation);
     document.getElementById("cvsBtnToggleSim")?.addEventListener("click", toggleSimulation);
+    document.getElementById("cvsBtnResetSim")?.addEventListener("click", resetSimulation);
     document.getElementById("cvsBtnZoomOut")?.addEventListener("click", zoomOut);
     document.getElementById("cvsBtnZoomIn")?.addEventListener("click", zoomIn);
     document.getElementById("cvsBtnScrollLeft")?.addEventListener("click", scrollLeft);
@@ -59,16 +62,24 @@ function registerEvents() {
     document.getElementById("theCanvas")?.addEventListener("mouseup", cvsMouseUpHandler);
     document.getElementById("theCanvas")?.addEventListener("mouseout", cvsMouseOutHandler);
     document.getElementById("theCanvas")?.addEventListener("mousemove", cvsMouseMoveHandler);
+    document.getElementById("cvsCbxDisplayVectors")?.addEventListener("change", cvsCbxDisplayVectorsHandler);
     document.querySelectorAll('input[name="cvsRadioBtnMouseAction"]').forEach((radioButton) => {
         radioButton.addEventListener('change', cvsRadioBtnMouseActionChangeHandler);
       });
+}
+function cvsCbxDisplayVectorsHandler(event: Event) {
+    const checkbox = event.target as HTMLInputElement;
+    displayVectors = checkbox ? checkbox.checked : false;
+    if (!animationRunning) {
+        drawSimulationState();
+    }
 }
 function cvsRadioBtnMouseActionChangeHandler(event: Event): void {
     const target = event.target as HTMLInputElement;
     if (target && target.type === 'radio') {
       selectedCvsClickAction = target.value;
     }
-  }
+}
 function cvsMouseDownHandler(this: HTMLElement, ev: MouseEvent) {
     if (ev.button !== 0) {
         return; //do nothing if a button other than the main mouse button is clicked
@@ -97,8 +108,9 @@ function cvsMouseUpHandler(this: HTMLElement, ev: MouseEvent) {
         case CvsClickAction.None:
             break;
         case CvsClickAction.AddBody:
-            let body: Body2d = body2dFromInputs();
-            let vel: Vector2D = calculateVelocityBetweenPoints(pointInCanvasSpaceToSimulationSpace(mainMouseBtnDownLastCvsPosition), pointInCanvasSpaceToSimulationSpace(mousePosition));
+            const body: Body2d = body2dFromInputs();
+            if (body.mass <= 0) { break; }
+            const vel: Vector2D = calculateVelocityBetweenPoints(pointInCanvasSpaceToSimulationSpace(mainMouseBtnDownLastCvsPosition), pointInCanvasSpaceToSimulationSpace(mousePosition));
             addBodyToSimulation(body, pointInCanvasSpaceToSimulationSpace(mousePosition), vel);
             break;
         default:
@@ -143,7 +155,8 @@ function initStatusBar() {
 }
 function body2dFromInputs(): Body2d {
     const massInput = tsEssentials.getInputNumber("massInput");
-    return new Body2d(massInput);
+    const movable = tsEssentials.isChecked("cvsCbxBodyMovable");
+    return new Body2d(massInput, movable);
 }
 /**
  * @param fieldIndexOrId number of field, starting at one. OR id of the field
@@ -226,7 +239,9 @@ function drawBodies() {
 function drawSimulationState() {
     visibleCanvasCtx.clearRect(0, 0, visibleCanvas.width, visibleCanvas.height);
     drawBodies();
-    drawVectors();
+    if (displayVectors) {
+        drawVectors();
+    }
 }
 function drawVectors() {
     simState.objectStates.forEach(objectState => {
@@ -286,13 +301,19 @@ function scrollDown() {
     let scrollDistance = calculateScrollDistance("vertical"); //in simulationUnits
     setCanvasOrigin({x: canvasSpace.origin.x, y: canvasSpace.origin.y - scrollDistance });
 }
+/**
+ * 
+ * @param orientation "horizontal" | "vertical"
+ * @param rate a number *0<rate<1* - the relative distance of the screen dimension (h/v) that one scroll step will move (ie. 0.1 will scroll 10% of the width/height in a horizontal/vertical direction)
+ * @returns 
+ */
 function calculateScrollDistance(orientation: "horizontal" | "vertical", rate?: number): number {
     if (rate === undefined) { rate = defaultScrollRate; }
     switch (orientation) {
         case "horizontal":
-            return visibleCanvas.width * rate * zoomStep;
+            return visibleCanvas.width * rate * canvasSpace.zoomFactor;
         case "vertical":
-            return visibleCanvas.height * rate * zoomStep;
+            return visibleCanvas.height * rate * canvasSpace.zoomFactor;
     }
 }
 function zoomOut() {
@@ -390,16 +411,19 @@ function setupSimulationState() {
 }
 function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
     if (simState.running) {
-        animationRunning = false;
-        simState.pause();
-        document.getElementById("cvsBtnToggleSim")!.innerHTML = "Resume";
-        setStatusMessage("Simulation paused", 1);
+        pauseSimulation();
     } else {
-        document.getElementById("cvsBtnToggleSim")!.innerHTML = "Pause";
         resumeSimulation();
-        drawRunningSimulation();
-        setStatusMessage("Simulation running", 1);
     }
+}
+function resetSimulation() {
+    if (simState.running) {
+        pauseSimulation();
+    }
+    simState.clearObjects();
+    simState.tickCount = 0;
+    drawSimulationState();
+    setStatusMessage(`Simulation Tick: ${simState.tickCount}`, 2);
 }
 /**
  * @param body 
@@ -423,11 +447,9 @@ function addBodyToSimulation(body?: Body2d, position?: Vector2D, velocity?: Vect
     const objectState = {body: body, position: position, velocity: velocity, acceleration: {x: 0, y: 0}};
 
     simState.addObject(objectState);
-
 }
 function startNewSimulation() {
-    simState.clearObjects();
-    simState.tickCount = 0;
+    resetSimulation();
     setStatusMessage("Simulation running", 1);
     document.getElementById("cvsBtnToggleSim")!.innerHTML = "Pause";
     
@@ -439,6 +461,16 @@ function resumeSimulation() {
     if (!simState.running) {
         simState.run();
         drawRunningSimulation();
+        setStatusMessage("Simulation running", 1);
+        document.getElementById("cvsBtnToggleSim")!.innerHTML = "Pause";
+    }
+}
+function pauseSimulation() {
+    if (simState.running) {
+        animationRunning = false;
+        simState.pause();
+        setStatusMessage("Simulation paused", 1);
+        document.getElementById("cvsBtnToggleSim")!.innerHTML = "Resume";
     }
 }
 function drawRunningSimulation() {
@@ -466,7 +498,7 @@ function newBody(mass?: number, radius?: number): Body2d {
     } else if (radius === undefined) {
         body1 = new Body2d(mass);
     } else {
-        body1 = new Body2d(mass, radius);
+        body1 = new Body2d(mass, true, "white", radius);
     }
     return body1;
 }

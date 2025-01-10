@@ -15,15 +15,15 @@
         return (!isNaN(+s)) && s.length !== 0;
     }
     /**
-     * returns "", if d is a non-numeric string
+     * @returns "", if d is a non-numeric string
      */
-    
     export function decimalToHex(d: string | number): string {
         if (typeof(d) === "string")  {
             if (isNumeric(d)) {
-                d = parseInt(d);
+                d = parseFloat(d);
+            } else {
+                return "";
             }
-            return "";
         }
         return d.toString(16);
     }
@@ -56,7 +56,7 @@
     /**
      * Removes all occurrences of charToRemove from the beginning of str
      * @param str the string to be modified
-     * @param charToRemove ***optional*** if a string longer than 1 is provided, its first character is used. If no value is provided the first character of str is used.
+     * @param charToRemove ***optional*** If no value is provided the first character of str is used.
      */
     export function removeLeadingChar(str: string, charToRemove?: string): string {
         if (str.length < 1) { return ""; }
@@ -84,5 +84,8 @@
         let inputValue: string = getInputValue(inputId);
         return isNumeric(inputValue) ? +inputValue : 0;
     }
-
+    export function isChecked(inputId: string): boolean {
+        const checkbox = document.getElementById(inputId) as HTMLInputElement;
+        return checkbox ? checkbox.checked : false;
+    }
     //#endregion
