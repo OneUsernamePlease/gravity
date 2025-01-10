@@ -85,6 +85,10 @@ body, html {
     transition: background-color 0.3s;
 }
 
+#controlBar .bold {
+    font-weight: bold;
+}
+
 .textButtonContainer {
     display: flex;
     width: 100%;

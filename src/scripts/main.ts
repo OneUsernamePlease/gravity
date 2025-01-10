@@ -470,7 +470,7 @@ function pauseSimulation() {
         animationRunning = false;
         simState.pause();
         setStatusMessage("Simulation paused", 1);
-        document.getElementById("cvsBtnToggleSim")!.innerHTML = "Resume";
+        document.getElementById("cvsBtnToggleSim")!.innerHTML = "Play";
     }
 }
 function drawRunningSimulation() {

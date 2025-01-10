@@ -14,16 +14,8 @@
         </div>
         <div id="mainContent" class="content">
             <div class="canvasControlsTop">
-                <div>
-                    <label>Simulation Preset</label>
-                    <select name="selectSimPreset" id="selectSimPreset" disabled>
-                        <option value="noPreset">None</option>
-                        <option value="preset1" selected>Preset 1</option>
-                    </select>
-                </div>
-                <button id="cvsBtnStartSim">Simulate Preset</button>
                 <button id="cvsBtnResetSim">Reset</button>
-                <button id="cvsBtnToggleSim">Resume</button>
+                <button id="cvsBtnToggleSim">Play</button>
                 <a href="https://github.com/OneUsernamePlease/gravity"><button>To the repository</button></a>
             </div>
             <div id="canvasWrapper">
@@ -46,38 +38,35 @@
                     <!--button>Control 4</button-->
                     <div class="hSeparator"></div>
                     <div class="cvsCbxContainer">
-                        <input type="checkbox" id="cvsCbxTracePaths" disabled>
-                        <label for="cvsCbxTracePaths">Trace</label>
-                    </div>
-                    <div class="cvsCbxContainer">
-                        <input type="checkbox" id="cvsCbxDisplayVectors" checked>
                         <label for="cvsCbxDisplayVectors">Display Vectors</label>
+                        <input type="checkbox" id="cvsCbxDisplayVectors" checked>
                     </div>
-                    <div class="hSeparator"></div>
-                    <div>New Body:</div>
                     <div>
+                        <div class="hSeparator"></div>
+                        <label class="bold">Click Action:</label>
+                        <div class="hSeparator"></div>
+                        <div>
+                            <label for="cvsRdbAdd">Add (Drag for Velocity)</label>
+                            <input type="radio" id="cvsRdbAdd"  value="AddBody" name="cvsRadioBtnMouseAction" checked>
+                        </div>
+                        <div class="hSeparator"></div>
+                        <div>
+                            <label for="cvsRdbNone">None</label>
+                            <input type="radio" id="cvsRdbNone" value="None" name="cvsRadioBtnMouseAction">                        
+                        </div>
+                    </div>
+                    <div>
+                        <div class="hSeparator"></div>
+                        <label class="bold">New Body:</label>
+                        <div class="hSeparator"></div>
                         <div class="splitInputControl">
                             <label for="massInput">Mass</label>
                             <input type="number" id="massInput" value="1000" min="1000" max="1000000000" step="1000">
                         </div>
                         <div class="hSeparator"></div>
                         <div>
-                            <input type="checkbox" id="cvsCbxBodyMovable" checked>
                             <label for="cvsCbxBodyMovable">Moveable</label>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="hSeparator"></div>
-                        <div>Click action:</div>
-                        <div class="hSeparator"></div>
-                        <div>
-                            <input type="radio" id="cvsRdbAdd"  value="AddBody" name="cvsRadioBtnMouseAction">
-                            <label for="cvsRdbAdd">Add Body (drag for velocity)</label>
-                        </div>
-                        <div class="hSeparator"></div>
-                        <div>
-                            <input type="radio" id="cvsRdbNone" value="None" name="cvsRadioBtnMouseAction" checked>                        
-                            <label for="cvsRdbNone">None</label>
+                            <input type="checkbox" id="cvsCbxBodyMovable" checked>
                         </div>
                     </div>
                 </div>
