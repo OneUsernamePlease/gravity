@@ -31,6 +31,7 @@ let animationRunning = false; //set to true while the sim is running
 let zoomStep = 1; //simUnits that get added to or subtracted from one canvasUnit in a zoom steps
 let defaultScrollRate = 0.1; //when scrolling, canvas is moved by this percentage of its height/width in the corresponding direction
 
+let selectedMassInput: number;
 let tracePaths = false;
 let displayVectors: boolean;
 let cvsLMouseState: MouseBtnState = MouseBtnState.Up;
@@ -44,6 +45,8 @@ function initialize() {
     initCanvas(1280, 720);
     canvasSpace = {origin: {x: 0, y: 0}, zoomFactor: 1, orientationY: -1};
     displayVectors = tsEssentials.isChecked("cbxDisplayVectors");
+    selectedMassInput = tsEssentials.getInputNumber("massInput");
+    (<HTMLInputElement>document.getElementById("massInput")!).step = calculateMassInputStep();
     simState = new Simulation();
     selectedCvsClickAction = (document.querySelector('input[name="cvsRadioBtnMouseAction"]:checked') as HTMLInputElement).value;
     document.removeEventListener("DOMContentLoaded", initialize);
@@ -64,10 +67,17 @@ function registerEvents() {
     document.getElementById("theCanvas")?.addEventListener("mousemove", cvsMouseMoveHandler);
     document.getElementById("theCanvas")?.addEventListener("touchstart", cvsTouchStartHandler);
     document.getElementById("theCanvas")?.addEventListener("touchend", cvsTouchEndHandler);
+    document.getElementById("massInput")?.addEventListener("change", massInputChangeHandler);
     document.getElementById("cbxDisplayVectors")?.addEventListener("change", cbxDisplayVectorsHandler);
     document.querySelectorAll('input[name="cvsRadioBtnMouseAction"]').forEach((radioButton) => {
         radioButton.addEventListener('change', radioBtnMouseActionChangeHandler);
       });
+}
+function massInputChangeHandler(this: HTMLElement) {
+    const element = this as HTMLInputElement;
+    const inputValue = element.value;
+    selectedMassInput = tsEssentials.isNumeric(inputValue) ? +inputValue : 0;
+    element.step = calculateMassInputStep(); //step = 10% of input value, round down to nearest power of 10
 }
 function cbxDisplayVectorsHandler(event: Event) {
     const checkbox = event.target as HTMLInputElement;
@@ -124,10 +134,10 @@ function cvsMouseDownHandler(this: HTMLElement, ev: MouseEvent) {
     }
     cvsLMouseState = MouseBtnState.Down;
     const mousePosition: Vector2D = getCanvasMousePosition(ev);
-    
+    log("canvasMouseDownHandler:" + MouseBtnState[cvsLMouseState] + " - at Position: " + mousePosition.toString());
+
     switch (CvsClickAction[selectedCvsClickAction as keyof typeof CvsClickAction]) {
-        case CvsClickAction.None:
-            log("LMouse Button:" + MouseBtnState[cvsLMouseState] + " - at Position: " + mousePosition.toString());
+        case CvsClickAction.None:  
             break;
         case CvsClickAction.AddBody:
             mainMouseBtnDownLastCvsPosition = mousePosition;
@@ -137,15 +147,15 @@ function cvsMouseDownHandler(this: HTMLElement, ev: MouseEvent) {
     }
 }
 function cvsMouseUpHandler(this: HTMLElement, ev: MouseEvent) {
-    if (ev.button !== 0) {
-        return; //do nothing if a button other than the main mouse button is clicked
+    if (ev.button !== 0 || cvsLMouseState === MouseBtnState.Up) {
+        return; //only the main mouse button matters, and only if the click was initiated inside the canvas
     }
     cvsLMouseState = MouseBtnState.Up;
     const mousePosition: Vector2D = getCanvasMousePosition(ev);
+    log("canvasMouseUpHandler:" + MouseBtnState[cvsLMouseState] + " - at Position: " + mousePosition.toString());
 
     switch (CvsClickAction[selectedCvsClickAction as keyof typeof CvsClickAction]) {
         case CvsClickAction.None:
-            log("LMouse Button:" + MouseBtnState[cvsLMouseState]);
             break;
         case CvsClickAction.AddBody:
             const body: Body2d = body2dFromInputs();
@@ -161,7 +171,9 @@ function cvsMouseUpHandler(this: HTMLElement, ev: MouseEvent) {
     }
 }
 function cvsMouseMoveHandler(this: HTMLElement, ev: MouseEvent) {
-    if (cvsLMouseState = MouseBtnState.Up) {
+    const mousePosition: Vector2D = getCanvasMousePosition(ev);
+    log("canvasMouseMoveHandler:" + MouseBtnState[cvsLMouseState] + " - at Position: " + mousePosition.toString());
+    if (cvsLMouseState === MouseBtnState.Up) {
         return;
     }
     //goal: display vector for a body that is currently being added
@@ -190,6 +202,14 @@ function getCanvasTouchEndPosition(event: TouchEvent): Vector2D {
     const touch = event.changedTouches[0];
     return new Vector2D(touch.clientX - rect.left, touch.clientY - rect.top)
 }
+/**
+ * The step is equal to 10% of the input value, rounded down to the nearest power of 10.
+ * @returns Step as a string. Step is always at least 1 or larger.
+ */
+function calculateMassInputStep(): string {
+    let step = (10 ** (Math.floor(Math.log10(selectedMassInput)) - 1));
+    return step < 1 ? "1" : step.toString();
+}
 function initStatusBar() {
     statusBar.fields;
     const idStart = "statusText";
@@ -202,9 +222,8 @@ function initStatusBar() {
     }
 }
 function body2dFromInputs(): Body2d {
-    const massInput = tsEssentials.getInputNumber("massInput");
     const movable = tsEssentials.isChecked("cvsCbxBodyMovable");
-    return new Body2d(massInput, movable);
+    return new Body2d(selectedMassInput, movable);
 }
 /**
  * @param fieldIndexOrId number of field, starting at one. OR id of the field
@@ -557,5 +576,6 @@ function newBody(mass?: number, radius?: number): Body2d {
 function rng(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
+
 
 //#endregion

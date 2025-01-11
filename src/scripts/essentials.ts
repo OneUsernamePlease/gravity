@@ -84,6 +84,10 @@
         let inputValue: string = getInputValue(inputId);
         return isNumeric(inputValue) ? +inputValue : 0;
     }
+    /**
+     * @param inputId id for a checkable input (radioButton, checkbox)
+     * @returns true if checked, false otherwise
+     */
     export function isChecked(inputId: string): boolean {
         const checkbox = document.getElementById(inputId) as HTMLInputElement;
         return checkbox ? checkbox.checked : false;

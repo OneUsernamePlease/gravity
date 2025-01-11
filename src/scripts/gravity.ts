@@ -70,7 +70,7 @@ export class Simulation {
         this._tickCount = 0;
         this._tickLength = 10; //ms
         this._collisionDetection = false;
-        this._g = 1;
+        this._g = 100;
     }
     public get objectStates() {
         return this._objectStates;
@@ -162,9 +162,9 @@ export class Simulation {
      * @param state *ObjectState* containing the body
      */
     public updateVelocityAndPosition(objectState: ObjectState) {
-        //update velocity based on acceleration: v = v + a * dt
         const dt = this.tickLength / 1000;
         if (!objectState.body.movable) { return; }
+        //update velocity based on acceleration: v = v + a * dt
         objectState.velocity = Vector2D.add(objectState.velocity, Vector2D.scale(objectState.acceleration, dt));
 
         //update position based on velocity: x = x + v * dt
@@ -200,14 +200,4 @@ export class Simulation {
         };
         runSimulationStep();
     }
-    public log(message: string) {
-        const timestamp = new Date();
-        const hours = timestamp.getHours().toString().padStart(2, '0');
-        const minutes = timestamp.getMinutes().toString().padStart(2, '0');
-        const seconds = timestamp.getSeconds().toString().padStart(2, '0');
-        const milliseconds = timestamp.getMilliseconds().toString().padStart(3, '0');
-    
-        const formattedTimestamp = `${hours}:${minutes}:${seconds}.${milliseconds}`;
-        console.log(`[${formattedTimestamp}] ${message}`);
-    };
 }
