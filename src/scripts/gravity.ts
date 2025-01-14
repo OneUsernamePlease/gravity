@@ -9,12 +9,12 @@ export class Body2d {
 
     //#region constructor, get, set
     constructor(mass: number, movable?: boolean, color?: string, radius?: number)  {
-        if (radius === undefined) { radius = ((3 * mass)/(4 * Math.PI * Body2d.defaultDensity)) ** (1/3); }
-        if (color === undefined) { color = "white" }
-        if (movable === undefined) { movable = true; }
         this.mass = mass;
+        if (radius === undefined) { radius = this.getDefaultRadius(mass); }
         this.radius = radius;
+        if (color === undefined) { color = "white"; }
         this.color = color;
+        if (movable === undefined) { movable = true; }
         this.movable = movable;     
     }
     public get mass() {
@@ -45,6 +45,15 @@ export class Body2d {
         this._color = c;
     } 
     //#endregion
+    /**
+     * sets the radius based on mass and density
+     */
+    public getDefaultRadius(mass?: number) {
+        if (mass === undefined) {
+            mass = this.mass;
+        }
+        return ((3 * this.mass)/(4 * Math.PI * Body2d.defaultDensity)) ** (1/3); 
+    }
 }
 export interface ObjectState {
     body: Body2d, 
@@ -70,7 +79,7 @@ export class Simulation {
         this._tickCount = 0;
         this._tickLength = 10; //ms
         this._collisionDetection = false;
-        this._g = 100;
+        this._g = 50;
     }
     public get objectStates() {
         return this._objectStates;
@@ -112,10 +121,8 @@ export class Simulation {
     public addObject(objectState: ObjectState): number {
         if (!objectState.body.movable) {
             objectState.velocity = new Vector2D(0, 0);
-            objectState.acceleration = new Vector2D(0, 0);
         }
-        this.objectStates.push(objectState);
-        return this.objectStates.length;
+        return this.objectStates.push(objectState);
     }
     public clearObjects() {
         this.objectStates = [];
@@ -123,7 +130,7 @@ export class Simulation {
     public pause() {
         this.running = false;
     }
-    public nextState() {
+    private nextState() {
         //calculate new accelerations vectors and update objectStates accordingly
         this.updateAccelerationVectors();
         
@@ -131,10 +138,14 @@ export class Simulation {
         this.objectStates.forEach(objectState => {
             this.updateVelocityAndPosition(objectState)
         });
+
+        if (this.collisionDetection) {
+            this.handleCollisions();
+        }
         
         this.tickCount++;
     }
-    public updateAccelerationVectors() {
+    private updateAccelerationVectors() {
         const forces: Map<number, Vector2D> = new Map(); //to keep track of the resulting force (sum of forces) on each body (by each other body) in objectStates[]
         
         //calculate forces on each body
@@ -161,7 +172,7 @@ export class Simulation {
      * Calculates the next **position** and **velocity** of the object in state, and updates state accordingly.
      * @param state *ObjectState* containing the body
      */
-    public updateVelocityAndPosition(objectState: ObjectState) {
+    private updateVelocityAndPosition(objectState: ObjectState) {
         const dt = this.tickLength / 1000;
         if (!objectState.body.movable) { return; }
         //update velocity based on acceleration: v = v + a * dt
@@ -174,7 +185,7 @@ export class Simulation {
      * Calculates the force-vector between the bodies in objectStates at index [i] and [j]
      * @returns a vector representing the force applied ***to*** body at ***objectStates[i]***
      */
-    public calculateForceBetweenBodies(i: number, j: number): Vector2D {
+    private calculateForceBetweenBodies(i: number, j: number): Vector2D {
         const objectStateI = this.objectStates[i];
         const objectStateJ = this.objectStates[j];
 
@@ -184,6 +195,45 @@ export class Simulation {
         const netForceBetweenBodies: number = this.g * ((objectStateI.body.mass * objectStateJ.body.mass)/(distance * distance)); //net force between bodies as scalar
         const unitVectorIToJ = Vector2D.normalize(Vector2D.subtract(objectStateJ.position, objectStateI.position)); //normalized vector from I to J
         return Vector2D.scale(unitVectorIToJ, netForceBetweenBodies); //return force-vector applied to i, which is (unitVector from I to J) multiplied by (netForce)
+    }
+    private handleCollisions() {
+        for (let i = 0; i < this.objectStates.length; i++) {
+            const objectStateI = this.objectStates[i];
+            if (objectStateI === undefined) { //undefined, if objectStateI has been merged in a previous collision
+                continue;
+            }
+            for (let j = i+1; j < this.objectStates.length; j++) {
+                const objectStateJ = this.objectStates[j];
+                const distanceIJ = Vector2D.distance(objectStateI.position, objectStateJ.position)
+                if (distanceIJ <= objectStateI.body.radius + objectStateJ.body.radius) {
+                    //collision...
+                    if (distanceIJ <= objectStateI.body.radius || distanceIJ <= objectStateJ.body.radius) { 
+                        //merge if position (middle) of either object is inside the other
+                        this.mergeBodies(i, j); //merge bodies into objectStateI
+                    }
+                }
+            }
+        }
+    }
+    /**
+     * merges the two bodies into one (the one at index1), removes the body at index2 from objectStates
+     */
+    private mergeBodies(index1: number, index2: number) {
+        const state1: ObjectState = this.objectStates[index1];
+        const state2: ObjectState = this.objectStates[index2];
+        const totalMomentum = Vector2D.add(Vector2D.scale(state1.velocity, state1.body.mass), Vector2D.scale(state2.velocity, state2.body.mass));
+        const totalMass = state1.body.mass + state2.body.mass;
+        const resultingVelocity = Vector2D.scale(totalMomentum, 1 / totalMass);
+        
+        state1.velocity = resultingVelocity;
+        state1.body.mass = totalMass;
+        state1.body.radius = state1.body.getDefaultRadius();
+        state1.body.movable = (state1.body.movable && state2.body.movable);
+        if (!state1.body.movable) {
+            state1.velocity = {x: 0, y: 0};
+        }
+
+        this.objectStates.splice(index2, 1); //remove objectStateJ
     }
     public run() {
         if (this.running) {

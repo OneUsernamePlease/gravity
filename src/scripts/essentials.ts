@@ -72,16 +72,28 @@
     //#endregion
 
     //#region input stuff
-    export function getInputValue(inputId: string): string {
-        let input = document.getElementById(inputId);
-        return (input instanceof HTMLInputElement) ? (input as HTMLInputElement).value.trim() : "";
+    export function getInputValue(inputElement: HTMLInputElement): string 
+    export function getInputValue(inputId: string): string 
+    export function getInputValue(input: string | HTMLInputElement): string {
+        let inputElement: HTMLInputElement;
+        if (typeof input === "string") {
+            inputElement = <HTMLInputElement>document.getElementById(input);
+        } else {
+            inputElement = input;
+        }
+        return inputElement.value.trim();
     }
     /**
-     * @param inputId elementID for input-element
+     * @param input an HTMLInputElement, or the id for the Element
      * @returns element's value attribute; 0 if value is not numeric
      */
-    export function getInputNumber(inputId: string): number {
-        let inputValue: string = getInputValue(inputId);
+    export function getInputNumber(input: string | HTMLInputElement): number {
+        let inputValue: string
+        if (typeof input === "string") {
+            inputValue = getInputValue(input);
+        } else {
+            inputValue = getInputValue(input);
+        }
         return isNumeric(inputValue) ? +inputValue : 0;
     }
     /**

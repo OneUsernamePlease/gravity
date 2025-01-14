@@ -49,6 +49,7 @@ function initialize() {
     (<HTMLInputElement>document.getElementById("massInput")!).step = calculateMassInputStep();
     simState = new Simulation();
     selectedCvsClickAction = (document.querySelector('input[name="cvsRadioBtnMouseAction"]:checked') as HTMLInputElement).value;
+    simState.collisionDetection = tsEssentials.isChecked("cbxCollisions");
     document.removeEventListener("DOMContentLoaded", initialize);
 }
 function registerEvents() {
@@ -68,7 +69,8 @@ function registerEvents() {
     document.getElementById("theCanvas")?.addEventListener("touchstart", cvsTouchStartHandler);
     document.getElementById("theCanvas")?.addEventListener("touchend", cvsTouchEndHandler);
     document.getElementById("massInput")?.addEventListener("change", massInputChangeHandler);
-    document.getElementById("cbxDisplayVectors")?.addEventListener("change", cbxDisplayVectorsHandler);
+    document.getElementById("cbxDisplayVectors")?.addEventListener("change", cbxDisplayVectorsChangeHandler);
+    document.getElementById("cbxCollisions")?.addEventListener("change", cbxCollisionsChangeHandler);
     document.querySelectorAll('input[name="cvsRadioBtnMouseAction"]').forEach((radioButton) => {
         radioButton.addEventListener('change', radioBtnMouseActionChangeHandler);
       });
@@ -79,7 +81,11 @@ function massInputChangeHandler(this: HTMLElement) {
     selectedMassInput = tsEssentials.isNumeric(inputValue) ? +inputValue : 0;
     element.step = calculateMassInputStep(); //step = 10% of input value, round down to nearest power of 10
 }
-function cbxDisplayVectorsHandler(event: Event) {
+function cbxCollisionsChangeHandler(event: Event) {
+    const checkbox = event.target as HTMLInputElement;
+    simState.collisionDetection = checkbox ? checkbox.checked : false;
+}
+function cbxDisplayVectorsChangeHandler(event: Event) {
     const checkbox = event.target as HTMLInputElement;
     displayVectors = checkbox ? checkbox.checked : false;
     if (!animationRunning) {
