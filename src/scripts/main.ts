@@ -4,40 +4,42 @@ import { Vector2D } from "tcellib-vectors";
 import * as tsEssentials from "./essentials";
 
 interface CanvasSpace { 
-    //use this to transform simulationSpace to canvasSpace and back
-    origin: Vector2D, //the canvas' origin in simulation space
-    zoomFactor: number, //simulationUnits (meter) per canvasUnit
-    orientationY: number; //in practice this is -1, as the y-axis of the canvas is in the opposite direction of the simulation
+    // use this to transform simulationSpace to canvasSpace and back
+    origin: Vector2D, // the canvas' origin in simulation space
+    zoomFactor: number, // simulationUnits (meter) per canvasUnit
+    orientationY: number; // in practice this is -1, as the y-axis of the canvas is in the opposite direction of the simulation
 }
-enum CvsClickAction {
+enum CanvasClickAction {
     None = 0,
     AddBody = 1,
-    ScrollCvs = 2,
+    ScrollCanvas = 2,
 }
 enum MouseBtnState {
     Up = 0,
     Down = 1,
 }
 
-//let offscreenCanvas: OffscreenCanvas; //use this in a worker thread to render or draw on, then transfer content to the visible html-canvas
+// let offscreenCanvas: OffscreenCanvas; // use this in a worker thread to render or draw on, then transfer content to the visible html-canvas
 let visibleCanvas: HTMLCanvasElement;
-//let offscreenCanvasCtx: OffscreenCanvasRenderingContext2D; //coming soon
-let visibleCanvasCtx: CanvasRenderingContext2D;
+// let offscreenCanvasCtx: OffscreenCanvasRenderingContext2D;
+let visibleCanvasContext: CanvasRenderingContext2D;
 let statusBar: { fields: HTMLElement[] } = { fields: [] };
-let simState: Simulation;
+let simulation: Simulation;
 let canvasSpace: CanvasSpace;
-let frameLength = 25; //ms
-let animationRunning = false; //set to true while the sim is running
-let zoomStep = 1; //simUnits that get added to or subtracted from one canvasUnit in a zoom steps
-let defaultScrollRate = 0.1; //when scrolling, canvas is moved by this percentage of its height/width in the corresponding direction
+let frameLength = 25; // ms
+let animationRunning = false; // set to true while the sim is running
+let zoomStep = 1; // simUnits that get added to or subtracted from one canvasUnit in a zoom steps
+
+// when scrolling, canvas is moved by this percentage of its height/width in the corresponding direction
+let defaultScrollRate = 0.1;
 
 let selectedMassInput: number;
 let tracePaths = false;
 let displayVectors: boolean;
-let cvsLMouseState: MouseBtnState = MouseBtnState.Up;
-let mainMouseBtnDownLastCvsPosition: Vector2D = new Vector2D (0, 0); //the position on the canvas, where the mouse's main button's last down-event happened
-let selectedCvsClickAction: string;
-//#region page stuff
+let canvasLMouseState: MouseBtnState = MouseBtnState.Up;
+let mainMouseBtnLastCanvasPosition: Vector2D = new Vector2D (0, 0); // the position on the canvas, where the mouse's main button's last down-event happened
+let selectedCanvasClickAction: string;
+// #region page stuff
 document.addEventListener("DOMContentLoaded", initialize);
 function initialize() {
     initStatusBar();
@@ -47,14 +49,14 @@ function initialize() {
     displayVectors = tsEssentials.isChecked("cbxDisplayVectors");
     selectedMassInput = tsEssentials.getInputNumber("massInput");
     (<HTMLInputElement>document.getElementById("massInput")!).step = calculateMassInputStep();
-    simState = new Simulation();
-    selectedCvsClickAction = (document.querySelector('input[name="cvsRadioBtnMouseAction"]:checked') as HTMLInputElement).value;
-    simState.collisionDetection = tsEssentials.isChecked("cbxCollisions");
+    simulation = new Simulation();
+    selectedCanvasClickAction = (document.querySelector('input[name="cvsRadioBtnMouseAction"]:checked') as HTMLInputElement).value;
+    simulation.collisionDetection = tsEssentials.isChecked("cbxCollisions");
     document.removeEventListener("DOMContentLoaded", initialize);
 }
 function registerEvents() {
-    document.getElementById("cvsBtnStartSim")?.addEventListener("click", startNewSimulation);
     document.getElementById("cvsBtnToggleSim")?.addEventListener("click", toggleSimulation);
+    document.getElementById("cvsBtnNextStep")?.addEventListener("click", advanceSimulationState);
     document.getElementById("cvsBtnResetSim")?.addEventListener("click", resetSimulation);
     document.getElementById("cvsBtnZoomOut")?.addEventListener("click", zoomOut);
     document.getElementById("cvsBtnZoomIn")?.addEventListener("click", zoomIn);
@@ -79,11 +81,12 @@ function massInputChangeHandler(this: HTMLElement) {
     const element = this as HTMLInputElement;
     const inputValue = element.value;
     selectedMassInput = tsEssentials.isNumeric(inputValue) ? +inputValue : 0;
-    element.step = calculateMassInputStep(); //step = 10% of input value, round down to nearest power of 10
+    element.step = calculateMassInputStep(); // step = 10% of input value, round down to nearest power of 10
 }
 function cbxCollisionsChangeHandler(event: Event) {
     const checkbox = event.target as HTMLInputElement;
-    simState.collisionDetection = checkbox ? checkbox.checked : false;
+    const checked = checkbox ? checkbox.checked : false;
+    simulation.collisionDetection = checked;
 }
 function cbxDisplayVectorsChangeHandler(event: Event) {
     const checkbox = event.target as HTMLInputElement;
@@ -95,36 +98,36 @@ function cbxDisplayVectorsChangeHandler(event: Event) {
 function radioBtnMouseActionChangeHandler(event: Event): void {
     const target = event.target as HTMLInputElement;
     if (target && target.type === 'radio') {
-      selectedCvsClickAction = target.value;
+      selectedCanvasClickAction = target.value;
     }
 }
 function cvsTouchStartHandler(this: HTMLElement, ev: TouchEvent) {
-    cvsLMouseState = MouseBtnState.Down;
+    canvasLMouseState = MouseBtnState.Down;
     const touchPosition = getCanvasTouchPosition(ev);
 
-    switch (CvsClickAction[selectedCvsClickAction as keyof typeof CvsClickAction]) {
-        case CvsClickAction.None:
+    switch (CanvasClickAction[selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
+        case CanvasClickAction.None:
             console.log(touchPosition.toString());
             break;
-        case CvsClickAction.AddBody:
+        case CanvasClickAction.AddBody:
             ev.preventDefault();
-            mainMouseBtnDownLastCvsPosition = touchPosition;
+            mainMouseBtnLastCanvasPosition = touchPosition;
             break;
         default:
             break;
     }
 }
 function cvsTouchEndHandler(this: HTMLElement, ev: TouchEvent) {
-    cvsLMouseState = MouseBtnState.Up;
+    canvasLMouseState = MouseBtnState.Up;
     const touchPosition = getCanvasTouchEndPosition(ev);
 
-    switch (CvsClickAction[selectedCvsClickAction as keyof typeof CvsClickAction]) {
-        case CvsClickAction.None:
+    switch (CanvasClickAction[selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
+        case CanvasClickAction.None:
             break;
-        case CvsClickAction.AddBody:
+        case CanvasClickAction.AddBody:
             const body: Body2d = body2dFromInputs();
             if (body.mass <= 0) { break; }
-            const vel: Vector2D = calculateVelocityBetweenPoints(pointInCanvasSpaceToSimulationSpace(mainMouseBtnDownLastCvsPosition), pointInCanvasSpaceToSimulationSpace(touchPosition));
+            const vel: Vector2D = calculateVelocityBetweenPoints(pointInCanvasSpaceToSimulationSpace(mainMouseBtnLastCanvasPosition), pointInCanvasSpaceToSimulationSpace(touchPosition));
             addBodyToSimulation(body, pointInCanvasSpaceToSimulationSpace(touchPosition), vel);
             break;
         default:
@@ -136,37 +139,37 @@ function cvsTouchEndHandler(this: HTMLElement, ev: TouchEvent) {
 }
 function cvsMouseDownHandler(this: HTMLElement, ev: MouseEvent) {
     if (ev.button !== 0) {
-        return; //do nothing if a button other than the main mouse button is clicked
+        return; // do nothing if a button other than the main mouse button is clicked
     }
-    cvsLMouseState = MouseBtnState.Down;
+    canvasLMouseState = MouseBtnState.Down;
     const mousePosition: Vector2D = getCanvasMousePosition(ev);
-    log("canvasMouseDownHandler:" + MouseBtnState[cvsLMouseState] + " - at Position: " + mousePosition.toString());
+    log("canvasMouseDownHandler:" + MouseBtnState[canvasLMouseState] + " - at Position: " + mousePosition.toString());
 
-    switch (CvsClickAction[selectedCvsClickAction as keyof typeof CvsClickAction]) {
-        case CvsClickAction.None:  
+    switch (CanvasClickAction[selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
+        case CanvasClickAction.None:  
             break;
-        case CvsClickAction.AddBody:
-            mainMouseBtnDownLastCvsPosition = mousePosition;
+        case CanvasClickAction.AddBody:
+            mainMouseBtnLastCanvasPosition = mousePosition;
             break;
         default:
             break;
     }
 }
 function cvsMouseUpHandler(this: HTMLElement, ev: MouseEvent) {
-    if (ev.button !== 0 || cvsLMouseState === MouseBtnState.Up) {
-        return; //only the main mouse button matters, and only if the click was initiated inside the canvas
+    if (ev.button !== 0 || canvasLMouseState === MouseBtnState.Up) {
+        return; // only the main mouse button matters, and only if the click was initiated inside the canvas
     }
-    cvsLMouseState = MouseBtnState.Up;
+    canvasLMouseState = MouseBtnState.Up;
     const mousePosition: Vector2D = getCanvasMousePosition(ev);
-    log("canvasMouseUpHandler:" + MouseBtnState[cvsLMouseState] + " - at Position: " + mousePosition.toString());
+    log("canvasMouseUpHandler:" + MouseBtnState[canvasLMouseState] + " - at Position: " + mousePosition.toString());
 
-    switch (CvsClickAction[selectedCvsClickAction as keyof typeof CvsClickAction]) {
-        case CvsClickAction.None:
+    switch (CanvasClickAction[selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
+        case CanvasClickAction.None:
             break;
-        case CvsClickAction.AddBody:
+        case CanvasClickAction.AddBody:
             const body: Body2d = body2dFromInputs();
             if (body.mass <= 0) { break; }
-            const vel: Vector2D = calculateVelocityBetweenPoints(pointInCanvasSpaceToSimulationSpace(mainMouseBtnDownLastCvsPosition), pointInCanvasSpaceToSimulationSpace(mousePosition));
+            const vel: Vector2D = calculateVelocityBetweenPoints(pointInCanvasSpaceToSimulationSpace(mainMouseBtnLastCanvasPosition), pointInCanvasSpaceToSimulationSpace(mousePosition));
             addBodyToSimulation(body, pointInCanvasSpaceToSimulationSpace(mousePosition), vel);
             break;
         default:
@@ -178,19 +181,19 @@ function cvsMouseUpHandler(this: HTMLElement, ev: MouseEvent) {
 }
 function cvsMouseMoveHandler(this: HTMLElement, ev: MouseEvent) {
     const mousePosition: Vector2D = getCanvasMousePosition(ev);
-    log("canvasMouseMoveHandler:" + MouseBtnState[cvsLMouseState] + " - at Position: " + mousePosition.toString());
-    if (cvsLMouseState === MouseBtnState.Up) {
+    log("canvasMouseMoveHandler:" + MouseBtnState[canvasLMouseState] + " - at Position: " + mousePosition.toString());
+    if (canvasLMouseState === MouseBtnState.Up) {
         return;
     }
-    //goal: display vector for a body that is currently being added
-    //draw vector and do some additional shit probably
-    //or add body to simSpace as immovable, with the velocity from moving, then redraw everything
+    // goal: display vector for a body that is currently being added
+    // draw vector and do some additional shit probably
+    // or add body to simSpace as immovable, with the velocity from moving, then redraw everything
 }
 function cvsMouseOutHandler(this: HTMLElement, ev: MouseEvent) {
-    cvsLMouseState = MouseBtnState.Up;
-    //cancel an ongoing addBodyToSimulation
-    //...
-    //redraw simState to get rid of the adding's velocity-vector
+    canvasLMouseState = MouseBtnState.Up;
+    // cancel an ongoing addBodyToSimulation
+    // ...
+    // redraw simState to get rid of the adding's velocity-vector
 }
 function getCanvasMousePosition(event: MouseEvent): Vector2D {
     const rect = visibleCanvas.getBoundingClientRect();
@@ -240,7 +243,7 @@ function setStatusMessage(newMessage: string, fieldIndexOrId?: number | string, 
         element = statusBar.fields[fieldIndexOrId - 1];
     } else if (typeof fieldIndexOrId === "string") {
         element = document.getElementById(fieldIndexOrId)!;
-    } else { //else -> undefined
+    } else {
         element = statusBar.fields[0];
     }
     
@@ -254,10 +257,10 @@ function initCanvas(width: number, height: number) {
     visibleCanvas = (document.getElementById("theCanvas")) as HTMLCanvasElement;
     visibleCanvas.width = width;
     visibleCanvas.height = height;
-    visibleCanvasCtx = visibleCanvas.getContext("2d")!;
+    visibleCanvasContext = visibleCanvas.getContext("2d")!;
     setStatusMessage(`Canvas dimension: ${width} * ${height}`, 5);
-    //offscreenCanvas = new OffscreenCanvas(visibleCanvas.clientWidth, visibleCanvas.clientHeight);
-    //offscreenCanvasCtx = offscreenCanvas.getContext("2d")!;
+    // offscreenCanvas = new OffscreenCanvas(visibleCanvas.clientWidth, visibleCanvas.clientHeight);
+    // offscreenCanvasCtx = offscreenCanvas.getContext("2d")!;
 }
 function log(message: string) {
     const timestamp = new Date();
@@ -269,22 +272,22 @@ function log(message: string) {
     const formattedTimestamp = `${hours}:${minutes}:${seconds}.${milliseconds}`;
     console.log(`[${formattedTimestamp}] ${message}`);
 }
-//#endregion
-//#region canvas and drawing stuff
+// #endregion
+// #region canvas and drawing stuff
 /**
  * @param position in canvas space
  * @param direction in canvas space
  */
 function drawVector(position: Vector2D, direction: Vector2D, color?: string) {
-    //optionally normalize the direction and scale later
+    // optionally normalize the direction and scale later
     if (color === undefined) { color = "white" }
     let endPosition: Vector2D = Vector2D.add(position, direction);
-    visibleCanvasCtx.beginPath();
-    visibleCanvasCtx.lineWidth = 3;
-    visibleCanvasCtx.strokeStyle = color;
-    visibleCanvasCtx.moveTo(position.x, position.y);
-    visibleCanvasCtx.lineTo(endPosition.x, endPosition.y);
-    visibleCanvasCtx.stroke();
+    visibleCanvasContext.beginPath();
+    visibleCanvasContext.lineWidth = 3;
+    visibleCanvasContext.strokeStyle = color;
+    visibleCanvasContext.moveTo(position.x, position.y);
+    visibleCanvasContext.lineTo(endPosition.x, endPosition.y);
+    visibleCanvasContext.stroke();
 }
 /**
  * draws a circular body at specified position, in specified color
@@ -293,15 +296,15 @@ function drawVector(position: Vector2D, direction: Vector2D, color?: string) {
  * @param color default white
  */
 function drawBody(body: Body2d, position: Vector2D) {
-    let visibleRadius = Math.max(body.radius / canvasSpace.zoomFactor, 1); //Minimum Radius of displayed body is one
-    visibleCanvasCtx.beginPath();
-    visibleCanvasCtx.arc(position.x, position.y, visibleRadius, 0, Math.PI * 2); //zF = m/cu; r...m -> r/zF -> (m)/
-    visibleCanvasCtx.closePath();
-    visibleCanvasCtx.fillStyle = body.color;
-    visibleCanvasCtx.fill();
+    let visibleRadius = Math.max(body.radius / canvasSpace.zoomFactor, 1); // Minimum Radius of displayed body is one
+    visibleCanvasContext.beginPath();
+    visibleCanvasContext.arc(position.x, position.y, visibleRadius, 0, Math.PI * 2); // zF = m/cu; r...m -> r/zF -> (m)/
+    visibleCanvasContext.closePath();
+    visibleCanvasContext.fillStyle = body.color;
+    visibleCanvasContext.fill();
 }
 function drawBodies() {
-    const objects = simState.objectStates;
+    const objects = simulation.objectStates;
     objects.forEach(object => {
         if (object !== null) {
             drawBody(object.body, pointInSimulationSpaceToCanvasSpace(object.position));
@@ -309,41 +312,41 @@ function drawBodies() {
     });
 }
 function drawSimulationState() {
-    visibleCanvasCtx.clearRect(0, 0, visibleCanvas.width, visibleCanvas.height);
+    visibleCanvasContext.clearRect(0, 0, visibleCanvas.width, visibleCanvas.height);
     drawBodies();
     if (displayVectors) {
         drawVectors();
     }
 }
 function drawVectors() {
-    simState.objectStates.forEach(objectState => {
+    simulation.objectStates.forEach(objectState => {
         drawVector(pointInSimulationSpaceToCanvasSpace(objectState.position), directionInSimulationSpaceToCanvasSpace(objectState.acceleration), "green");
         drawVector(pointInSimulationSpaceToCanvasSpace(objectState.position), directionInSimulationSpaceToCanvasSpace(objectState.velocity), "red");
     });
 }
 function pointInSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
-    //transformation:
-    //1. shift (point in SimSpace - Origin of C in SimSpace)
-    //2. flip (y axis point in opposite directions)
-    //3. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
+    // transformation:
+    // 1. shift (point in SimSpace - Origin of C in SimSpace)
+    // 2. flip (y axis point in opposite directions)
+    // 3. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
     const shifted: Vector2D = Vector2D.subtract(simVector, canvasSpace.origin);
     const flipped: Vector2D = {x: shifted.x, y: shifted.y * -1}
     const scaled: Vector2D = Vector2D.scale(flipped, 1/canvasSpace.zoomFactor);
     return scaled;
 }
 function directionInSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
-    //transformation:
-    //1. flip (y axis are in opposite directions)
-    //2. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
+    // transformation:
+    // 1. flip (y axis are in opposite directions)
+    // 2. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
     const flipped: Vector2D = {x: simVector.x, y: simVector.y * -1}
     const scaled: Vector2D = Vector2D.scale(flipped, 1/canvasSpace.zoomFactor);
     return scaled;
 }
 function pointInCanvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
-    //transformation:
-    //1. scale (canvasVector * zoom in simulationUnits/canvasUnit)
-    //2. flip (y axis are in opposite directions)
-    //3. shift (scaledAndFlippedPoint + Origin of C in SimSpace)
+    // transformation:
+    // 1. scale (canvasVector * zoom in simulationUnits/canvasUnit)
+    // 2. flip (y axis are in opposite directions)
+    // 3. shift (scaledAndFlippedPoint + Origin of C in SimSpace)
     let simulationVector: Vector2D;
     simulationVector = Vector2D.add(Vector2D.hadamardProduct(Vector2D.scale(canvasVector, canvasSpace.zoomFactor), {x: 1, y: canvasSpace.orientationY}), canvasSpace.origin)
     return simulationVector;
@@ -358,19 +361,19 @@ function setCanvasOrigin(newOrigin: Vector2D) {
     }
 }
 function scrollRight() {
-    let scrollDistance = calculateScrollDistance("horizontal"); //in simulationUnits
+    let scrollDistance = calculateScrollDistance("horizontal"); // in simulationUnits
     setCanvasOrigin({x: canvasSpace.origin.x + scrollDistance, y: canvasSpace.origin.y });
 }
 function scrollLeft() {
-    let scrollDistance = calculateScrollDistance("horizontal"); //in simulationUnits
+    let scrollDistance = calculateScrollDistance("horizontal"); // in simulationUnits
     setCanvasOrigin({x: canvasSpace.origin.x - scrollDistance, y: canvasSpace.origin.y });
 }
 function scrollUp() {
-    let scrollDistance = calculateScrollDistance("vertical"); //in simulationUnits
+    let scrollDistance = calculateScrollDistance("vertical"); // in simulationUnits
     setCanvasOrigin({x: canvasSpace.origin.x, y: canvasSpace.origin.y + scrollDistance });
 }
 function scrollDown() {
-    let scrollDistance = calculateScrollDistance("vertical"); //in simulationUnits
+    let scrollDistance = calculateScrollDistance("vertical"); // in simulationUnits
     setCanvasOrigin({x: canvasSpace.origin.x, y: canvasSpace.origin.y - scrollDistance });
 }
 /**
@@ -392,7 +395,7 @@ function zoomOut() {
     const zoomCenter: Vector2D = {x: visibleCanvas.width/2, y: visibleCanvas.height/2};
     const newZoom = canvasSpace.zoomFactor + zoomStep;
 
-    let shiftOrigin: Vector2D = Vector2D.scale(zoomCenter, zoomStep); //zoom step here is really the difference in zoom change (zoomFactor now - zoomFactor before)
+    let shiftOrigin: Vector2D = Vector2D.scale(zoomCenter, zoomStep); // zoom step here is really the difference in zoom change (zoomFactor now - zoomFactor before)
 
     canvasSpace.origin = {x: canvasSpace.origin.x - shiftOrigin.x, y: canvasSpace.origin.y + shiftOrigin.y};
     canvasSpace.zoomFactor = newZoom;
@@ -407,7 +410,7 @@ function zoomIn() {
     let zoomCenter: Vector2D = {x: visibleCanvas.width/2, y: visibleCanvas.height/2};
     let newZoom = canvasSpace.zoomFactor - zoomStep;
 
-    let shiftOrigin: Vector2D = Vector2D.scale(zoomCenter, zoomStep); //zoom step here is really the difference in zoom change (zoomFactor now - zoomFactor before)
+    let shiftOrigin: Vector2D = Vector2D.scale(zoomCenter, zoomStep); // zoom step here is really the difference in zoom change (zoomFactor now - zoomFactor before)
 
     canvasSpace.origin = {x: canvasSpace.origin.x + shiftOrigin.x, y: canvasSpace.origin.y - shiftOrigin.y};
     canvasSpace.zoomFactor = newZoom;
@@ -420,8 +423,8 @@ function zoomIn() {
 function drawCoordinateSystem() {
 
 }
-//#endregion
-//#region simulation
+// #endregion
+// #region simulation
 /**
  * Calculates and returns the velocity vector needed to get from *fromCoordinate* to *toCoordinate* in *timeFrameInSeconds* seconds
  * @param toCoordinate value in simulation space
@@ -433,68 +436,30 @@ function calculateVelocityBetweenPoints(toCoordinate: Vector2D, fromCoordinate: 
     let distance: Vector2D = Vector2D.subtract(toCoordinate, fromCoordinate);
     return Vector2D.scale(distance, 1 / timeFrameInSeconds);
 }
-function setupSimulationState() {
-    let width = visibleCanvas.width;
-    let height = visibleCanvas.height;
-    let canvasMiddle: Vector2D = { x: width / 2, y: height / 2 };
 
-    /* setup one - with zoom = 1*/
-    //let startA: Vector2D = canvasSpaceToSimulationSpace({ x: canvasMiddle.x - 50 , y: canvasMiddle.y + 50});
-    //let startB: Vector2D = canvasSpaceToSimulationSpace({ x: canvasMiddle.x + 50 , y: canvasMiddle.y - 50});
-    //let velA: Vector2D = {x: 40, y: -50 };
-    //let velB: Vector2D = {x: -40, y: 50 };
-    //addBody(newBody(1000), startA, velA);
-    //addBody(newBody(1000), startB, velB);
-
-    /* setup two - with zoom = 1 */
-    //let startA: Vector2D = canvasSpaceToSimulationSpace({ x: canvasMiddle.x - width / 8 , y: canvasMiddle.y});
-    //let startB: Vector2D = canvasSpaceToSimulationSpace({ x: canvasMiddle.x + width / 8 , y: canvasMiddle.y});
-    //addBody(newBody(100000), startA);
-    //addBody(newBody(100000), startB);
-   
-    /* setup three - with zoom = 1 */
-    //let startA: Vector2D = { x: 200, y: -100};
-    //let startB: Vector2D = { x: 400, y: -100};
-    //let startC: Vector2D = { x: 300, y: -200};
-    //addBody(newBody(1000000, 10), startA);-
-    //addBody(newBody(1000000, 10), startB);
-    //addBody(newBody(1000000, 10), startC);    
-   
-    /* setup four */
-    //this is a "stable" orbit (g = 1, tickLength = 10. ~3300 ticks)  
-    let startA: Vector2D = { x: 640, y: -360};
-    let startB: Vector2D = { x: 1140, y: -410};
-    let velA: Vector2D = {x: 0, y: 0 };
-    let velB: Vector2D = {x: -110, y: -110 };
-    addBodyToSimulation(newBody(10000000, 50), startA, velA);
-    addBodyToSimulation(newBody(1000000, 40), startB, velB);
-
-    /* setup five - with zoom = 1 */ 
-    //let startA: Vector2D = { x: 640, y: -360};
-    //let startB: Vector2D = { x: 1140, y: -410};
-    //let startC: Vector2D = { x: 1010, y: 0};
-    //let velA: Vector2D = {x: 0, y: 0 };
-    //let velB: Vector2D = {x: -110, y: -110 };
-    //let velC: Vector2D = {x: -150, y: -150 };
-    //addBody(newBody(1000000000, 50), startA, velA);
-    //addBody(newBody(1000, 10), startB, velB); 
-    //addBody(newBody(1000, 10), startC, velC); 
-}
 function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
-    if (simState.running) {
+    if (simulation.running) {
         pauseSimulation();
     } else {
         resumeSimulation();
     }
 }
+function advanceSimulationState() {
+    if (animationRunning) {
+        return;
+    }
+    simulation.nextState();
+    drawSimulationState();
+    setStatusMessage(`Simulation Tick: ${simulation.tickCount}`, 2);
+}
 function resetSimulation() {
-    if (simState.running) {
+    if (simulation.running) {
         pauseSimulation();
     }
-    simState.clearObjects();
-    simState.tickCount = 0;
+    simulation.clearObjects();
+    simulation.tickCount = 0;
     drawSimulationState();
-    setStatusMessage(`Simulation Tick: ${simState.tickCount}`, 2);
+    setStatusMessage(`Simulation Tick: ${simulation.tickCount}`, 2);
 }
 /**
  * @param body 
@@ -517,29 +482,20 @@ function addBodyToSimulation(body?: Body2d, position?: Vector2D, velocity?: Vect
     }
     const objectState = {body: body, position: position, velocity: velocity, acceleration: {x: 0, y: 0}};
 
-    simState.addObject(objectState);
-}
-function startNewSimulation() {
-    resetSimulation();
-    setStatusMessage("Simulation running", 1);
-    document.getElementById("cvsBtnToggleSim")!.innerHTML = "Pause";
-    
-    setupSimulationState();
-    simState.run();
-    drawRunningSimulation();
+    simulation.addObject(objectState);
 }
 function resumeSimulation() {
-    if (!simState.running) {
-        simState.run();
+    if (!simulation.running) {
+        simulation.run();
         drawRunningSimulation();
         setStatusMessage("Simulation running", 1);
         document.getElementById("cvsBtnToggleSim")!.innerHTML = "Pause";
     }
 }
 function pauseSimulation() {
-    if (simState.running) {
+    if (simulation.running) {
         animationRunning = false;
-        simState.pause();
+        simulation.pause();
         setStatusMessage("Simulation paused", 1);
         document.getElementById("cvsBtnToggleSim")!.innerHTML = "Play";
     }
@@ -553,8 +509,8 @@ function drawRunningSimulation() {
         if (animationRunning) {
             setTimeout(runDrawLoop, frameLength);
             drawSimulationState();
-            setStatusMessage(`Simulation Tick: ${simState.tickCount}`, 2);
-            //log("Draw simulation step");
+            setStatusMessage(`Simulation Tick: ${simulation.tickCount}`, 2);
+            // log("Draw simulation step");
         }
     };
     runDrawLoop();
@@ -573,8 +529,8 @@ function newBody(mass?: number, radius?: number): Body2d {
     }
     return body1;
 }
-//#endregion
-//#region other stuff
+// #endregion
+// #region other stuff
 /**
  * min and max included
  * @returns random number
@@ -584,4 +540,4 @@ function rng(min: number, max: number) {
 }
 
 
-//#endregion
+// #endregion
