@@ -1,6 +1,6 @@
 import { InferCustomEventPayload } from "vite";
 import { Body2d, Simulation } from "./gravity";
-import { Vector2D } from "tcellib-vectors";
+import { Vector2D } from "./vector2d"
 import * as tsEssentials from "./essentials";
 
 interface CanvasSpace { 
@@ -45,7 +45,7 @@ function initialize() {
     initStatusBar();
     registerEvents();
     initCanvas(1280, 720);
-    canvasSpace = {origin: {x: 0, y: 0}, zoomFactor: 1, orientationY: -1};
+    canvasSpace = {origin: new Vector2D(0, 0), zoomFactor: 1, orientationY: -1};
     simulation = new Simulation();
     displayVectors = tsEssentials.isChecked("cbxDisplayVectors");
     selectedMassInput = tsEssentials.getInputNumber("massInput");
@@ -203,9 +203,6 @@ function cvsMouseMoveHandler(this: HTMLElement, ev: MouseEvent) {
 }
 function cvsMouseOutHandler(this: HTMLElement, ev: MouseEvent) {
     canvasLMouseState = MouseBtnState.Up;
-    // cancel an ongoing addBodyToSimulation
-    // ...
-    // redraw simState to get rid of the adding's velocity-vector
 }
 function getCanvasMousePosition(event: MouseEvent): Vector2D {
     const rect = visibleCanvas.getBoundingClientRect();
@@ -293,7 +290,7 @@ function log(message: string) {
 function drawVector(position: Vector2D, direction: Vector2D, color?: string) {
     // optionally normalize the direction and scale later
     if (color === undefined) { color = "white" }
-    let endPosition: Vector2D = Vector2D.add(position, direction);
+    let endPosition: Vector2D = position.add(direction);
     visibleCanvasContext.beginPath();
     visibleCanvasContext.lineWidth = 3;
     visibleCanvasContext.strokeStyle = color;
@@ -341,17 +338,17 @@ function pointInSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
     // 1. shift (point in SimSpace - Origin of C in SimSpace)
     // 2. flip (y axis point in opposite directions)
     // 3. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
-    const shifted: Vector2D = Vector2D.subtract(simVector, canvasSpace.origin);
-    const flipped: Vector2D = {x: shifted.x, y: shifted.y * -1}
-    const scaled: Vector2D = Vector2D.scale(flipped, 1/canvasSpace.zoomFactor);
+    const shifted: Vector2D = simVector.subtract(canvasSpace.origin);
+    const flipped: Vector2D = new Vector2D(shifted.x, shifted.y * -1);
+    const scaled: Vector2D = flipped.scale(1 / canvasSpace.zoomFactor);
     return scaled;
 }
 function directionInSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
     // transformation:
     // 1. flip (y axis are in opposite directions)
     // 2. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
-    const flipped: Vector2D = {x: simVector.x, y: simVector.y * -1}
-    const scaled: Vector2D = Vector2D.scale(flipped, 1/canvasSpace.zoomFactor);
+    const flipped: Vector2D = new Vector2D(simVector.x, simVector.y * -1);
+    const scaled: Vector2D = flipped.scale(1 / canvasSpace.zoomFactor);
     return scaled;
 }
 function pointInCanvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
@@ -360,7 +357,7 @@ function pointInCanvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
     // 2. flip (y axis are in opposite directions)
     // 3. shift (scaledAndFlippedPoint + Origin of C in SimSpace)
     let simulationVector: Vector2D;
-    simulationVector = Vector2D.add(Vector2D.hadamardProduct(Vector2D.scale(canvasVector, canvasSpace.zoomFactor), {x: 1, y: canvasSpace.orientationY}), canvasSpace.origin)
+    simulationVector = canvasVector.scale(canvasSpace.zoomFactor).hadamardProduct(new Vector2D(1, canvasSpace.orientationY)).add(canvasSpace.origin);
     return simulationVector;
 }
 /**
@@ -374,19 +371,19 @@ function setCanvasOrigin(newOrigin: Vector2D) {
 }
 function scrollRight() {
     let scrollDistance = calculateScrollDistance("horizontal"); // in simulationUnits
-    setCanvasOrigin({x: canvasSpace.origin.x + scrollDistance, y: canvasSpace.origin.y });
+    setCanvasOrigin(new Vector2D(canvasSpace.origin.x + scrollDistance, canvasSpace.origin.y));
 }
 function scrollLeft() {
     let scrollDistance = calculateScrollDistance("horizontal"); // in simulationUnits
-    setCanvasOrigin({x: canvasSpace.origin.x - scrollDistance, y: canvasSpace.origin.y });
+    setCanvasOrigin(new Vector2D(canvasSpace.origin.x - scrollDistance, canvasSpace.origin.y ));
 }
 function scrollUp() {
     let scrollDistance = calculateScrollDistance("vertical"); // in simulationUnits
-    setCanvasOrigin({x: canvasSpace.origin.x, y: canvasSpace.origin.y + scrollDistance });
+    setCanvasOrigin(new Vector2D(canvasSpace.origin.x, canvasSpace.origin.y + scrollDistance));
 }
 function scrollDown() {
     let scrollDistance = calculateScrollDistance("vertical"); // in simulationUnits
-    setCanvasOrigin({x: canvasSpace.origin.x, y: canvasSpace.origin.y - scrollDistance });
+    setCanvasOrigin(new Vector2D(canvasSpace.origin.x, canvasSpace.origin.y - scrollDistance));
 }
 /**
  * 
@@ -404,12 +401,12 @@ function calculateScrollDistance(orientation: "horizontal" | "vertical", rate?: 
     }
 }
 function zoomOut() {
-    const zoomCenter: Vector2D = {x: visibleCanvas.width/2, y: visibleCanvas.height/2};
+    const zoomCenter: Vector2D = new Vector2D(visibleCanvas.width/2, visibleCanvas.height/2);
     const newZoom = canvasSpace.zoomFactor + zoomStep;
 
-    let shiftOrigin: Vector2D = Vector2D.scale(zoomCenter, zoomStep); // zoom step here is really the difference in zoom change (zoomFactor now - zoomFactor before)
+    let shiftOrigin: Vector2D = zoomCenter.scale(zoomStep); // zoom step here is really the difference in zoom change (zoomFactor now - zoomFactor before)
 
-    canvasSpace.origin = {x: canvasSpace.origin.x - shiftOrigin.x, y: canvasSpace.origin.y + shiftOrigin.y};
+    canvasSpace.origin = new Vector2D(canvasSpace.origin.x - shiftOrigin.x, canvasSpace.origin.y + shiftOrigin.y);
     canvasSpace.zoomFactor = newZoom;
 
     setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
@@ -419,12 +416,12 @@ function zoomOut() {
 }
 function zoomIn() {
     if (canvasSpace.zoomFactor <= 1) { return; }
-    let zoomCenter: Vector2D = {x: visibleCanvas.width/2, y: visibleCanvas.height/2};
+    let zoomCenter: Vector2D = new Vector2D(visibleCanvas.width/2, visibleCanvas.height/2);
     let newZoom = canvasSpace.zoomFactor - zoomStep;
 
-    let shiftOrigin: Vector2D = Vector2D.scale(zoomCenter, zoomStep); // zoom step here is really the difference in zoom change (zoomFactor now - zoomFactor before)
+    let shiftOrigin: Vector2D = zoomCenter.scale(zoomStep); // zoom step here is really the difference in zoom change (zoomFactor now - zoomFactor before)
 
-    canvasSpace.origin = {x: canvasSpace.origin.x + shiftOrigin.x, y: canvasSpace.origin.y - shiftOrigin.y};
+    canvasSpace.origin = new Vector2D(canvasSpace.origin.x + shiftOrigin.x, canvasSpace.origin.y - shiftOrigin.y);
     canvasSpace.zoomFactor = newZoom;
     
     setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
@@ -442,8 +439,8 @@ function zoomIn() {
  */
 function calculateVelocityBetweenPoints(toCoordinate: Vector2D, fromCoordinate: Vector2D, timeFrameInSeconds: number = 1): Vector2D {
     if (timeFrameInSeconds <= 0) { timeFrameInSeconds = 1; }
-    let distance: Vector2D = Vector2D.subtract(toCoordinate, fromCoordinate);
-    return Vector2D.scale(distance, 1 / timeFrameInSeconds);
+    let distance: Vector2D = toCoordinate.subtract(fromCoordinate);
+    return distance.scale(1 / timeFrameInSeconds);
 }
 function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
     if (simulation.running) {
@@ -482,15 +479,15 @@ function addBodyToSimulation(body?: Body2d, position?: Vector2D, velocity?: Vect
         body = newBody();
     }
     if (position === undefined) {
-        position = {x: 0, y: 0};
+        position = new Vector2D(0, 0);
     }
     if (velocity === undefined) {
-        velocity = {x: 0, y: 0};
+        velocity = new Vector2D(0, 0);
     }
     if (movable !== undefined) {
         body.movable = movable;
     }
-    const objectState = {body: body, position: position, velocity: velocity, acceleration: {x: 0, y: 0}};
+    const objectState = {body: body, position: position, velocity: velocity, acceleration: new Vector2D(0, 0)};
 
     simulation.addObject(objectState);
 }
