@@ -53,6 +53,7 @@ function initialize() {
     selectedCanvasClickAction = (document.querySelector('input[name="cvsRadioBtnMouseAction"]:checked') as HTMLInputElement).value;
     simulation.collisionDetection = tsEssentials.isChecked("cbxCollisions");
     simulation.elasticCollisions = tsEssentials.isChecked("cbxElasticCollisions");
+    (<HTMLInputElement>document.getElementById("cbxElasticCollisions")).disabled = !simulation.collisionDetection;
     document.removeEventListener("DOMContentLoaded", initialize);
 }
 function registerEvents() {
