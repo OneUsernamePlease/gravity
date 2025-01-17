@@ -100,8 +100,15 @@
      * @param inputId id for a checkable input (radioButton, checkbox)
      * @returns true if checked, false otherwise
      */
-    export function isChecked(inputId: string): boolean {
-        const checkbox = document.getElementById(inputId) as HTMLInputElement;
+    export function isChecked(inputElement: HTMLInputElement): boolean
+    export function isChecked(inputId: string): boolean
+    export function isChecked(input: string | HTMLInputElement): boolean {
+        let checkbox: HTMLInputElement;
+        if (typeof input === "string") {
+            checkbox = document.getElementById(input) as HTMLInputElement;
+        } else {
+            checkbox = input;
+        }
         return checkbox ? checkbox.checked : false;
     }
     //#endregion

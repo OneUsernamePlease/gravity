@@ -46,12 +46,13 @@ function initialize() {
     registerEvents();
     initCanvas(1280, 720);
     canvasSpace = {origin: {x: 0, y: 0}, zoomFactor: 1, orientationY: -1};
+    simulation = new Simulation();
     displayVectors = tsEssentials.isChecked("cbxDisplayVectors");
     selectedMassInput = tsEssentials.getInputNumber("massInput");
     (<HTMLInputElement>document.getElementById("massInput")!).step = calculateMassInputStep();
-    simulation = new Simulation();
     selectedCanvasClickAction = (document.querySelector('input[name="cvsRadioBtnMouseAction"]:checked') as HTMLInputElement).value;
     simulation.collisionDetection = tsEssentials.isChecked("cbxCollisions");
+    simulation.elasticCollisions = tsEssentials.isChecked("cbxElasticCollisions");
     document.removeEventListener("DOMContentLoaded", initialize);
 }
 function registerEvents() {
@@ -73,6 +74,7 @@ function registerEvents() {
     document.getElementById("massInput")?.addEventListener("change", massInputChangeHandler);
     document.getElementById("cbxDisplayVectors")?.addEventListener("change", cbxDisplayVectorsChangeHandler);
     document.getElementById("cbxCollisions")?.addEventListener("change", cbxCollisionsChangeHandler);
+    document.getElementById("cbxElasticCollisions")?.addEventListener("change", cbxElasticCollisionsChangeHandler);
     document.querySelectorAll('input[name="cvsRadioBtnMouseAction"]').forEach((radioButton) => {
         radioButton.addEventListener('change', radioBtnMouseActionChangeHandler);
       });
@@ -84,15 +86,23 @@ function massInputChangeHandler(this: HTMLElement) {
     element.step = calculateMassInputStep(); // step = 10% of input value, round down to nearest power of 10
 }
 function cbxCollisionsChangeHandler(event: Event) {
-    const checkbox = event.target as HTMLInputElement;
-    const checked = checkbox ? checkbox.checked : false;
+    const checked = tsEssentials.isChecked(event.target as HTMLInputElement);
+    const cbxElastic: HTMLInputElement = <HTMLInputElement>document.getElementById("cbxElasticCollisions");
+    const elasticChecked = tsEssentials.isChecked(cbxElastic);
     simulation.collisionDetection = checked;
+    simulation.elasticCollisions = elasticChecked;
+
+    cbxElastic.disabled = !checked;
+}
+function cbxElasticCollisionsChangeHandler(event: Event) {
+    const checked = tsEssentials.isChecked(event.target as HTMLInputElement);
+    simulation.elasticCollisions = checked;
 }
 function cbxDisplayVectorsChangeHandler(event: Event) {
     const checkbox = event.target as HTMLInputElement;
     displayVectors = checkbox ? checkbox.checked : false;
     if (!animationRunning) {
-        drawSimulationState();
+        redrawSimulationState();
     }
 }
 function radioBtnMouseActionChangeHandler(event: Event): void {
@@ -129,12 +139,13 @@ function cvsTouchEndHandler(this: HTMLElement, ev: TouchEvent) {
             if (body.mass <= 0) { break; }
             const vel: Vector2D = calculateVelocityBetweenPoints(pointInCanvasSpaceToSimulationSpace(mainMouseBtnLastCanvasPosition), pointInCanvasSpaceToSimulationSpace(touchPosition));
             addBodyToSimulation(body, pointInCanvasSpaceToSimulationSpace(touchPosition), vel);
+            setStatusMessage(`Number of Bodies: ${simulation.objectStates.length}`, 1);
             break;
         default:
             break;
     }
     if (!animationRunning) {
-        drawSimulationState();
+        redrawSimulationState();
     }
 }
 function cvsMouseDownHandler(this: HTMLElement, ev: MouseEvent) {
@@ -171,12 +182,13 @@ function cvsMouseUpHandler(this: HTMLElement, ev: MouseEvent) {
             if (body.mass <= 0) { break; }
             const vel: Vector2D = calculateVelocityBetweenPoints(pointInCanvasSpaceToSimulationSpace(mainMouseBtnLastCanvasPosition), pointInCanvasSpaceToSimulationSpace(mousePosition));
             addBodyToSimulation(body, pointInCanvasSpaceToSimulationSpace(mousePosition), vel);
+            setStatusMessage(`Number of Bodies: ${simulation.objectStates.length}`, 1);
             break;
         default:
             break;
     }
     if (!animationRunning) {
-        drawSimulationState();
+        redrawSimulationState();
     }
 }
 function cvsMouseMoveHandler(this: HTMLElement, ev: MouseEvent) {
@@ -186,7 +198,6 @@ function cvsMouseMoveHandler(this: HTMLElement, ev: MouseEvent) {
         return;
     }
     // goal: display vector for a body that is currently being added
-    // draw vector and do some additional shit probably
     // or add body to simSpace as immovable, with the velocity from moving, then redraw everything
 }
 function cvsMouseOutHandler(this: HTMLElement, ev: MouseEvent) {
@@ -221,13 +232,13 @@ function calculateMassInputStep(): string {
 }
 function initStatusBar() {
     statusBar.fields;
-    const idStart = "statusText";
+    const idBeginsWith = "statusText";
     let i = 1;
-    let statusBarField = document.getElementById(idStart + i);
+    let statusBarField = document.getElementById(idBeginsWith + i);
     while (statusBarField !== null) {
         statusBar.fields.push(statusBarField)
         i++;
-        statusBarField = document.getElementById(idStart + i);
+        statusBarField = document.getElementById(idBeginsWith + i);
     }
 }
 function body2dFromInputs(): Body2d {
@@ -311,7 +322,7 @@ function drawBodies() {
         }
     });
 }
-function drawSimulationState() {
+function redrawSimulationState() {
     visibleCanvasContext.clearRect(0, 0, visibleCanvas.width, visibleCanvas.height);
     drawBodies();
     if (displayVectors) {
@@ -357,7 +368,7 @@ function pointInCanvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
 function setCanvasOrigin(newOrigin: Vector2D) {
     canvasSpace.origin = newOrigin;
     if (!animationRunning) {
-        drawSimulationState();
+        redrawSimulationState();
     }
 }
 function scrollRight() {
@@ -402,7 +413,7 @@ function zoomOut() {
 
     setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
     if (!animationRunning) {
-        drawSimulationState();
+        redrawSimulationState();
     }
 }
 function zoomIn() {
@@ -417,11 +428,8 @@ function zoomIn() {
     
     setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
     if (!animationRunning) {
-        drawSimulationState();
+        redrawSimulationState();
     }
-}
-function drawCoordinateSystem() {
-
 }
 // #endregion
 // #region simulation
@@ -436,7 +444,6 @@ function calculateVelocityBetweenPoints(toCoordinate: Vector2D, fromCoordinate: 
     let distance: Vector2D = Vector2D.subtract(toCoordinate, fromCoordinate);
     return Vector2D.scale(distance, 1 / timeFrameInSeconds);
 }
-
 function toggleSimulation(this: HTMLElement, ev: MouseEvent) {
     if (simulation.running) {
         pauseSimulation();
@@ -449,8 +456,9 @@ function advanceSimulationState() {
         return;
     }
     simulation.nextState();
-    drawSimulationState();
+    redrawSimulationState();
     setStatusMessage(`Simulation Tick: ${simulation.tickCount}`, 2);
+    setStatusMessage(`Number of Bodies: ${simulation.objectStates.length}`, 1);
 }
 function resetSimulation() {
     if (simulation.running) {
@@ -458,8 +466,9 @@ function resetSimulation() {
     }
     simulation.clearObjects();
     simulation.tickCount = 0;
-    drawSimulationState();
+    redrawSimulationState();
     setStatusMessage(`Simulation Tick: ${simulation.tickCount}`, 2);
+    setStatusMessage(`Number of Bodies: ${simulation.objectStates.length}`, 1);
 }
 /**
  * @param body 
@@ -488,7 +497,7 @@ function resumeSimulation() {
     if (!simulation.running) {
         simulation.run();
         drawRunningSimulation();
-        setStatusMessage("Simulation running", 1);
+        setStatusMessage(`Number of Bodies: ${simulation.objectStates.length}`, 1);
         document.getElementById("cvsBtnToggleSim")!.innerHTML = "Pause";
     }
 }
@@ -496,7 +505,6 @@ function pauseSimulation() {
     if (simulation.running) {
         animationRunning = false;
         simulation.pause();
-        setStatusMessage("Simulation paused", 1);
         document.getElementById("cvsBtnToggleSim")!.innerHTML = "Play";
     }
 }
@@ -508,8 +516,9 @@ function drawRunningSimulation() {
     const runDrawLoop = () => {
         if (animationRunning) {
             setTimeout(runDrawLoop, frameLength);
-            drawSimulationState();
+            redrawSimulationState();
             setStatusMessage(`Simulation Tick: ${simulation.tickCount}`, 2);
+            setStatusMessage(`Number of Bodies: ${simulation.objectStates.length}`, 1);
             // log("Draw simulation step");
         }
     };
@@ -538,6 +547,5 @@ function newBody(mass?: number, radius?: number): Body2d {
 function rng(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
-
 
 // #endregion

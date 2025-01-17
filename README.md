@@ -5,7 +5,7 @@
     this should install typescript and vite.
 3. you need my library tcellib-vectors, which is not published on npm, but public on github. download it.
 
-If you then have local access to the vectors-lib, run [npm link] in that directory, and [npm link projectName] in the gravity project dir (projectName = tcellib-vectors).
+If you then have local access to the vectors-lib, run [npm link] in that directory, and [npm link projectName] in the gravity project directory (projectName = tcellib-vectors).
 
 4. that should do it
 

@@ -10,7 +10,7 @@ export class Body2d {
     // #region constructor, get, set
     constructor(mass: number, movable?: boolean, color?: string, radius?: number)  {
         this.mass = mass;
-        if (radius === undefined) { radius = this.getDefaultRadius(mass); }
+        if (radius === undefined) { radius = this.defaultRadius(mass); }
         this.radius = radius;
         if (color === undefined) { color = "white"; }
         this.color = color;
@@ -48,11 +48,11 @@ export class Body2d {
     /**
      * sets the radius based on mass and density
      */
-    public getDefaultRadius(mass?: number) {
+    public defaultRadius(mass?: number) {
         if (mass === undefined) {
             mass = this.mass;
         }
-        return ((3 * this.mass)/(4 * Math.PI * Body2d.defaultDensity)) ** (1/3); 
+        return ((3 * mass)/(4 * Math.PI * Body2d.defaultDensity)) ** (1/3); 
     }
 }
 export interface ObjectState {
@@ -70,6 +70,7 @@ export class Simulation {
     public _tickCount: number;
     private _tickLength: number;
     private _collisionDetection: boolean;
+    private _elasticCollisions: boolean;
     private _g: number; // gravitational constant
     private readonly gravityLowerBounds: number = 1; // force calculations for distances lower than this number are skipped
     constructor() { 
@@ -78,6 +79,7 @@ export class Simulation {
         this._tickCount = 0;
         this._tickLength = 10; // ms
         this._collisionDetection = false;
+        this._elasticCollisions = false;
         this._g = 50;
     }
     // #region get, set
@@ -111,11 +113,17 @@ export class Simulation {
     public set collisionDetection(collisionDetection: boolean) {
         this._collisionDetection = collisionDetection;
     }
+    public get elasticCollisions() {
+        return this._elasticCollisions;
+    }
+    public set elasticCollisions(elasticCollisions: boolean) {
+        this._elasticCollisions = elasticCollisions;
+    }
     public get g() {
         return this._g;
     }
     public set g(g: number) {
-        this._g = Math.max(g, Number.MIN_VALUE);
+        this._g = g;
     }
 // #endregion
     public addObject(objectState: ObjectState): number {
@@ -127,8 +135,8 @@ export class Simulation {
     public clearObjects() {
         this.objectStates = [];
     }
-    public removeAtIndex(i: number) {
-        this.objectStates.splice(i, 1); // remove objectStateJ
+    public removeFromObjectStates(i: number) {
+        this.objectStates.splice(i, 1);
     }
     public pause() {
         this.running = false;
@@ -149,27 +157,28 @@ export class Simulation {
         this.tickCount++;
     }
     private updateAccelerationVectors() {
-        const forces: Map<number, Vector2D> = new Map(); // to keep track of the resulting force (sum of forces) on each body (by each other body) in objectStates[]
-        
-        // calculate forces on each body
-        for (let i = 0; i < this.objectStates.length; i++) {
-            for (let j = i+1; j < this.objectStates.length; j++) {
-                const forceOnI = this.calculateForceBetweenBodies(i, j);
-                const forceOnJ = Vector2D.scale(forceOnI, -1); // force on j = (-1) * (force on i) -- opposite direction
+        const forces: Map<number, Vector2D> = this.calculateForces();
 
-                // Update the force on both bodies
-                forces.set(i, Vector2D.add(forces.get(i) || new Vector2D(0, 0), forceOnI));
-                forces.set(j, Vector2D.add(forces.get(j) || new Vector2D(0, 0), forceOnJ));
-            }
-        }
-
-        // update acceleration
         this.objectStates.forEach((objectState, index) => {
             const totalForceOnBody = forces.get(index);
             let newAcceleration = (totalForceOnBody !== undefined) ? (totalForceOnBody) : (new Vector2D(0, 0));
             newAcceleration = Vector2D.scale(newAcceleration, 1 / objectState.body.mass);
             objectState.acceleration = newAcceleration;
         });
+    }
+    private calculateForces() {
+        const forces: Map<number, Vector2D> = new Map();
+        
+        for (let i = 0; i < this.objectStates.length; i++) {
+            for (let j = i+1; j < this.objectStates.length; j++) {
+                const forceOnI = this.calculateForceBetweenBodies(i, j);
+                const forceOnJ = Vector2D.scale(forceOnI, -1);
+
+                forces.set(i, Vector2D.add(forces.get(i) || new Vector2D(0, 0), forceOnI));
+                forces.set(j, Vector2D.add(forces.get(j) || new Vector2D(0, 0), forceOnJ));
+            }
+        }
+        return forces;
     }
     /**
      * Calculates the next **position** and **velocity** of the object in state, and updates state accordingly.
@@ -195,14 +204,15 @@ export class Simulation {
         const distance = Vector2D.distance(objectStateI.position, objectStateJ.position);
         if (distance < this.gravityLowerBounds || distance === 0) // if the bodies are too close, skip the calculation
             { return new Vector2D(0, 0); } 
-        const netForceBetweenBodies: number = this.g * ((objectStateI.body.mass * objectStateJ.body.mass)/(distance * distance)); // net force between bodies as scalar
-        const unitVectorIToJ = Vector2D.normalize(Vector2D.subtract(objectStateJ.position, objectStateI.position)); // normalized vector from I to J
-        return Vector2D.scale(unitVectorIToJ, netForceBetweenBodies); // return force-vector applied to i, which is (unitVector from I to J) multiplied by (netForce)
+        const netForceBetweenBodies: number = this.g * ((objectStateI.body.mass * objectStateJ.body.mass)/(distance * distance));
+        const unitVectorIToJ = Vector2D.normalize(Vector2D.subtract(objectStateJ.position, objectStateI.position));
+        return Vector2D.scale(unitVectorIToJ, netForceBetweenBodies);
     }
     private handleCollisions() {
         for (let i = 0; i < this.objectStates.length; i++) {
             const objectStateI = this.objectStates[i];
-            if (objectStateI === undefined) { // undefined, if objectStateI has been merged in a previous collision
+            // undefined, if objectStateI has been merged in a previous collision
+            if (objectStateI === undefined) {
                 continue;
             }
             for (let j = i+1; j < this.objectStates.length; j++) {
@@ -213,7 +223,9 @@ export class Simulation {
                     if (distanceIJ <= objectStateI.body.radius || distanceIJ <= objectStateJ.body.radius) { 
                         this.mergeBodies(i, j);
                     } else {
-                        this.elasticCollision(objectStateI, objectStateJ)
+                        if (this.elasticCollisions) {
+                            this.elasticCollision(objectStateI, objectStateJ);
+                        }
                     }
                 }
             }
@@ -228,15 +240,26 @@ export class Simulation {
         const totalMomentum = Vector2D.add(Vector2D.scale(state1.velocity, state1.body.mass), Vector2D.scale(state2.velocity, state2.body.mass));
         const totalMass = state1.body.mass + state2.body.mass;
         const resultingVelocity = Vector2D.scale(totalMomentum, 1 / totalMass);
-        
-        state1.velocity = resultingVelocity;
-        state1.body.mass = totalMass;
-        state1.body.radius = state1.body.getDefaultRadius();
-        state1.body.movable = (state1.body.movable && state2.body.movable);
-        if (!state1.body.movable) {
-            state1.velocity = {x: 0, y: 0};
+        let changeObject: ObjectState;
+        let removeIndex: number;
+
+        if (state2.body.mass > state1.body.mass) {
+            changeObject = state2;
+            removeIndex = index1;
+        } else {
+            changeObject = state1;
+            removeIndex = index2;
         }
-        this.removeAtIndex(index2);
+
+        changeObject.velocity = resultingVelocity;
+        changeObject.body.mass = totalMass;
+        changeObject.body.radius = changeObject.body.defaultRadius();
+        changeObject.body.movable = (state1.body.movable && state2.body.movable);
+        if (!changeObject.body.movable) {
+            changeObject.velocity = {x: 0, y: 0};
+        }
+        this.removeFromObjectStates(removeIndex);
+    
     }
     /**
     * @param restitution number between 0 (perfectly inelastic) and 1 (perfectly elastic)
@@ -254,12 +277,12 @@ export class Simulation {
 
         // relative velocity along the normalDisplacement
         const relativeVelocity = Vector2D.subtract(body2.velocity, body1.velocity);
-        const velocityAlongDisplacement = Vector2D.dotProduct(relativeVelocity, normalizedDisplacement); // relative Velocity projected onto the normalized displacement
+        const velocityAlongDisplacement = Vector2D.dotProduct(relativeVelocity, normalizedDisplacement);
 
         // if the bodies are moving apart, do nothing
         if (velocityAlongDisplacement > 0) { return; }
 
-        // compute the impulse scalar based on the restitution coefficient ???
+        // impulseScalar = change in momentum as scalar
         const impulseScalar = -(1 + restitution) * velocityAlongDisplacement / (body1.body.mass + body2.body.mass);
 
         // update velocities based on the impulse scalar
