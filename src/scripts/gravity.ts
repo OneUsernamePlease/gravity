@@ -1,3 +1,4 @@
+import { ObjectState } from "./types";
 import { Vector2D } from "./vector2d"
 export class Body2d {
     private _mass!: number;
@@ -53,15 +54,6 @@ export class Body2d {
         }
         return ((3 * mass)/(4 * Math.PI * Body2d.defaultDensity)) ** (1/3); 
     }
-}
-export interface ObjectState {
-    body: Body2d, 
-    position: Vector2D,
-    /**
-     * simulationUnits (meter?) per second
-     */
-    velocity: Vector2D,
-    acceleration: Vector2D
 }
 export class Simulation {
     private _objectStates: ObjectState[];
@@ -231,7 +223,7 @@ export class Simulation {
         }
     }
     /**
-     * merges the two bodies into one (the one at index1), removes the body at index2 from objectStates
+     * Merges the two bodies into one. The lighter body is merged into the heavier one. Momentum is preserved.
      */
     private mergeBodies(index1: number, index2: number) {
         const state1: ObjectState = this.objectStates[index1];
@@ -249,7 +241,6 @@ export class Simulation {
             changeObject = state1;
             removeIndex = index2;
         }
-
         changeObject.velocity = resultingVelocity;
         changeObject.body.mass = totalMass;
         changeObject.body.radius = changeObject.body.defaultRadius();
@@ -258,7 +249,6 @@ export class Simulation {
             changeObject.velocity = new Vector2D(0, 0);
         }
         this.removeFromObjectStates(removeIndex);
-    
     }
     /**
     * @param restitution number between 0 (perfectly inelastic) and 1 (perfectly elastic)
@@ -290,6 +280,17 @@ export class Simulation {
 
         body1.velocity = body1.velocity.subtract(deltaV1);
         body2.velocity = body2.velocity.add(deltaV2);
+    }
+    private placeOverlappingBodiesTangentially(objectState1: ObjectState, objectState2: ObjectState) {
+        const displacement = objectState1.position.displacementVector(objectState2.position);
+        const normalDisplacement = displacement.normalize();        
+        const targetDistance = objectState1.body.radius + objectState2.body.radius;
+        const totalMoveDistance = targetDistance - displacement.magnitude();
+        const moveBody1 = normalDisplacement.scale(totalMoveDistance * (objectState1.body.radius / targetDistance));
+        const moveBody2 = normalDisplacement.scale(totalMoveDistance * (objectState2.body.radius / targetDistance));
+    
+        objectState1.position = objectState1.position.subtract(moveBody1);
+        objectState2.position = objectState2.position.add(moveBody2);
     }
     public run() {
         if (this.running) {

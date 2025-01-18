@@ -1,23 +1,8 @@
 import { InferCustomEventPayload } from "vite";
 import { Body2d, Simulation } from "./gravity";
-import { Vector2D } from "./vector2d"
+import { Vector2D } from "./vector2d";
+import { CanvasClickAction, CanvasSpace, MouseBtnState } from "./types";
 import * as tsEssentials from "./essentials";
-
-interface CanvasSpace { 
-    // use this to transform simulationSpace to canvasSpace and back
-    origin: Vector2D, // the canvas' origin in simulation space
-    zoomFactor: number, // simulationUnits (meter) per canvasUnit
-    orientationY: number; // in practice this is -1, as the y-axis of the canvas is in the opposite direction of the simulation
-}
-enum CanvasClickAction {
-    None = 0,
-    AddBody = 1,
-    ScrollCanvas = 2,
-}
-enum MouseBtnState {
-    Up = 0,
-    Down = 1,
-}
 
 // let offscreenCanvas: OffscreenCanvas; // use this in a worker thread to render or draw on, then transfer content to the visible html-canvas
 let visibleCanvas: HTMLCanvasElement;
@@ -307,7 +292,7 @@ function drawVector(position: Vector2D, direction: Vector2D, color?: string) {
 function drawBody(body: Body2d, position: Vector2D) {
     let visibleRadius = Math.max(body.radius / canvasSpace.zoomFactor, 1); // Minimum Radius of displayed body is one
     visibleCanvasContext.beginPath();
-    visibleCanvasContext.arc(position.x, position.y, visibleRadius, 0, Math.PI * 2); // zF = m/cu; r...m -> r/zF -> (m)/
+    visibleCanvasContext.arc(position.x, position.y, visibleRadius, 0, Math.PI * 2);
     visibleCanvasContext.closePath();
     visibleCanvasContext.fillStyle = body.color;
     visibleCanvasContext.fill();
@@ -315,9 +300,7 @@ function drawBody(body: Body2d, position: Vector2D) {
 function drawBodies() {
     const objects = simulation.objectStates;
     objects.forEach(object => {
-        if (object !== null) {
-            drawBody(object.body, pointInSimulationSpaceToCanvasSpace(object.position));
-        }
+        drawBody(object.body, pointInSimulationSpaceToCanvasSpace(object.position));
     });
 }
 function redrawSimulationState() {
