@@ -1,6 +1,13 @@
 import { Body2d } from "./gravity";
 import { Vector2D } from "./vector2d";
+export interface AnimationSettings {
+    defaultScrollRate: number;
+    defaultZoomStep: number;
+    frameLength: number; // ms
+    displayVectors: boolean;
+    tracePaths: boolean;
 
+}
 export enum CanvasClickAction {
     None = 0,
     AddBody = 1,

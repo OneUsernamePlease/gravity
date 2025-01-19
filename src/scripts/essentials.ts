@@ -14,6 +14,13 @@ export function log(message: string) {
     const formattedTimestamp = `${hours}:${minutes}:${seconds}.${milliseconds}`;
     console.log(`[${formattedTimestamp}] ${message}`);
 }
+/**
+ * min and max included
+ * @returns random number
+ */
+export function rng(min: number, max: number) {
+    return Math.floor(Math.random() * (max - min + 1) + min);
+}
 //#endregion
 
 //#region math stuff
