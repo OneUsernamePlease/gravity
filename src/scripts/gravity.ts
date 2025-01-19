@@ -151,9 +151,8 @@ export class Simulation {
         const forces: Map<number, Vector2D> = this.calculateForces();
 
         this.objectStates.forEach((objectState, index) => {
-            const totalForceOnBody = forces.get(index);
-            let newAcceleration = (totalForceOnBody !== undefined) ? (totalForceOnBody) : (new Vector2D(0, 0));
-            newAcceleration = newAcceleration.scale(1 / objectState.body.mass);
+            const totalForceOnBody = forces.get(index) || (new Vector2D(0, 0));
+            const newAcceleration = totalForceOnBody.scale(1 / objectState.body.mass);
             objectState.acceleration = newAcceleration;
         });
     }
@@ -223,7 +222,7 @@ export class Simulation {
         }
     }
     /**
-     * Merges the two bodies into one. The lighter body is merged into the heavier one. Momentum is preserved.
+     * Merges the two bodies at indices in objectStates into one. The lighter body is merged into the heavier one. Momentum is preserved.
      */
     private mergeBodies(index1: number, index2: number) {
         const state1: ObjectState = this.objectStates[index1];

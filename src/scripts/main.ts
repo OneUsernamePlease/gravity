@@ -103,7 +103,6 @@ function cvsTouchStartHandler(this: HTMLElement, ev: TouchEvent) {
 
     switch (CanvasClickAction[selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
         case CanvasClickAction.None:
-            console.log(touchPosition.toString());
             break;
         case CanvasClickAction.AddBody:
             ev.preventDefault();
@@ -140,8 +139,7 @@ function cvsMouseDownHandler(this: HTMLElement, ev: MouseEvent) {
     }
     canvasLMouseState = MouseBtnState.Down;
     const mousePosition: Vector2D = getCanvasMousePosition(ev);
-    log("canvasMouseDownHandler:" + MouseBtnState[canvasLMouseState] + " - at Position: " + mousePosition.toString());
-
+    
     switch (CanvasClickAction[selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
         case CanvasClickAction.None:  
             break;
@@ -158,8 +156,7 @@ function cvsMouseUpHandler(this: HTMLElement, ev: MouseEvent) {
     }
     canvasLMouseState = MouseBtnState.Up;
     const mousePosition: Vector2D = getCanvasMousePosition(ev);
-    log("canvasMouseUpHandler:" + MouseBtnState[canvasLMouseState] + " - at Position: " + mousePosition.toString());
-
+    
     switch (CanvasClickAction[selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
         case CanvasClickAction.None:
             break;
@@ -178,8 +175,6 @@ function cvsMouseUpHandler(this: HTMLElement, ev: MouseEvent) {
     }
 }
 function cvsMouseMoveHandler(this: HTMLElement, ev: MouseEvent) {
-    const mousePosition: Vector2D = getCanvasMousePosition(ev);
-    log("canvasMouseMoveHandler:" + MouseBtnState[canvasLMouseState] + " - at Position: " + mousePosition.toString());
     if (canvasLMouseState === MouseBtnState.Up) {
         return;
     }
@@ -256,16 +251,7 @@ function initCanvas(width: number, height: number) {
     // offscreenCanvas = new OffscreenCanvas(visibleCanvas.clientWidth, visibleCanvas.clientHeight);
     // offscreenCanvasCtx = offscreenCanvas.getContext("2d")!;
 }
-function log(message: string) {
-    const timestamp = new Date();
-    const hours = timestamp.getHours().toString().padStart(2, '0');
-    const minutes = timestamp.getMinutes().toString().padStart(2, '0');
-    const seconds = timestamp.getSeconds().toString().padStart(2, '0');
-    const milliseconds = timestamp.getMilliseconds().toString().padStart(3, '0');
 
-    const formattedTimestamp = `${hours}:${minutes}:${seconds}.${milliseconds}`;
-    console.log(`[${formattedTimestamp}] ${message}`);
-}
 // #endregion
 // #region canvas and drawing stuff
 /**
