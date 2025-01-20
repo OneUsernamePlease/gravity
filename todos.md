@@ -4,11 +4,11 @@
     - workers and offscreen canvas
     - mobile / responsive
 
-
-
 # bugs
     - mobile view (or just narrow width)
     - in theory a body can move at above c so introduce a limit we shall
+    - when Display Vectors is active, the displayed acceleration vector for a given body is actually the vector from the previous tick.
+        - for a given simulationState, immediately calculate force/acceleration rather than calculating it when advancing to the next tick
 
 # feets/refactors/improvements:
 - improve the drawing implementations

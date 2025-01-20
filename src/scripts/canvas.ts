@@ -17,6 +17,7 @@ export class Canvas {
         this._animationSettings = { defaultScrollRate: 0.1, defaultZoomStep: 1, frameLength: 25, displayVectors: true, tracePaths: false };
         this._animationRunning = false;
     }
+    //#region get, set
     get visibleCanvas() {
         return this._visibleCanvas;
     }
@@ -47,8 +48,8 @@ export class Canvas {
     set animationRunning(animationRunning: boolean) {
         this._animationRunning = animationRunning;
     }
+    //#endregion
     //#region drawing stuff
-    // #region canvas and drawing stuff
     /**
      * @param position in canvas space
      * @param direction in canvas space
@@ -70,7 +71,33 @@ export class Canvas {
             this.drawVector(this.pointInSimulationSpaceToCanvasSpace(objectState.position), this.directionInSimulationSpaceToCanvasSpace(objectState.velocity), "red");
         });
     }
-        //#endregion
+    /**
+     * draws a circular body at specified position, in specified color
+     * @param body 
+     * @param position 
+     * @param color default white
+     */
+    public drawBody(body: Body2d, position: Vector2D) {
+        let visibleRadius = Math.max(body.radius / this.canvasSpace.zoomFactor, 1); // Minimum Radius of displayed body is one
+        this.visibleCanvasContext.beginPath();
+        this.visibleCanvasContext.arc(position.x, position.y, visibleRadius, 0, Math.PI * 2);
+        this.visibleCanvasContext.closePath();
+        this.visibleCanvasContext.fillStyle = body.color;
+        this.visibleCanvasContext.fill();
+    }
+    public drawBodies(objectStates: ObjectState[]) {
+        objectStates.forEach(object => {
+            this.drawBody(object.body, this.pointInSimulationSpaceToCanvasSpace(object.position));
+        });
+    }
+    public redrawSimulationState(objectStates: ObjectState[], displayVectors: boolean) {
+        this.visibleCanvasContext.clearRect(0, 0, this.visibleCanvas.width, this.visibleCanvas.height);
+        this.drawBodies(objectStates);
+        if (displayVectors) {
+            this.drawVectors(objectStates);
+        }
+    }
+    //#endregion
 
     public pointInSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
     // transformation:
@@ -98,58 +125,28 @@ export class Canvas {
         let simulationVector: Vector2D;
         simulationVector = canvasVector.scale(this.canvasSpace.zoomFactor).hadamardProduct(new Vector2D(1, this.canvasSpace.orientationY)).add(this.canvasSpace.origin);
         return simulationVector;
-    }
-
-    /**
-     * draws a circular body at specified position, in specified color
-     * @param body 
-     * @param position 
-     * @param color default white
-     */
-    public drawBody(body: Body2d, position: Vector2D) {
-        let visibleRadius = Math.max(body.radius / this.canvasSpace.zoomFactor, 1); // Minimum Radius of displayed body is one
-        this.visibleCanvasContext.beginPath();
-        this.visibleCanvasContext.arc(position.x, position.y, visibleRadius, 0, Math.PI * 2);
-        this.visibleCanvasContext.closePath();
-        this.visibleCanvasContext.fillStyle = body.color;
-        this.visibleCanvasContext.fill();
-    }
-    public drawBodies(objectStates: ObjectState[]) {
-        objectStates.forEach(object => {
-            this.drawBody(object.body, this.pointInSimulationSpaceToCanvasSpace(object.position));
-        });
-    }
-    public redrawSimulationState(objectStates: ObjectState[], displayVectors: boolean) {
-        this.visibleCanvasContext.clearRect(0, 0, this.visibleCanvas.width, this.visibleCanvas.height);
-        this.drawBodies(objectStates);
-        if (displayVectors) {
-            this.drawVectors(objectStates);
-        }
-    }
+    }    
     /**
      * Origin {x:0,y:0} is at the top-left
      */
     public setCanvasOrigin(newOrigin: Vector2D) {
         this.canvasSpace.origin = newOrigin;
-        //if (!this.animationRunning) {
-        //    this.redrawSimulationState(simulation.objectStates, this.animationSettings.drawVectors);
-        //}
     }
-    public scrollRight() {
-        let scrollDistance = this.calculateScrollDistance("horizontal"); // in simulationUnits
-        this.setCanvasOrigin(new Vector2D(this.canvasSpace.origin.x + scrollDistance, this.canvasSpace.origin.y));
+    public moveCanvasRight(rate?: number) {
+        const distance = this.calculateScrollDistance("horizontal", rate); // in simulationUnits
+        this.setCanvasOrigin(new Vector2D(this.canvasSpace.origin.x + distance, this.canvasSpace.origin.y));
     }
-    public scrollLeft() {
-        let scrollDistance = this.calculateScrollDistance("horizontal"); // in simulationUnits
-        this.setCanvasOrigin(new Vector2D(this.canvasSpace.origin.x - scrollDistance, this.canvasSpace.origin.y ));
+    public moveCanvasLeft(rate?: number) {
+        const distance = this.calculateScrollDistance("horizontal", rate); // in simulationUnits
+        this.setCanvasOrigin(new Vector2D(this.canvasSpace.origin.x - distance, this.canvasSpace.origin.y ));
     }
-    public scrollUp() {
-        let scrollDistance = this.calculateScrollDistance("vertical"); // in simulationUnits
-        this.setCanvasOrigin(new Vector2D(this.canvasSpace.origin.x, this.canvasSpace.origin.y + scrollDistance));
+    public moveCanvasUp(rate?: number) {
+        const distance = this.calculateScrollDistance("vertical", rate); // in simulationUnits
+        this.setCanvasOrigin(new Vector2D(this.canvasSpace.origin.x, this.canvasSpace.origin.y + distance));
     }
-    public scrollDown() {
-        let scrollDistance = this.calculateScrollDistance("vertical"); // in simulationUnits
-        this.setCanvasOrigin(new Vector2D(this.canvasSpace.origin.x, this.canvasSpace.origin.y - scrollDistance));
+    public moveCanvasDown(rate?: number) {
+        const distance = this.calculateScrollDistance("vertical", rate); // in simulationUnits
+        this.setCanvasOrigin(new Vector2D(this.canvasSpace.origin.x, this.canvasSpace.origin.y - distance));
     }
     /**
      * 
@@ -166,8 +163,7 @@ export class Canvas {
                 return this.visibleCanvas.height * rate * this.canvasSpace.zoomFactor;
         }
     }
-    public zoomOut() {
-        const zoomCenter: Vector2D = new Vector2D(this.visibleCanvas.width/2, this.visibleCanvas.height/2);
+    public zoomOut(zoomCenter: Vector2D) {
         const newZoom = this.canvasSpace.zoomFactor + this.animationSettings.defaultZoomStep;
 
         let shiftOrigin: Vector2D = zoomCenter.scale(this.animationSettings.defaultZoomStep); // zoom step here is really the difference in zoom change (zoomFactor now - zoomFactor before)
@@ -175,9 +171,8 @@ export class Canvas {
         this.canvasSpace.origin = new Vector2D(this.canvasSpace.origin.x - shiftOrigin.x, this.canvasSpace.origin.y + shiftOrigin.y);
         this.canvasSpace.zoomFactor = newZoom;
     }
-    public zoomIn() {
+    public zoomIn(zoomCenter: Vector2D) {
         if (this.canvasSpace.zoomFactor <= 1) { return; }
-        let zoomCenter: Vector2D = new Vector2D(this.visibleCanvas.width/2, this.visibleCanvas.height/2);
         let newZoom = this.canvasSpace.zoomFactor - this.animationSettings.defaultZoomStep;
 
         let shiftOrigin: Vector2D = zoomCenter.scale(this.animationSettings.defaultZoomStep); // zoom step here is really the difference in zoom change (zoomFactor now - zoomFactor before)
