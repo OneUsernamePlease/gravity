@@ -117,11 +117,16 @@ export class Simulation {
         this._g = g;
     }
 // #endregion
-    public addObject(objectState: ObjectState): number {
-        if (!objectState.body.movable) {
-            objectState.velocity = new Vector2D(0, 0);
+    public addObject(body: Body2d, position: Vector2D, velocity: Vector2D): number 
+    public addObject(objectState: ObjectState): number 
+    public addObject(bodyOrObject: ObjectState | Body2d, position?: Vector2D, velocity?: Vector2D): number {
+        if (bodyOrObject instanceof Body2d) {
+            bodyOrObject = {body: bodyOrObject, position: position!, velocity: velocity!, acceleration: new Vector2D(0, 0)};
         }
-        return this.simulationState.push(objectState);
+        if (!bodyOrObject.body.movable) {
+            bodyOrObject.velocity = new Vector2D(0, 0);
+        }
+        return this.simulationState.push(bodyOrObject);
     }
     public clearObjects() {
         this.simulationState = [];
@@ -249,7 +254,7 @@ export class Simulation {
     * @param restitution number between 0 (perfectly inelastic) and 1 (perfectly elastic)
     */
     private elasticCollision(body1: ObjectState, body2: ObjectState, restitution: number = 1) {
-        const lowerBounds = 1; // lower bounds for the distance between bodies
+        const lowerBounds = 1;
         
         // normal vector between the bodies
         const displacement = body1.position.displacementVector(body2.position);

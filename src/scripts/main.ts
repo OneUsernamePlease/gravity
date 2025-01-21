@@ -171,7 +171,7 @@ function canvasMouseUp(this: HTMLElement, ev: MouseEvent) {
             const bodyBeingAdded: Body2d = body2dFromInputs();
             if (bodyBeingAdded.mass <= 0) { break; }
             const vel: Vector2D = calculateVelocityBetweenPoints(canvas.pointFromCanvasSpaceToSimulationSpace(lastMainMouseBtnDownPositionOnCanvas), canvas.pointFromCanvasSpaceToSimulationSpace(mousePosition));
-            addBodyToSimulation(bodyBeingAdded, canvas.pointFromCanvasSpaceToSimulationSpace(mousePosition), vel);
+            simulation.addObject(bodyBeingAdded, canvas.pointFromCanvasSpaceToSimulationSpace(mousePosition), vel);
             setStatusMessage(`Number of Bodies: ${simulation.simulationState.length}`, 1);
             break;
         default:
@@ -220,7 +220,7 @@ function canvasTouchEnd(this: HTMLElement, ev: TouchEvent) {
             const bodyBeingAdded = body2dFromInputs();    
             if (bodyBeingAdded.mass <= 0) { break; }
             const vel: Vector2D = calculateVelocityBetweenPoints(canvas.pointFromCanvasSpaceToSimulationSpace(lastMainMouseBtnDownPositionOnCanvas), canvas.pointFromCanvasSpaceToSimulationSpace(touchPosition));
-            addBodyToSimulation(bodyBeingAdded, canvas.pointFromCanvasSpaceToSimulationSpace(touchPosition), vel);
+            simulation.addObject(bodyBeingAdded, canvas.pointFromCanvasSpaceToSimulationSpace(touchPosition), vel);
             setStatusMessage(`Number of Bodies: ${simulation.simulationState.length}`, 1);
             break;
         default:
@@ -298,24 +298,6 @@ function calculateVelocityBetweenPoints(toCoordinate: Vector2D, fromCoordinate: 
     if (timeFrameInSeconds <= 0) { timeFrameInSeconds = 1; }
     let distance: Vector2D = toCoordinate.subtract(fromCoordinate);
     return distance.scale(1 / timeFrameInSeconds);
-}
-/**
- * @param position in *SIMULATION SPACE*
- * @param velocity in *SIMULATION SPACE*
- */
-function addBodyToSimulation(body: Body2d, position?: Vector2D, velocity?: Vector2D, movable?: boolean) {
-    if (position === undefined) {
-        position = new Vector2D(0, 0);
-    }
-    if (velocity === undefined) {
-        velocity = new Vector2D(0, 0);
-    }
-    if (movable !== undefined) {
-        body.movable = movable;
-    }
-    const objectState = {body: body, position: position, velocity: velocity, acceleration: new Vector2D(0, 0)};
-
-    simulation.addObject(objectState);
 }
 function resumeSimulation() {
     if (!simulation.running) {
