@@ -71,7 +71,7 @@ export class Simulation {
         this._tickLength = 10; // ms
         this._collisionDetection = false;
         this._elasticCollisions = false;
-        this._g = 50;
+        this._g = 0;
     }
     // #region get, set
     public get simulationState() {
@@ -277,9 +277,18 @@ export class Simulation {
         // update velocities based on the impulse scalar
         const deltaV1 = normalizedDisplacement.scale(impulseScalar * body2.body.mass);
         const deltaV2 = normalizedDisplacement.scale(impulseScalar * body1.body.mass);
-
         body1.velocity = body1.velocity.subtract(deltaV1);
         body2.velocity = body2.velocity.add(deltaV2);
+        
+        // if a body is immovable, reset its velocity and transfer it back
+        if (!body1.body.movable) {
+            body1.velocity = new Vector2D(0, 0);
+            body2.velocity = body2.velocity.add(deltaV1);
+        }
+        if (!body2.body.movable) {
+            body2.velocity = new Vector2D(0, 0);
+            body1.velocity = body1.velocity.add(deltaV2);
+        }
     }
     private placeOverlappingBodiesTangentially(objectState1: ObjectState, objectState2: ObjectState) {
         const displacement = objectState1.position.displacementVector(objectState2.position);
