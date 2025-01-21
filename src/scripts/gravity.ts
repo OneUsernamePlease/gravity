@@ -1,21 +1,21 @@
 import { ObjectState } from "./types";
 import { Vector2D } from "./vector2d"
 export class Body2d {
-    private _mass!: number;
-    private _radius!: number;
-    private _color!: string;
-    private _movable!: boolean;
+    private _mass: number;
+    private _radius: number;
+    private _color: string;
+    private _movable: boolean;
     static defaultDensity = 1;
 
     // #region constructor, get, set
     constructor(mass: number, movable?: boolean, color?: string, radius?: number)  {
-        this.mass = mass;
+        this._mass = mass;
         if (radius === undefined) { radius = this.defaultRadius(mass); }
-        this.radius = radius;
+        this._radius = radius;
         if (color === undefined) { color = "white"; }
-        this.color = color;
+        this._color = color;
         if (movable === undefined) { movable = true; }
-        this.movable = movable;     
+        this._movable = movable;     
     }
     public get mass() {
         return this._mass;
@@ -46,7 +46,7 @@ export class Body2d {
     } 
     // #endregion
     /**
-     * sets the radius based on mass and density
+     * returns the radius of a sphere based on mass and density
      */
     public defaultRadius(mass?: number) {
         if (mass === undefined) {
@@ -56,7 +56,7 @@ export class Body2d {
     }
 }
 export class Simulation {
-    private _objectStates: ObjectState[];
+    private _simulationState: ObjectState[];
     public _running: boolean;
     public _tickCount: number;
     private _tickLength: number;
@@ -65,7 +65,7 @@ export class Simulation {
     private _g: number; // gravitational constant
     private readonly gravityLowerBounds: number = 1; // force calculations for distances lower than this number are skipped
     constructor() { 
-        this._objectStates = [];
+        this._simulationState = [];
         this._running = false;
         this._tickCount = 0;
         this._tickLength = 10; // ms
@@ -74,11 +74,11 @@ export class Simulation {
         this._g = 50;
     }
     // #region get, set
-    public get objectStates() {
-        return this._objectStates;
+    public get simulationState() {
+        return this._simulationState;
     }
-    public set objectStates(objectState: ObjectState[]) {
-        this._objectStates = objectState;
+    public set simulationState(objectState: ObjectState[]) {
+        this._simulationState = objectState;
     }
     public get running() {
         return this._running;
@@ -121,36 +121,29 @@ export class Simulation {
         if (!objectState.body.movable) {
             objectState.velocity = new Vector2D(0, 0);
         }
-        return this.objectStates.push(objectState);
+        return this.simulationState.push(objectState);
     }
     public clearObjects() {
-        this.objectStates = [];
+        this.simulationState = [];
     }
     public removeFromObjectStates(i: number) {
-        this.objectStates.splice(i, 1);
+        this.simulationState.splice(i, 1);
     }
     public pause() {
         this.running = false;
     }
     public nextState() {
-        // calculate new accelerations vectors and update objectStates accordingly
         this.updateAccelerationVectors();
-        
-        // update position and velocity arising therefrom
-        this.objectStates.forEach(objectState => {
-            this.updateVelocityAndPosition(objectState)
-        });
-
+        this.updateVelocitiesAndPositions();
         if (this.collisionDetection) {
             this.handleCollisions();
         }
-        
         this.tickCount++;
     }
     private updateAccelerationVectors() {
         const forces: Map<number, Vector2D> = this.calculateForces();
 
-        this.objectStates.forEach((objectState, index) => {
+        this.simulationState.forEach((objectState, index) => {
             const totalForceOnBody = forces.get(index) || (new Vector2D(0, 0));
             const newAcceleration = totalForceOnBody.scale(1 / objectState.body.mass);
             objectState.acceleration = newAcceleration;
@@ -159,8 +152,8 @@ export class Simulation {
     private calculateForces() {
         const forces: Map<number, Vector2D> = new Map();
         
-        for (let i = 0; i < this.objectStates.length; i++) {
-            for (let j = i+1; j < this.objectStates.length; j++) {
+        for (let i = 0; i < this.simulationState.length; i++) {
+            for (let j = i+1; j < this.simulationState.length; j++) {
                 const forceOnI = this.calculateForceBetweenBodies(i, j);
                 const forceOnJ = forceOnI.scale(-1);
 
@@ -171,8 +164,8 @@ export class Simulation {
         return forces;
     }
     /**
-     * Calculates the next **position** and **velocity** of the object in state, and updates state accordingly.
-     * @param state *ObjectState* containing the body
+     * Calculates the next **position** and **velocity** of the object in state, and updates objectState accordingly.
+     * @param objectState *ObjectState* containing the body
      */
     private updateVelocityAndPosition(objectState: ObjectState) {
         const dt = this.tickLength / 1000;
@@ -183,13 +176,18 @@ export class Simulation {
         // update position based on velocity: x = x + v * dt
         objectState.position =  objectState.position.add(objectState.velocity.scale(dt));
     }
+    private updateVelocitiesAndPositions() {
+        this.simulationState.forEach(objectState => {
+            this.updateVelocityAndPosition(objectState)
+        });
+    }
     /**
      * Calculates the force-vector between the bodies in objectStates at index [i] and [j]
      * @returns a vector representing the force applied ***to*** body at ***objectStates[i]***
      */
     private calculateForceBetweenBodies(i: number, j: number): Vector2D {
-        const objectStateI = this.objectStates[i];
-        const objectStateJ = this.objectStates[j];
+        const objectStateI = this.simulationState[i];
+        const objectStateJ = this.simulationState[j];
 
         const distance = objectStateI.position.distance(objectStateJ.position);
         if (distance < this.gravityLowerBounds || distance === 0) // if the bodies are too close, skip the calculation
@@ -199,23 +197,21 @@ export class Simulation {
         return unitVectorIToJ.scale(netForceBetweenBodies);
     }
     private handleCollisions() {
-        for (let i = 0; i < this.objectStates.length; i++) {
-            const objectStateI = this.objectStates[i];
-            // undefined, if objectStateI has been merged in a previous collision
+        for (let i = 0; i < this.simulationState.length; i++) {
+            const objectStateI = this.simulationState[i];
             if (objectStateI === undefined) {
+                // undefined, if objectStateI has been merged in a previous collision
                 continue;
             }
-            for (let j = i+1; j < this.objectStates.length; j++) {
-                const objectStateJ = this.objectStates[j];
+            for (let j = i+1; j < this.simulationState.length; j++) {
+                const objectStateJ = this.simulationState[j];
                 const distanceIJ = objectStateI.position.distance(objectStateJ.position);
                 const collision = distanceIJ <= objectStateI.body.radius + objectStateJ.body.radius;
                 if (collision) {
                     if (distanceIJ <= objectStateI.body.radius || distanceIJ <= objectStateJ.body.radius) { 
                         this.mergeBodies(i, j);
-                    } else {
-                        if (this.elasticCollisions) {
-                            this.elasticCollision(objectStateI, objectStateJ);
-                        }
+                    } else if (this.elasticCollisions) {
+                        this.elasticCollision(objectStateI, objectStateJ);
                     }
                 }
             }
@@ -225,8 +221,8 @@ export class Simulation {
      * Merges the two bodies at indices in objectStates into one. The lighter body is merged into the heavier one. Momentum is preserved.
      */
     private mergeBodies(index1: number, index2: number) {
-        const state1: ObjectState = this.objectStates[index1];
-        const state2: ObjectState = this.objectStates[index2];
+        const state1: ObjectState = this.simulationState[index1];
+        const state2: ObjectState = this.simulationState[index2];
         const totalMomentum = state1.velocity.scale(state1.body.mass).add(state2.velocity.scale(state2.body.mass));
         const totalMass = state1.body.mass + state2.body.mass;
         const resultingVelocity = totalMomentum.scale(1 / totalMass);

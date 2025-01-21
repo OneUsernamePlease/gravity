@@ -67,8 +67,8 @@ export class Canvas {
     }
     public drawVectors(objectStates: ObjectState[]) {
         objectStates.forEach(objectState => {
-            this.drawVector(this.pointInSimulationSpaceToCanvasSpace(objectState.position), this.directionInSimulationSpaceToCanvasSpace(objectState.acceleration), "green");
-            this.drawVector(this.pointInSimulationSpaceToCanvasSpace(objectState.position), this.directionInSimulationSpaceToCanvasSpace(objectState.velocity), "red");
+            this.drawVector(this.pointFromSimulationSpaceToCanvasSpace(objectState.position), this.directionFromSimulationSpaceToCanvasSpace(objectState.acceleration), "green");
+            this.drawVector(this.pointFromSimulationSpaceToCanvasSpace(objectState.position), this.directionFromSimulationSpaceToCanvasSpace(objectState.velocity), "red");
         });
     }
     /**
@@ -87,7 +87,7 @@ export class Canvas {
     }
     public drawBodies(objectStates: ObjectState[]) {
         objectStates.forEach(object => {
-            this.drawBody(object.body, this.pointInSimulationSpaceToCanvasSpace(object.position));
+            this.drawBody(object.body, this.pointFromSimulationSpaceToCanvasSpace(object.position));
         });
     }
     public redrawSimulationState(objectStates: ObjectState[], displayVectors: boolean) {
@@ -99,7 +99,7 @@ export class Canvas {
     }
     //#endregion
 
-    public pointInSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
+    public pointFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
     // transformation:
     // 1. shift (point in SimSpace - Origin of C in SimSpace)
     // 2. flip (y axis point in opposite directions)
@@ -109,7 +109,7 @@ export class Canvas {
     const scaled: Vector2D = flipped.scale(1 / this.canvasSpace.zoomFactor);
     return scaled;
     }
-    public directionInSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
+    public directionFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
         // transformation:
         // 1. flip (y axis are in opposite directions)
         // 2. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
@@ -117,7 +117,7 @@ export class Canvas {
         const scaled: Vector2D = flipped.scale(1 / this.canvasSpace.zoomFactor);
         return scaled;
     }
-    public pointInCanvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
+    public pointFromCanvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
         // transformation:
         // 1. scale (canvasVector * zoom in simulationUnits/canvasUnit)
         // 2. flip (y axis are in opposite directions)

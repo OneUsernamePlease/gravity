@@ -9,8 +9,8 @@ let canvas: Canvas;
 let simulation: Simulation;
 let statusBar: { fields: HTMLElement[] } = { fields: [] };
 let selectedMassInput: number;
-let canvasLMouseState: MouseBtnState = MouseBtnState.Up;
-let mainMouseBtnLastCanvasPosition: Vector2D = new Vector2D (0, 0); // the position on the canvas, where the mouse's main button's last down-event happened
+let canvasLeftMouseState: MouseBtnState = MouseBtnState.Up;
+let lastMainMouseBtnDownPositionOnCanvas: Vector2D = new Vector2D (0, 0);
 let selectedCanvasClickAction: string;
 
 document.addEventListener("DOMContentLoaded", initialize);
@@ -26,15 +26,15 @@ function initialize() {
     document.removeEventListener("DOMContentLoaded", initialize);
 }
 function registerEvents() {
-    document.getElementById("btnToggleSim")?.addEventListener("click", toggleSimClick);
-    document.getElementById("btnNextStep")?.addEventListener("click", nextStepClick);
-    document.getElementById("btnResetSim")?.addEventListener("click", resetClick);
-    document.getElementById("btnZoomOut")?.addEventListener("click", zoomOutClick);
-    document.getElementById("btnZoomIn")?.addEventListener("click", zoomInClick);
-    document.getElementById("btnScrollLeft")?.addEventListener("click", scrollLeftClick);
-    document.getElementById("btnScrollRight")?.addEventListener("click", scrollRightClick);
-    document.getElementById("btnScrollUp")?.addEventListener("click", scrollUpClick);
-    document.getElementById("btnScrollDown")?.addEventListener("click", scrollDownClick);
+    document.getElementById("btnToggleSim")?.addEventListener("click", toggleSimulationClicked);
+    document.getElementById("btnNextStep")?.addEventListener("click", nextStepClicked);
+    document.getElementById("btnResetSim")?.addEventListener("click", resetClicked);
+    document.getElementById("btnZoomOut")?.addEventListener("click", zoomOutClicked);
+    document.getElementById("btnZoomIn")?.addEventListener("click", zoomInClicked);
+    document.getElementById("btnScrollLeft")?.addEventListener("click", scrollLeftClicked);
+    document.getElementById("btnScrollRight")?.addEventListener("click", scrollRightClicked);
+    document.getElementById("btnScrollUp")?.addEventListener("click", scrollUpClicked);
+    document.getElementById("btnScrollDown")?.addEventListener("click", scrollDownClicked);
     document.getElementById("theCanvas")?.addEventListener("mousedown", canvasMouseDown);
     document.getElementById("theCanvas")?.addEventListener("mouseup", canvasMouseUp);
     document.getElementById("theCanvas")?.addEventListener("mouseout", canvasMouseOut);
@@ -42,48 +42,48 @@ function registerEvents() {
     document.getElementById("theCanvas")?.addEventListener("touchstart", canvasTouchStart);
     document.getElementById("theCanvas")?.addEventListener("touchend", canvasTouchEnd);
     document.getElementById("theCanvas")?.addEventListener("touchmove", canvasTouchMove);
-    document.getElementById("massInput")?.addEventListener("change", massInputChange);
-    document.getElementById("cbxDisplayVectors")?.addEventListener("change", cbxDisplayVectorsChange);
-    document.getElementById("cbxCollisions")?.addEventListener("change", cbxCollisionsChange);
-    document.getElementById("cbxElasticCollisions")?.addEventListener("change", cbxElasticCollisionsChange);
+    document.getElementById("massInput")?.addEventListener("change", massInputChanged);
+    document.getElementById("cbxDisplayVectors")?.addEventListener("change", cbxDisplayVectorsChanged);
+    document.getElementById("cbxCollisions")?.addEventListener("change", cbxCollisionsChanged);
+    document.getElementById("cbxElasticCollisions")?.addEventListener("change", cbxElasticCollisionsChanged);
     document.querySelectorAll('input[name="radioBtnMouseAction"]').forEach((radioButton) => {
-        radioButton.addEventListener('change', radioBtnMouseActionChange);
+        radioButton.addEventListener('change', radioBtnMouseActionChanged);
       });
 }
 //#region eventHandlers
-function zoomOutClick(this: HTMLElement, ev: MouseEvent) {
+function zoomOutClicked(this: HTMLElement, ev: MouseEvent) {
     canvas.zoomOut(new Vector2D(canvas.visibleCanvas.width / 2, canvas.visibleCanvas.height / 2));
-    canvas.redrawSimulationState(simulation.objectStates, canvas.animationSettings.displayVectors);
+    canvas.redrawSimulationState(simulation.simulationState, canvas.animationSettings.displayVectors);
     setStatusMessage(`Zoom: ${canvas.canvasSpace.zoomFactor} (m per pixel)`, 4);
 }
-function zoomInClick(this: HTMLElement, ev: MouseEvent) {
+function zoomInClicked(this: HTMLElement, ev: MouseEvent) {
     canvas.zoomIn(new Vector2D(canvas.visibleCanvas.width / 2, canvas.visibleCanvas.height / 2));
-    canvas.redrawSimulationState(simulation.objectStates, canvas.animationSettings.displayVectors);
+    canvas.redrawSimulationState(simulation.simulationState, canvas.animationSettings.displayVectors);
     setStatusMessage(`Zoom: ${canvas.canvasSpace.zoomFactor} (m per pixel)`, 4);
 }
-function scrollLeftClick(this: HTMLElement, ev: MouseEvent) {
+function scrollLeftClicked(this: HTMLElement, ev: MouseEvent) {
     canvas.moveCanvasLeft();
-    canvas.redrawSimulationState(simulation.objectStates, canvas.animationSettings.displayVectors);
+    canvas.redrawSimulationState(simulation.simulationState, canvas.animationSettings.displayVectors);
 }
-function scrollRightClick(this: HTMLElement, ev: MouseEvent) {
+function scrollRightClicked(this: HTMLElement, ev: MouseEvent) {
     canvas.moveCanvasRight();
-    canvas.redrawSimulationState(simulation.objectStates, canvas.animationSettings.displayVectors);
+    canvas.redrawSimulationState(simulation.simulationState, canvas.animationSettings.displayVectors);
 }
-function scrollUpClick(this: HTMLElement, ev: MouseEvent) {
+function scrollUpClicked(this: HTMLElement, ev: MouseEvent) {
     canvas.moveCanvasUp();
-    canvas.redrawSimulationState(simulation.objectStates, canvas.animationSettings.displayVectors);
+    canvas.redrawSimulationState(simulation.simulationState, canvas.animationSettings.displayVectors);
 }
-function scrollDownClick(this: HTMLElement, ev: MouseEvent) {
+function scrollDownClicked(this: HTMLElement, ev: MouseEvent) {
     canvas.moveCanvasDown();
-    canvas.redrawSimulationState(simulation.objectStates, canvas.animationSettings.displayVectors);
+    canvas.redrawSimulationState(simulation.simulationState, canvas.animationSettings.displayVectors);
 }
-function massInputChange(this: HTMLElement) {
+function massInputChanged(this: HTMLElement) {
     const element = this as HTMLInputElement;
     const inputValue = element.value;
     selectedMassInput = tsEssentials.isNumeric(inputValue) ? +inputValue : 0;
     element.step = calculateMassInputStep(); // step = 10% of input value, round down to nearest power of 10
 }
-function cbxCollisionsChange(event: Event) {
+function cbxCollisionsChanged(event: Event) {
     const checked = tsEssentials.isChecked(event.target as HTMLInputElement);
     const cbxElastic: HTMLInputElement = <HTMLInputElement>document.getElementById("cbxElasticCollisions");
     const elasticChecked = tsEssentials.isChecked(cbxElastic);
@@ -92,52 +92,76 @@ function cbxCollisionsChange(event: Event) {
 
     cbxElastic.disabled = !checked;
 }
-function cbxElasticCollisionsChange(event: Event) {
+function cbxElasticCollisionsChanged(event: Event) {
     const checked = tsEssentials.isChecked(event.target as HTMLInputElement);
     simulation.elasticCollisions = checked;
 }
-function cbxDisplayVectorsChange(event: Event) {
+function cbxDisplayVectorsChanged(event: Event) {
     const checkbox = event.target as HTMLInputElement;
     canvas.animationSettings.displayVectors = checkbox ? checkbox.checked : false;
     if (!canvas.animationRunning) {
-        canvas.redrawSimulationState(simulation.objectStates, canvas.animationSettings.displayVectors);
+        canvas.redrawSimulationState(simulation.simulationState, canvas.animationSettings.displayVectors);
     }
 }
-function radioBtnMouseActionChange(event: Event): void {
+function radioBtnMouseActionChanged(event: Event): void {
     const target = event.target as HTMLInputElement;
     if (target && target.type === 'radio') {
       selectedCanvasClickAction = target.value;
     }
 }
+function toggleSimulationClicked(this: HTMLElement, ev: MouseEvent) {
+    if (simulation.running) {
+        pauseSimulation();
+    } else {
+        resumeSimulation();
+    }
+}
+function nextStepClicked() {
+    if (canvas.animationRunning) {
+        return;
+    }
+    simulation.nextState();
+    canvas.redrawSimulationState(simulation.simulationState, canvas.animationSettings.displayVectors);
+    setStatusMessage(`Simulation Tick: ${simulation.tickCount}`, 2);
+    setStatusMessage(`Number of Bodies: ${simulation.simulationState.length}`, 1);
+}
+function resetClicked() {
+    if (simulation.running) {
+        pauseSimulation();
+    }
+    simulation.clearObjects();
+    simulation.tickCount = 0;
+    canvas.redrawSimulationState(simulation.simulationState, canvas.animationSettings.displayVectors);
+    setStatusMessage(`Simulation Tick: ${simulation.tickCount}`, 2);
+    setStatusMessage(`Number of Bodies: ${simulation.simulationState.length}`, 1);
+}
 function canvasMouseDown(this: HTMLElement, ev: MouseEvent) {
     if (ev.button !== 0) {
         return; // do nothing if a button other than the main mouse button is clicked
     }
-    canvasLMouseState = MouseBtnState.Down;
+    canvasLeftMouseState = MouseBtnState.Down;
     const mousePosition: Vector2D = canvas.getCanvasMousePosition(ev);
     
     switch (CanvasClickAction[selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
         case CanvasClickAction.None:  
             break;
         case CanvasClickAction.AddBody:
-            mainMouseBtnLastCanvasPosition = mousePosition;
+            lastMainMouseBtnDownPositionOnCanvas = mousePosition;
             break;
         default:
             break;
     }
 }
 function canvasMouseMove(this: HTMLElement, ev: MouseEvent) {
-    if (canvasLMouseState === MouseBtnState.Up) {
+    if (canvasLeftMouseState === MouseBtnState.Up) {
         return;
     }
-    // goal: display vector for a body that is currently being added
-    // or add body to simSpace as immovable, with the velocity from moving, then redraw everything
 }
 function canvasMouseUp(this: HTMLElement, ev: MouseEvent) {
-    if (ev.button !== 0 || canvasLMouseState === MouseBtnState.Up) {
+    if (ev.button !== 0 || canvasLeftMouseState === MouseBtnState.Up) {
         return;
     }
-    canvasLMouseState = MouseBtnState.Up;
+    canvasLeftMouseState = MouseBtnState.Up;
     const mousePosition: Vector2D = canvas.getCanvasMousePosition(ev);
     
     switch (CanvasClickAction[selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
@@ -146,22 +170,22 @@ function canvasMouseUp(this: HTMLElement, ev: MouseEvent) {
         case CanvasClickAction.AddBody:
             const bodyBeingAdded: Body2d = body2dFromInputs();
             if (bodyBeingAdded.mass <= 0) { break; }
-            const vel: Vector2D = calculateVelocityBetweenPoints(canvas.pointInCanvasSpaceToSimulationSpace(mainMouseBtnLastCanvasPosition), canvas.pointInCanvasSpaceToSimulationSpace(mousePosition));
-            addBodyToSimulation(bodyBeingAdded, canvas.pointInCanvasSpaceToSimulationSpace(mousePosition), vel);
-            setStatusMessage(`Number of Bodies: ${simulation.objectStates.length}`, 1);
+            const vel: Vector2D = calculateVelocityBetweenPoints(canvas.pointFromCanvasSpaceToSimulationSpace(lastMainMouseBtnDownPositionOnCanvas), canvas.pointFromCanvasSpaceToSimulationSpace(mousePosition));
+            addBodyToSimulation(bodyBeingAdded, canvas.pointFromCanvasSpaceToSimulationSpace(mousePosition), vel);
+            setStatusMessage(`Number of Bodies: ${simulation.simulationState.length}`, 1);
             break;
         default:
             break;
     }
     if (!canvas.animationRunning) {
-        canvas.redrawSimulationState(simulation.objectStates, canvas.animationSettings.displayVectors);
+        canvas.redrawSimulationState(simulation.simulationState, canvas.animationSettings.displayVectors);
     }
 }
 function canvasMouseOut(this: HTMLElement, ev: MouseEvent) {
-    canvasLMouseState = MouseBtnState.Up;
+    canvasLeftMouseState = MouseBtnState.Up;
 }
 function canvasTouchStart(this: HTMLElement, ev: TouchEvent) {
-    canvasLMouseState = MouseBtnState.Down;
+    canvasLeftMouseState = MouseBtnState.Down;
     const touchPosition = canvas.getCanvasTouchPosition(ev);
 
     switch (CanvasClickAction[selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
@@ -169,7 +193,7 @@ function canvasTouchStart(this: HTMLElement, ev: TouchEvent) {
             break;
         case CanvasClickAction.AddBody:
             ev.preventDefault();
-            mainMouseBtnLastCanvasPosition = touchPosition;
+            lastMainMouseBtnDownPositionOnCanvas = touchPosition;
             break;
         default:
             break;
@@ -179,14 +203,14 @@ function canvasTouchMove(this: HTMLElement, ev: TouchEvent) {
     const touchPosition = canvas.getCanvasTouchEndPosition(ev);
     tsEssentials.log(touchPosition.toString())
     if (touchPosition.x > canvas.visibleCanvas.width || touchPosition.y > canvas.visibleCanvas.height) {
-        canvasLMouseState = MouseBtnState.Up;
+        canvasLeftMouseState = MouseBtnState.Up;
     }
 }
 function canvasTouchEnd(this: HTMLElement, ev: TouchEvent) {
-    if (canvasLMouseState === MouseBtnState.Up) {
+    if (canvasLeftMouseState === MouseBtnState.Up) {
         return;
     }
-    canvasLMouseState = MouseBtnState.Up;
+    canvasLeftMouseState = MouseBtnState.Up;
     const touchPosition = canvas.getCanvasTouchEndPosition(ev);
 
     switch (CanvasClickAction[selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
@@ -195,15 +219,15 @@ function canvasTouchEnd(this: HTMLElement, ev: TouchEvent) {
         case CanvasClickAction.AddBody:
             const bodyBeingAdded = body2dFromInputs();    
             if (bodyBeingAdded.mass <= 0) { break; }
-            const vel: Vector2D = calculateVelocityBetweenPoints(canvas.pointInCanvasSpaceToSimulationSpace(mainMouseBtnLastCanvasPosition), canvas.pointInCanvasSpaceToSimulationSpace(touchPosition));
-            addBodyToSimulation(bodyBeingAdded, canvas.pointInCanvasSpaceToSimulationSpace(touchPosition), vel);
-            setStatusMessage(`Number of Bodies: ${simulation.objectStates.length}`, 1);
+            const vel: Vector2D = calculateVelocityBetweenPoints(canvas.pointFromCanvasSpaceToSimulationSpace(lastMainMouseBtnDownPositionOnCanvas), canvas.pointFromCanvasSpaceToSimulationSpace(touchPosition));
+            addBodyToSimulation(bodyBeingAdded, canvas.pointFromCanvasSpaceToSimulationSpace(touchPosition), vel);
+            setStatusMessage(`Number of Bodies: ${simulation.simulationState.length}`, 1);
             break;
         default:
             break;
     }
     if (!canvas.animationRunning) {
-        canvas.redrawSimulationState(simulation.objectStates, canvas.animationSettings.displayVectors);
+        canvas.redrawSimulationState(simulation.simulationState, canvas.animationSettings.displayVectors);
     }
 }
 //#endregion
@@ -275,32 +299,6 @@ function calculateVelocityBetweenPoints(toCoordinate: Vector2D, fromCoordinate: 
     let distance: Vector2D = toCoordinate.subtract(fromCoordinate);
     return distance.scale(1 / timeFrameInSeconds);
 }
-function toggleSimClick(this: HTMLElement, ev: MouseEvent) {
-    if (simulation.running) {
-        pauseSimulation();
-    } else {
-        resumeSimulation();
-    }
-}
-function nextStepClick() {
-    if (canvas.animationRunning) {
-        return;
-    }
-    simulation.nextState();
-    canvas.redrawSimulationState(simulation.objectStates, canvas.animationSettings.displayVectors);
-    setStatusMessage(`Simulation Tick: ${simulation.tickCount}`, 2);
-    setStatusMessage(`Number of Bodies: ${simulation.objectStates.length}`, 1);
-}
-function resetClick() {
-    if (simulation.running) {
-        pauseSimulation();
-    }
-    simulation.clearObjects();
-    simulation.tickCount = 0;
-    canvas.redrawSimulationState(simulation.objectStates, canvas.animationSettings.displayVectors);
-    setStatusMessage(`Simulation Tick: ${simulation.tickCount}`, 2);
-    setStatusMessage(`Number of Bodies: ${simulation.objectStates.length}`, 1);
-}
 /**
  * @param position in *SIMULATION SPACE*
  * @param velocity in *SIMULATION SPACE*
@@ -323,7 +321,7 @@ function resumeSimulation() {
     if (!simulation.running) {
         simulation.run();
         drawRunningSimulation();
-        setStatusMessage(`Number of Bodies: ${simulation.objectStates.length}`, 1);
+        setStatusMessage(`Number of Bodies: ${simulation.simulationState.length}`, 1);
         document.getElementById("btnToggleSim")!.innerHTML = "Pause";
     }
 }
@@ -342,9 +340,9 @@ function drawRunningSimulation() {
     const runDrawLoop = () => {
         if (canvas.animationRunning) {
             setTimeout(runDrawLoop, canvas.animationSettings.frameLength);
-            canvas.redrawSimulationState(simulation.objectStates, canvas.animationSettings.displayVectors);
+            canvas.redrawSimulationState(simulation.simulationState, canvas.animationSettings.displayVectors);
             setStatusMessage(`Simulation Tick: ${simulation.tickCount}`, 2);
-            setStatusMessage(`Number of Bodies: ${simulation.objectStates.length}`, 1);
+            setStatusMessage(`Number of Bodies: ${simulation.simulationState.length}`, 1);
         }
     };
     runDrawLoop();

@@ -1,6 +1,9 @@
 # currently/next working on:
     - some refactors
         - move things from main.ts to separate files
+            - class Simulation which combines canvas + gravity ?
+        - remove mouseMove and touchMove, then check whether we are inside the canvas when releasing
+        - remove color from Body2d, (in Canvas or similar) extend Body2d and add color
     - workers and offscreen canvas
     - mobile / responsive
 
