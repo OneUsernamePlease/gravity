@@ -8,14 +8,10 @@ export class Canvas {
     private _visibleCanvas: HTMLCanvasElement;
     private _visibleCanvasContext: CanvasRenderingContext2D;
     private _canvasSpace: CanvasSpace;
-    private _animationSettings: AnimationSettings;
-    private _animationRunning: boolean;
     constructor(visibleCanvas: HTMLCanvasElement) {
         this._visibleCanvas = visibleCanvas;
         this._visibleCanvasContext = visibleCanvas.getContext("2d")!;
-        this._canvasSpace = {origin: new Vector2D(0, 0), zoomFactor: 1, orientationY: -1};
-        this._animationSettings = { defaultScrollRate: 0.1, defaultZoomStep: 1, frameLength: 25, displayVectors: true, tracePaths: false };
-        this._animationRunning = false;
+        this._canvasSpace = {origin: new Vector2D(0, 0), currentZoom: 1, orientationY: -1};
     }
     //#region get, set
     get visibleCanvas() {
@@ -35,18 +31,6 @@ export class Canvas {
     }
     set canvasSpace(canvasSpace: CanvasSpace) {
         this._canvasSpace = canvasSpace;
-    }
-    get animationSettings() {
-        return this._animationSettings;
-    }
-    set animationSettings(animationSetting: AnimationSettings) {
-        this._animationSettings = animationSetting;
-    }
-    get animationRunning() {
-        return this._animationRunning;
-    }
-    set animationRunning(animationRunning: boolean) {
-        this._animationRunning = animationRunning;
     }
     //#endregion
     //#region drawing stuff
@@ -78,7 +62,7 @@ export class Canvas {
      * @param color default white
      */
     public drawBody(body: Body2d, position: Vector2D) {
-        let visibleRadius = Math.max(body.radius / this.canvasSpace.zoomFactor, 1); // Minimum Radius of displayed body is one
+        let visibleRadius = Math.max(body.radius / this.canvasSpace.currentZoom, 1); // Minimum Radius of displayed body is one
         this.visibleCanvasContext.beginPath();
         this.visibleCanvasContext.arc(position.x, position.y, visibleRadius, 0, Math.PI * 2);
         this.visibleCanvasContext.closePath();
@@ -106,7 +90,7 @@ export class Canvas {
     // 3. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
     const shifted: Vector2D = simVector.subtract(this.canvasSpace.origin);
     const flipped: Vector2D = new Vector2D(shifted.x, shifted.y * -1);
-    const scaled: Vector2D = flipped.scale(1 / this.canvasSpace.zoomFactor);
+    const scaled: Vector2D = flipped.scale(1 / this.canvasSpace.currentZoom);
     return scaled;
     }
     public directionFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
@@ -114,7 +98,7 @@ export class Canvas {
         // 1. flip (y axis are in opposite directions)
         // 2. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
         const flipped: Vector2D = new Vector2D(simVector.x, simVector.y * -1);
-        const scaled: Vector2D = flipped.scale(1 / this.canvasSpace.zoomFactor);
+        const scaled: Vector2D = flipped.scale(1 / this.canvasSpace.currentZoom);
         return scaled;
     }
     public pointFromCanvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
@@ -123,62 +107,47 @@ export class Canvas {
         // 2. flip (y axis are in opposite directions)
         // 3. shift (scaledAndFlippedPoint + Origin of C in SimSpace)
         let simulationVector: Vector2D;
-        simulationVector = canvasVector.scale(this.canvasSpace.zoomFactor).hadamardProduct(new Vector2D(1, this.canvasSpace.orientationY)).add(this.canvasSpace.origin);
+        simulationVector = canvasVector.scale(this.canvasSpace.currentZoom).hadamardProduct(new Vector2D(1, this.canvasSpace.orientationY)).add(this.canvasSpace.origin);
         return simulationVector;
     }    
     /**
      * Origin {x:0,y:0} is at the top-left
      */
-    public setCanvasOrigin(newOrigin: Vector2D) {
+    public setOrigin(newOrigin: Vector2D) {
         this.canvasSpace.origin = newOrigin;
     }
-    public moveCanvasRight(rate?: number) {
-        const distance = this.calculateScrollDistance("horizontal", rate); // in simulationUnits
-        this.setCanvasOrigin(new Vector2D(this.canvasSpace.origin.x + distance, this.canvasSpace.origin.y));
+    public moveCanvasRight(distance: number) {
+        this.setOrigin(new Vector2D(this.canvasSpace.origin.x + distance, this.canvasSpace.origin.y));
     }
-    public moveCanvasLeft(rate?: number) {
-        const distance = this.calculateScrollDistance("horizontal", rate); // in simulationUnits
-        this.setCanvasOrigin(new Vector2D(this.canvasSpace.origin.x - distance, this.canvasSpace.origin.y ));
+    public moveCanvasLeft(distance: number) {
+        this.setOrigin(new Vector2D(this.canvasSpace.origin.x - distance, this.canvasSpace.origin.y ));
     }
-    public moveCanvasUp(rate?: number) {
-        const distance = this.calculateScrollDistance("vertical", rate); // in simulationUnits
-        this.setCanvasOrigin(new Vector2D(this.canvasSpace.origin.x, this.canvasSpace.origin.y + distance));
+    public moveCanvasUp(distance: number) {
+        this.setOrigin(new Vector2D(this.canvasSpace.origin.x, this.canvasSpace.origin.y + distance));
     }
-    public moveCanvasDown(rate?: number) {
-        const distance = this.calculateScrollDistance("vertical", rate); // in simulationUnits
-        this.setCanvasOrigin(new Vector2D(this.canvasSpace.origin.x, this.canvasSpace.origin.y - distance));
+    public moveCanvasDown(distance: number) {
+        this.setOrigin(new Vector2D(this.canvasSpace.origin.x, this.canvasSpace.origin.y - distance));
     }
-    /**
-     * 
-     * @param orientation "horizontal" | "vertical"
-     * @param rate a number *0<rate<1* - the relative distance of the screen dimension (h/v) that one scroll step will move (ie. 0.1 will scroll 10% of the width/height in a horizontal/vertical direction)
-     * @returns 
-     */
-    private calculateScrollDistance(orientation: "horizontal" | "vertical", rate?: number): number {
-        if (rate === undefined) { rate = this.animationSettings.defaultScrollRate; }
-        switch (orientation) {
-            case "horizontal":
-                return this.visibleCanvas.width * rate * this.canvasSpace.zoomFactor;
-            case "vertical":
-                return this.visibleCanvas.height * rate * this.canvasSpace.zoomFactor;
-        }
-    }
-    public zoomOut(zoomCenter: Vector2D) {
-        const newZoom = this.canvasSpace.zoomFactor + this.animationSettings.defaultZoomStep;
-
-        let shiftOrigin: Vector2D = zoomCenter.scale(this.animationSettings.defaultZoomStep); // zoom step here is really the difference in zoom change (zoomFactor now - zoomFactor before)
+    
+    public zoomOut(zoomCenter: Vector2D, zoomStep: number) {
+        const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
+        const newZoom = this.canvasSpace.currentZoom + zoomStep;
 
         this.canvasSpace.origin = new Vector2D(this.canvasSpace.origin.x - shiftOrigin.x, this.canvasSpace.origin.y + shiftOrigin.y);
-        this.canvasSpace.zoomFactor = newZoom;
+        this.canvasSpace.currentZoom = newZoom;
     }
-    public zoomIn(zoomCenter: Vector2D) {
-        if (this.canvasSpace.zoomFactor <= 1) { return; }
-        let newZoom = this.canvasSpace.zoomFactor - this.animationSettings.defaultZoomStep;
+    public zoomIn(zoomCenter: Vector2D, zoomStep: number) {
+        if (this.canvasSpace.currentZoom <= 1) { return; }
+        let newZoom = this.canvasSpace.currentZoom - zoomStep;
+        if (newZoom < 1) {
+            newZoom = 1;
+            zoomStep = this.canvasSpace.currentZoom - 1;
+        }
 
-        let shiftOrigin: Vector2D = zoomCenter.scale(this.animationSettings.defaultZoomStep); // zoom step here is really the difference in zoom change (zoomFactor now - zoomFactor before)
+        let shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
 
         this.canvasSpace.origin = new Vector2D(this.canvasSpace.origin.x + shiftOrigin.x, this.canvasSpace.origin.y - shiftOrigin.y);
-        this.canvasSpace.zoomFactor = newZoom;
+        this.canvasSpace.currentZoom = newZoom;
     }
     public getCanvasMousePosition(event: MouseEvent): Vector2D {
         const rect = this.visibleCanvas.getBoundingClientRect();

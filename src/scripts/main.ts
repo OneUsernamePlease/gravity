@@ -11,13 +11,14 @@ let selectedMassInput: number;
 let canvasLeftMouseState: MouseBtnState = MouseBtnState.Up;
 let lastMainMouseBtnDownPositionOnCanvas: Vector2D = new Vector2D (0, 0);
 let selectedCanvasClickAction: string;
+const canvasId: string = "theCanvas";
 
 document.addEventListener("DOMContentLoaded", initialize);
 function initialize() {
-    sandbox = new Sandbox(new Canvas(<HTMLCanvasElement>document.getElementById("theCanvas")), new Simulation())
-    sandbox.initStatusBar();
     registerEvents();
-    sandbox.initSandbox({x: 1280, y: 720});
+    sandbox = new Sandbox(new Canvas(<HTMLCanvasElement>document.getElementById(canvasId)), new Simulation())
+    sandbox.initStatusBar();
+    sandbox.initSandbox({x: 1280, y: 720}, canvasId);
     selectedMassInput = tsEssentials.getInputNumber("massInput");
     (<HTMLInputElement>document.getElementById("massInput")!).step = calculateMassInputStep();
     selectedCanvasClickAction = (document.querySelector('input[name="radioBtnMouseAction"]:checked') as HTMLInputElement).value;
@@ -34,13 +35,13 @@ function registerEvents() {
     document.getElementById("btnScrollRight")?.addEventListener("click", scrollRightClicked);
     document.getElementById("btnScrollUp")?.addEventListener("click", scrollUpClicked);
     document.getElementById("btnScrollDown")?.addEventListener("click", scrollDownClicked);
-    document.getElementById("theCanvas")?.addEventListener("mousedown", canvasMouseDown);
-    document.getElementById("theCanvas")?.addEventListener("mouseup", canvasMouseUp);
-    document.getElementById("theCanvas")?.addEventListener("mouseout", canvasMouseOut);
-    document.getElementById("theCanvas")?.addEventListener("mousemove", canvasMouseMove);
-    document.getElementById("theCanvas")?.addEventListener("touchstart", canvasTouchStart);
-    document.getElementById("theCanvas")?.addEventListener("touchend", canvasTouchEnd);
-    document.getElementById("theCanvas")?.addEventListener("touchmove", canvasTouchMove);
+    document.getElementById(canvasId)?.addEventListener("mousedown", canvasMouseDown);
+    document.getElementById(canvasId)?.addEventListener("mouseup", canvasMouseUp);
+    document.getElementById(canvasId)?.addEventListener("mouseout", canvasMouseOut);
+    document.getElementById(canvasId)?.addEventListener("mousemove", canvasMouseMove);
+    document.getElementById(canvasId)?.addEventListener("touchstart", canvasTouchStart);
+    document.getElementById(canvasId)?.addEventListener("touchend", canvasTouchEnd);
+    document.getElementById(canvasId)?.addEventListener("touchmove", canvasTouchMove);
     document.getElementById("massInput")?.addEventListener("change", massInputChanged);
     document.getElementById("cbxDisplayVectors")?.addEventListener("change", cbxDisplayVectorsChanged);
     document.getElementById("cbxCollisions")?.addEventListener("change", cbxCollisionsChanged);
@@ -51,30 +52,24 @@ function registerEvents() {
 }
 //#region eventHandlers
 function zoomOutClicked(this: HTMLElement, ev: MouseEvent) {
-    sandbox.canvas.zoomOut(new Vector2D(sandbox.canvas.visibleCanvas.width / 2, sandbox.canvas.visibleCanvas.height / 2));
-    sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.canvas.animationSettings.displayVectors);
-    sandbox.setStatusMessage(`Zoom: ${sandbox.canvas.canvasSpace.zoomFactor} (m per pixel)`, 4);
+    const zoomCenter = new Vector2D(sandbox.canvas.visibleCanvas.width / 2, sandbox.canvas.visibleCanvas.height / 2)
+    sandbox.zoomOut(zoomCenter);
 }
 function zoomInClicked(this: HTMLElement, ev: MouseEvent) {
-    sandbox.canvas.zoomIn(new Vector2D(sandbox.canvas.visibleCanvas.width / 2, sandbox.canvas.visibleCanvas.height / 2));
-    sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.canvas.animationSettings.displayVectors);
-    sandbox.setStatusMessage(`Zoom: ${sandbox.canvas.canvasSpace.zoomFactor} (m per pixel)`, 4);
+    const zoomCenter = new Vector2D(sandbox.canvas.visibleCanvas.width / 2, sandbox.canvas.visibleCanvas.height / 2)
+    sandbox.zoomIn(zoomCenter);
 }
 function scrollLeftClicked(this: HTMLElement, ev: MouseEvent) {
-    sandbox.canvas.moveCanvasLeft();
-    sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.canvas.animationSettings.displayVectors);
+    sandbox.moveCanvasLeft();
 }
 function scrollRightClicked(this: HTMLElement, ev: MouseEvent) {
-    sandbox.canvas.moveCanvasRight();
-    sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.canvas.animationSettings.displayVectors);
+    sandbox.moveCanvasRight();
 }
 function scrollUpClicked(this: HTMLElement, ev: MouseEvent) {
-    sandbox.canvas.moveCanvasUp();
-    sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.canvas.animationSettings.displayVectors);
+    sandbox.moveCanvasUp();
 }
 function scrollDownClicked(this: HTMLElement, ev: MouseEvent) {
-    sandbox.canvas.moveCanvasDown();
-    sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.canvas.animationSettings.displayVectors);
+    sandbox.moveCanvasDown();
 }
 function massInputChanged(this: HTMLElement) {
     const element = this as HTMLInputElement;
@@ -97,9 +92,9 @@ function cbxElasticCollisionsChanged(event: Event) {
 }
 function cbxDisplayVectorsChanged(event: Event) {
     const checkbox = event.target as HTMLInputElement;
-    sandbox.canvas.animationSettings.displayVectors = checkbox ? checkbox.checked : false;
-    if (!sandbox.canvas.animationRunning) {
-        sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.canvas.animationSettings.displayVectors);
+    sandbox.animationSettings.displayVectors = checkbox ? checkbox.checked : false;
+    if (!sandbox.animationRunning) {
+        sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.animationSettings.displayVectors);
     }
 }
 function radioBtnMouseActionChanged(event: Event): void {
@@ -111,26 +106,29 @@ function radioBtnMouseActionChanged(event: Event): void {
 function toggleSimulationClicked(this: HTMLElement, ev: MouseEvent) {
     if (sandbox.simulation.running) {
         sandbox.pauseSimulation();
+        document.getElementById("btnToggleSim")!.innerHTML = "Play";
     } else {
         sandbox.resumeSimulation();
+        document.getElementById("btnToggleSim")!.innerHTML = "Pause";
     }
 }
 function nextStepClicked() {
-    if (sandbox.canvas.animationRunning) {
+    if (sandbox.animationRunning) {
         return;
     }
     sandbox.simulation.nextState();
-    sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.canvas.animationSettings.displayVectors);
+    sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.animationSettings.displayVectors);
     sandbox.setStatusMessage(`Simulation Tick: ${sandbox.simulation.tickCount}`, 2);
     sandbox.setStatusMessage(`Number of Bodies: ${sandbox.simulation.simulationState.length}`, 1);
 }
 function resetClicked() {
     if (sandbox.simulation.running) {
         sandbox.pauseSimulation();
+        document.getElementById("btnToggleSim")!.innerHTML = "Play";
     }
     sandbox.simulation.clearObjects();
     sandbox.simulation.tickCount = 0;
-    sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.canvas.animationSettings.displayVectors);
+    sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.animationSettings.displayVectors);
     sandbox.setStatusMessage(`Simulation Tick: ${sandbox.simulation.tickCount}`, 2);
     sandbox.setStatusMessage(`Number of Bodies: ${sandbox.simulation.simulationState.length}`, 1);
 }
@@ -176,8 +174,8 @@ function canvasMouseUp(this: HTMLElement, ev: MouseEvent) {
         default:
             break;
     }
-    if (!sandbox.canvas.animationRunning) {
-        sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.canvas.animationSettings.displayVectors);
+    if (!sandbox.animationRunning) {
+        sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.animationSettings.displayVectors);
     }
 }
 function canvasMouseOut(this: HTMLElement, ev: MouseEvent) {
@@ -225,8 +223,8 @@ function canvasTouchEnd(this: HTMLElement, ev: TouchEvent) {
         default:
             break;
     }
-    if (!sandbox.canvas.animationRunning) {
-        sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.canvas.animationSettings.displayVectors);
+    if (!sandbox.animationRunning) {
+        sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.animationSettings.displayVectors);
     }
 }
 //#endregion
@@ -243,8 +241,3 @@ function body2dFromInputs(): Body2d {
     const movable = tsEssentials.isChecked("cvsCbxBodyMovable");
     return new Body2d(selectedMassInput, movable);
 }
-
-
-// #region simulation
-
-// #endregion

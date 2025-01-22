@@ -5,12 +5,22 @@ import { Canvas } from "./canvas";
 import { Simulation } from "./gravity";
 import * as tsEssentials from "./essentials";
 import { Vector2D } from "./vector2d";
+import { AnimationSettings } from "./types";
 
 export class Sandbox {
     private _canvas: Canvas
     private _simulation: Simulation;
     private _statusBar: { fields: HTMLElement[] } = { fields: [] };
+    private _animationSettings: AnimationSettings;
+    
+    private _animationRunning: boolean;
     //#region get, set, constr
+    constructor(canvas: Canvas, simulation: Simulation) {
+        this._canvas = canvas;
+        this._simulation = simulation;
+        this._animationSettings = { defaultScrollRate: 0.1, defaultZoomStep: 1, frameLength: 25, displayVectors: true, tracePaths: false };
+        this._animationRunning = false;
+    }
     set canvas(canvas: Canvas) {
         this._canvas = canvas;
     }
@@ -29,9 +39,17 @@ export class Sandbox {
     get statusBar() {
         return this._statusBar;
     }
-    constructor(canvas: Canvas, simulation: Simulation) {
-        this._canvas = canvas;
-        this._simulation = simulation;
+    get animationSettings() {
+        return this._animationSettings;
+    }
+    set animationSettings(animationSetting: AnimationSettings) {
+        this._animationSettings = animationSetting;
+    }
+    get animationRunning() {
+        return this._animationRunning;
+    }
+    set animationRunning(animationRunning: boolean) {
+        this._animationRunning = animationRunning;
     }
     //#endregion
     //#region setup
@@ -45,16 +63,16 @@ export class Sandbox {
             statusBarField = document.getElementById(idBeginsWith + i);
         }
     }
-    public initSandbox(canvasDimensions: {x: number, y: number}) {
-        this.initCanvas(canvasDimensions.x, canvasDimensions.y);
+    public initSandbox(canvasDimensions: {x: number, y: number}, canvasId: string) {
+        this.initCanvas(canvasDimensions.x, canvasDimensions.y, canvasId);
         this.initSimulation();
     }
-    public initCanvas(width: number, height: number) {
-        const visibleCanvas = (document.getElementById("theCanvas")) as HTMLCanvasElement;
+    public initCanvas(width: number, height: number, id: string) {
+        const visibleCanvas = (document.getElementById(id)) as HTMLCanvasElement;
         this.canvas = new Canvas(visibleCanvas);
         this.canvas.visibleCanvas.width = width;
         this.canvas.visibleCanvas.height = height;
-        this.canvas.animationSettings.displayVectors = tsEssentials.isChecked("cbxDisplayVectors");
+        this.animationSettings.displayVectors = tsEssentials.isChecked("cbxDisplayVectors");
         this.setStatusMessage(`Canvas dimension: ${width} * ${height}`, 5);
         
         // offscreenCanvas = new OffscreenCanvas(visibleCanvas.clientWidth, visibleCanvas.clientHeight);
@@ -88,35 +106,87 @@ export class Sandbox {
     }
     //#endregion
     //#region interaction
-    public zoomOut(zoomCenter: Vector2D, zoomStep: number) {
-        this.canvas.zoomOut(new Vector2D(this.canvas.visibleCanvas.width / 2, this.canvas.visibleCanvas.height / 2));
-        this.canvas.redrawSimulationState(this.simulation.simulationState, this.canvas.animationSettings.displayVectors);
-        this.setStatusMessage(`Zoom: ${this.canvas.canvasSpace.zoomFactor} (m per pixel)`, 4);
+    /**
+     * 
+     * @param orientation "horizontal" | "vertical"
+     * @param rate a number *0<rate<1* - the relative distance of the screen dimension (h/v) that one scroll step will move (ie. 0.1 will scroll 10% of the width/height in a horizontal/vertical direction)
+     * @returns 
+     */
+    private defaultScrollDistance(orientation: "horizontal" | "vertical", rate?: number): number {
+        if (rate === undefined) { rate = this.animationSettings.defaultScrollRate; }
+        switch (orientation) {
+            case "horizontal":
+                return this.canvas.visibleCanvas.width * rate * this.canvas.canvasSpace.currentZoom;
+            case "vertical":
+                return this.canvas.visibleCanvas.height * rate * this.canvas.canvasSpace.currentZoom;
+        }
+    }
+    public moveCanvasRight(distance?: number) {
+        if (distance === undefined) {
+            distance = this.defaultScrollDistance("horizontal"); // in simulationUnits
+        }
+        this.canvas.moveCanvasRight(distance);
+        this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
+    }
+    public moveCanvasLeft(distance?: number) {
+        if (distance === undefined) {
+            distance = this.defaultScrollDistance("horizontal"); // in simulationUnits
+        }
+        this.canvas.moveCanvasLeft(distance);
+        this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
+    }
+    public moveCanvasUp(distance?: number) {
+        if (distance === undefined) {
+            distance = this.defaultScrollDistance("vertical"); // in simulationUnits
+        }
+        this.canvas.moveCanvasUp(distance);
+        this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
+    }
+    public moveCanvasDown(distance?: number) {
+        if (distance === undefined) {
+            distance = this.defaultScrollDistance("vertical"); // in simulationUnits
+        }
+        this.canvas.moveCanvasDown(distance);
+        this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
+    }
+    public zoomOut(zoomCenter: Vector2D, zoomStep?: number) {
+        if (zoomStep === undefined) {
+            zoomStep = this.animationSettings.defaultZoomStep;
+        }
+        this.canvas.zoomOut(zoomCenter, zoomStep);
+        this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
+        this.setStatusMessage(`Zoom: ${this.canvas.canvasSpace.currentZoom} (m per pixel)`, 4);
+    }
+    public zoomIn(zoomCenter: Vector2D, zoomStep?: number) {
+        if (zoomStep === undefined) {
+            zoomStep = this.animationSettings.defaultZoomStep;
+        }
+        this.canvas.zoomIn(zoomCenter, zoomStep);
+        this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
+        this.setStatusMessage(`Zoom: ${this.canvas.canvasSpace.currentZoom} (m per pixel)`, 4);
     }
     public resumeSimulation() {
         if (!this.simulation.running) {
             this.simulation.run();
             this.drawRunningSimulation();
             this.setStatusMessage(`Number of Bodies: ${this.simulation.simulationState.length}`, 1);
-            document.getElementById("btnToggleSim")!.innerHTML = "Pause";
         }
     }
     public pauseSimulation() {
         if (this.simulation.running) {
-            this.canvas.animationRunning = false;
+            this.animationRunning = false;
             this.simulation.pause();
-            document.getElementById("btnToggleSim")!.innerHTML = "Play";
         }
     }
     public drawRunningSimulation() {
-        if (this.canvas.animationRunning) {
+        if (this.animationRunning) {
             return;
         }
-        this.canvas.animationRunning = true;
+        this.animationRunning = true;
         const runDrawLoop = () => {
-            if (this.canvas.animationRunning) {
-                setTimeout(runDrawLoop, this.canvas.animationSettings.frameLength);
-                this.canvas.redrawSimulationState(this.simulation.simulationState, this.canvas.animationSettings.displayVectors);
+            if (this.animationRunning) {
+                setTimeout(runDrawLoop, this.animationSettings.frameLength);
+                this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
                 this.setStatusMessage(`Simulation Tick: ${this.simulation.tickCount}`, 2);
                 this.setStatusMessage(`Number of Bodies: ${this.simulation.simulationState.length}`, 1);
             }
