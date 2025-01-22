@@ -20,3 +20,28 @@ Here is a hopefully complete list of what it can do:
 HINT:
 run: "npm run dev" to start the vite dev-server
 
+# Code
+- main.ts
+This script mostly handles the site, it contains the event listeners and functions.
+
+- gravity.ts
+This contains the Body2d class and the Simulation class. Body2d is pretty self explanatory. Simulation is the nonvisual gravity-simulation (ie. calculate states of all the bodies, add remove bodies).
+
+- canvas.ts
+This contains the canvas and its context, functions for drawing and manipulating the view of the simulation (zoom, scroll).
+
+- sandbox.ts
+Combines gravity and canvas on the site, provides functions for running and animating the simulation, interacting with the simulation on the canvas and writing other outputs.
+
+- types.ts
+A collection of interfaces and enums.
+
+- vector2d.ts
+A simple vector library.
+
+- essentials.ts
+Some generally useful functions.
+
+
+
+

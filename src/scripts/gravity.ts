@@ -71,7 +71,7 @@ export class Simulation {
         this._tickLength = 10; // ms
         this._collisionDetection = false;
         this._elasticCollisions = false;
-        this._g = 0;
+        this._g = 50;
     }
     // #region get, set
     public get simulationState() {
@@ -137,6 +137,17 @@ export class Simulation {
     public pause() {
         this.running = false;
     }
+    /**
+     * Calculates and returns the velocity vector needed to get from *fromCoordinate* to *toCoordinate* in *timeFrameInSeconds* seconds
+     * @param toCoordinate value in simulation space
+     * @param fromCoordinate value in simulation space
+     * @param timeFrameInSeconds *optional* defaults to one
+     */
+    public calculateVelocityBetweenPoints(toCoordinate: Vector2D, fromCoordinate: Vector2D, timeFrameInSeconds: number = 1): Vector2D {
+        if (timeFrameInSeconds <= 0) { timeFrameInSeconds = 1; }
+        let distance: Vector2D = toCoordinate.subtract(fromCoordinate);
+        return distance.scale(1 / timeFrameInSeconds);
+        }
     public nextState() {
         this.updateAccelerationVectors();
         this.updateVelocitiesAndPositions();

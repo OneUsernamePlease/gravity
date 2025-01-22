@@ -55,4 +55,13 @@ export class Vector2D {
     public hadamardProduct(v: Vector2D) {
         return new Vector2D(this.x * v.x, this.y * v.y);
     }
+    /**
+     * @returns an array of two vectors, both normal to v, both pointing in opposite directions
+     */
+    public normalVectors(v: Vector2D): Vector2D[] {
+        const array: Vector2D[] = [];
+        array.push(new Vector2D(-v.y, v.x));
+        array.push(new Vector2D(v.y, -v.x));
+        return array;
+    }
 }
