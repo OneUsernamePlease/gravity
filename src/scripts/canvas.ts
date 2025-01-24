@@ -82,7 +82,6 @@ export class Canvas {
         }
     }
     //#endregion
-
     public pointFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
     // transformation:
     // 1. shift (point in SimSpace - Origin of C in SimSpace)
@@ -137,15 +136,17 @@ export class Canvas {
         this.canvasSpace.currentZoom = newZoom;
     }
     public zoomIn(zoomCenter: Vector2D, zoomStep: number) {
-        if (this.canvasSpace.currentZoom <= 1) { return; }
+        if (this.canvasSpace.currentZoom <= 1) { 
+            return; 
+        }
+
         let newZoom = this.canvasSpace.currentZoom - zoomStep;
         if (newZoom < 1) {
             newZoom = 1;
             zoomStep = this.canvasSpace.currentZoom - 1;
         }
-
+        
         let shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
-
         this.canvasSpace.origin = new Vector2D(this.canvasSpace.origin.x + shiftOrigin.x, this.canvasSpace.origin.y - shiftOrigin.y);
         this.canvasSpace.currentZoom = newZoom;
     }

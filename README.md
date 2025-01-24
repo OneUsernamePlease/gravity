@@ -31,7 +31,7 @@ This contains the Body2d class and the Simulation class. Body2d is pretty self e
 This contains the canvas and its context, functions for drawing and manipulating the view of the simulation (zoom, scroll).
 
 - sandbox.ts
-Combines gravity and canvas on the site, provides functions for running and animating the simulation, interacting with the simulation on the canvas and writing other outputs.
+Combines gravity and canvas, provides functions for running and animating the simulation, interacting with the simulation on the canvas and writing other outputs.
 
 - types.ts
 A collection of interfaces and enums.

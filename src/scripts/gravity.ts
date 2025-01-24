@@ -131,8 +131,8 @@ export class Simulation {
     public clearObjects() {
         this.simulationState = [];
     }
-    public removeFromObjectStates(i: number) {
-        this.simulationState.splice(i, 1);
+    public removeFromObjectStates(index: number) {
+        this.simulationState.splice(index, 1);
     }
     public pause() {
         this.running = false;
@@ -147,7 +147,7 @@ export class Simulation {
         if (timeFrameInSeconds <= 0) { timeFrameInSeconds = 1; }
         let distance: Vector2D = toCoordinate.subtract(fromCoordinate);
         return distance.scale(1 / timeFrameInSeconds);
-        }
+    }
     public nextState() {
         this.updateAccelerationVectors();
         this.updateVelocitiesAndPositions();
@@ -291,6 +291,7 @@ export class Simulation {
         body1.velocity = body1.velocity.subtract(deltaV1);
         body2.velocity = body2.velocity.add(deltaV2);
         
+        // REFACTOR ME: at the top, check for movable, if not just reflect velocity
         // if a body is immovable, reset its velocity and transfer it back
         if (!body1.body.movable) {
             body1.velocity = new Vector2D(0, 0);
