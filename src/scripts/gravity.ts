@@ -141,7 +141,7 @@ export class Simulation {
      * Calculates and returns the velocity vector needed to get from *fromCoordinate* to *toCoordinate* in *timeFrameInSeconds* seconds
      * @param toCoordinate value in simulation space
      * @param fromCoordinate value in simulation space
-     * @param timeFrameInSeconds *optional* defaults to one
+     * @param timeFrameInSeconds *optional* defaults to 1
      */
     public calculateVelocityBetweenPoints(toCoordinate: Vector2D, fromCoordinate: Vector2D, timeFrameInSeconds: number = 1): Vector2D {
         if (timeFrameInSeconds <= 0) { timeFrameInSeconds = 1; }
@@ -186,10 +186,7 @@ export class Simulation {
     private updateVelocityAndPosition(objectState: ObjectState) {
         const dt = this.tickLength / 1000;
         if (!objectState.body.movable) { return; }
-        // update velocity based on acceleration: v = v + a * dt
         objectState.velocity = objectState.velocity.add(objectState.acceleration.scale(dt));
-
-        // update position based on velocity: x = x + v * dt
         objectState.position =  objectState.position.add(objectState.velocity.scale(dt));
     }
     private updateVelocitiesAndPositions() {
@@ -270,12 +267,12 @@ export class Simulation {
         // normal vector between the bodies
         const displacement = body1.position.displacementVector(body2.position);
         const distance = displacement.magnitude(); 
-        if (distance <= lowerBounds || distance === 0) { 
+        if (distance <= lowerBounds || distance === 0) {
             return; 
         }
         const normalizedDisplacement = displacement.scale(1 / distance);
 
-        // relative velocity along the normalDisplacement
+        // relative velocity along the normalDisplacement?
         const relativeVelocity = body2.velocity.subtract(body1.velocity);
         const velocityAlongDisplacement = relativeVelocity.dotProduct(normalizedDisplacement);
 
@@ -302,11 +299,14 @@ export class Simulation {
             body1.velocity = body1.velocity.add(deltaV2);
         }
     }
-    private placeOverlappingBodiesTangentially(objectState1: ObjectState, objectState2: ObjectState) {
+    private placeBodiesTangentially(objectState1: ObjectState, objectState2: ObjectState) {
         const displacement = objectState1.position.displacementVector(objectState2.position);
         const normalDisplacement = displacement.normalize();        
         const targetDistance = objectState1.body.radius + objectState2.body.radius;
         const totalMoveDistance = targetDistance - displacement.magnitude();
+        if (targetDistance === 0) {
+            return;
+        }
         const moveBody1 = normalDisplacement.scale(totalMoveDistance * (objectState1.body.radius / targetDistance));
         const moveBody2 = normalDisplacement.scale(totalMoveDistance * (objectState2.body.radius / targetDistance));
     

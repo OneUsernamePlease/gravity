@@ -1,5 +1,5 @@
-import { Body2d, Simulation } from "./gravity";
-import { AnimationSettings, CanvasSpace, ObjectState } from "./types";
+import { Body2d } from "./gravity";
+import { CanvasSpace, ObjectState } from "./types";
 import { Vector2D } from "./vector2d";
 
 export class Canvas {
@@ -71,10 +71,12 @@ export class Canvas {
     }
     public drawBodies(objectStates: ObjectState[]) {
         objectStates.forEach(object => {
+            // REFACTOR ME: draw only if body or its vectors are (partially) visible, otherwise return 
             this.drawBody(object.body, this.pointFromSimulationSpaceToCanvasSpace(object.position));
         });
     }
     public redrawSimulationState(objectStates: ObjectState[], displayVectors: boolean) {
+        // REFACTOR ME: instead of displayVectors, pass the current animationSettings, then extract the values here
         this.visibleCanvasContext.clearRect(0, 0, this.visibleCanvas.width, this.visibleCanvas.height);
         this.drawBodies(objectStates);
         if (displayVectors) {
@@ -82,7 +84,7 @@ export class Canvas {
         }
     }
     //#endregion
-    public pointFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
+    private pointFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
     // transformation:
     // 1. shift (point in SimSpace - Origin of C in SimSpace)
     // 2. flip (y axis point in opposite directions)
@@ -92,7 +94,7 @@ export class Canvas {
     const scaled: Vector2D = flipped.scale(1 / this.canvasSpace.currentZoom);
     return scaled;
     }
-    public directionFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
+    private directionFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
         // transformation:
         // 1. flip (y axis are in opposite directions)
         // 2. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
@@ -108,7 +110,7 @@ export class Canvas {
         let simulationVector: Vector2D;
         simulationVector = canvasVector.scale(this.canvasSpace.currentZoom).hadamardProduct(new Vector2D(1, this.canvasSpace.orientationY)).add(this.canvasSpace.origin);
         return simulationVector;
-    }    
+    }
     /**
      * Origin {x:0,y:0} is at the top-left
      */
@@ -127,7 +129,6 @@ export class Canvas {
     public moveCanvasDown(distance: number) {
         this.setOrigin(new Vector2D(this.canvasSpace.origin.x, this.canvasSpace.origin.y - distance));
     }
-    
     public zoomOut(zoomCenter: Vector2D, zoomStep: number) {
         const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
         const newZoom = this.canvasSpace.currentZoom + zoomStep;

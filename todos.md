@@ -1,11 +1,16 @@
 # currently/next working on:
     - some refactors
         - remove color from Body2d, (in Canvas or similar) extend Body2d and add color
+        - restructure
+            - sandbox is the new main -> outsource
+                - pageController that coordinates everything
+                - inputs.ts - remove inputs from sandbox? 
     - mobile / responsive
     - workers and offscreen canvas
 
 # bugs
     - mobile view (or just narrow width)
+    - elastic collisions (that should be 100% elastic) are not
     - in theory a body can move at above c so introduce a limit we shall
     - when Display Vectors is active, the displayed acceleration vector for a given body is actually the vector from the previous tick.
         - for a given simulationState, immediately calculate force/acceleration rather than calculating it when advancing to the next tick

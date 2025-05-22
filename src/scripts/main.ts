@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", initialize);
 function initialize() {
     registerEvents();
     sandbox = new Sandbox(new Canvas(<HTMLCanvasElement>document.getElementById(CANVAS_ID)));
-    sandbox.initStatusBar("statusText"); // use status bar instead of id-beginning of its fields
+    sandbox.initStatusBar("statusText"); // REFACTOR ME: use status bar instead of id-beginning of its fields
     sandbox.initSandbox({x: 1280, y: 720});
     sandbox.selectedCanvasClickAction = (document.querySelector('input[name="radioBtnMouseAction"]:checked') as HTMLInputElement).value;
     (<HTMLInputElement>document.getElementById("cbxElasticCollisions")).disabled = !sandbox.simulation.collisionDetection;
@@ -42,7 +42,6 @@ function registerEvents() {
         radioButton.addEventListener('change', radioBtnMouseActionChanged);
       });
 }
-//#region eventHandlers
 function zoomOutClicked(this: HTMLElement, ev: MouseEvent) {
     const zoomCenter = new Vector2D(sandbox.canvas.visibleCanvas.width / 2, sandbox.canvas.visibleCanvas.height / 2)
     sandbox.zoomOut(zoomCenter);
@@ -82,7 +81,7 @@ function cbxElasticCollisionsChanged(event: Event) {
 function cbxDisplayVectorsChanged(event: Event) {
     const checkbox = event.target as HTMLInputElement;
     sandbox.animationSettings.displayVectors = checkbox ? checkbox.checked : false;
-    if (!sandbox.animationRunning) {
+    if (!sandbox.running) {
         sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.animationSettings.displayVectors);
     }
 }
@@ -127,4 +126,3 @@ function canvasTouchMove(this: HTMLElement, ev: TouchEvent) {
 function canvasTouchEnd(this: HTMLElement, ev: TouchEvent) {
     sandbox.canvasTouchEnd(ev);
 }
-//#endregion

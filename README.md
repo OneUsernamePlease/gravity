@@ -33,6 +33,8 @@ This contains the canvas and its context, functions for drawing and manipulating
 - sandbox.ts
 Combines gravity and canvas, provides functions for running and animating the simulation, interacting with the simulation on the canvas and writing other outputs.
 
+- inputs.ts
+
 - types.ts
 A collection of interfaces and enums.
 

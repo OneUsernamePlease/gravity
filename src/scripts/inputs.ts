@@ -18,7 +18,7 @@ export class Inputs {
         (<HTMLInputElement>document.getElementById(MASS_INPUT_ID)!).step = this.calculateMassInputStep();
     }
     public body2dFromInputs(): Body2d {
-        const movable = tsEssentials.isChecked("cvsCbxBodyMovable");
+        const movable = tsEssentials.isChecked("cbxBodyMovable");
         return new Body2d(this.selectedMass, movable);
     }
     public updateSelectedMass(inputElement: HTMLInputElement) {

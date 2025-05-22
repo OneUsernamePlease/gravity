@@ -1,6 +1,3 @@
-// class that combines Simulation + Canvas (animation). move remaining things, that "combine" these from main to here.
-// in main then use sandbox instead of Simulation and Canvas
-
 import { Canvas } from "./canvas";
 import { Body2d, Simulation } from "./gravity";
 import * as tsEssentials from "./essentials";
@@ -9,14 +6,14 @@ import { AnimationSettings, CanvasClickAction, MouseBtnState } from "./types";
 import { Inputs } from "./inputs";
 
 export class Sandbox {
-    private _canvas: Canvas
+    private _canvas: Canvas;
     private _simulation: Simulation;
     private _inputs: Inputs;
     private _statusBar: { fields: HTMLElement[] } = { fields: [] };
     private _animationSettings: AnimationSettings;
-    private _animationRunning: boolean;
-    private _canvasLeftMouseState: MouseBtnState = MouseBtnState.Up;
-    private _lastMainMouseDownCanvasCoord: Vector2D = new Vector2D (0, 0);
+    private _running: boolean;
+    private _canvasLeftMouseState: MouseBtnState = MouseBtnState.Up; // Refactor me: -> this is canvas stuff
+    private _lastMainMouseDownCanvasCoord: Vector2D = new Vector2D (0, 0); // Refactor me: -> this is canvas stuff
     private _selectedCanvasClickAction: string = "";
     //#region get, set, constr
     constructor(canvas: Canvas) {
@@ -24,7 +21,7 @@ export class Sandbox {
         this._simulation = new Simulation;
         this._inputs = new Inputs();
         this._animationSettings = { defaultScrollRate: 0.1, defaultZoomStep: 1, frameLength: 25, displayVectors: true, tracePaths: false };
-        this._animationRunning = false;
+        this._running = false;
     }
     get canvas() {
         return this._canvas;
@@ -41,11 +38,11 @@ export class Sandbox {
     get animationSettings() {
         return this._animationSettings;
     }
-    get animationRunning() {
-        return this._animationRunning;
+    get running() {
+        return this._running;
     }
-    set animationRunning(animationRunning: boolean) {
-        this._animationRunning = animationRunning;
+    set running(running: boolean) {
+        this._running = running;
     }
     get canvasLeftMouseState() {
         return this._canvasLeftMouseState;
@@ -132,7 +129,7 @@ export class Sandbox {
             default:
                 break;
         }
-        if (!this.animationRunning) {
+        if (!this.running) {
             this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
         }
 
@@ -161,7 +158,7 @@ export class Sandbox {
             default:
                 break;
         }
-        if (!this.animationRunning) {
+        if (!this.running) {
             this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
         }
     }
@@ -175,19 +172,19 @@ export class Sandbox {
     }
     //#endregion
     //#region output/drawing
-    public drawRunningSimulation() {
-        if (this.animationRunning) {
+    public runAnimation() {
+        if (this.running) {
             return;
         }
-        this.animationRunning = true;
-        const runDrawLoop = () => {
-            if (this.animationRunning) {
-                setTimeout(runDrawLoop, this.animationSettings.frameLength);
+        this.running = true;
+        const loop = () => {
+            if (this.running) {
+                setTimeout(loop, this.animationSettings.frameLength);
                 this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
                 this.updateSimulationStatusMessages();
             }
-        };
-        runDrawLoop();
+        };   
+        loop();
     }
     /**
      * @param fieldIndexOrId number of field, starting at one. OR id of the field
@@ -277,7 +274,7 @@ export class Sandbox {
         this.setStatusMessage(`Zoom: ${this.canvas.canvasSpace.currentZoom} (m per pixel)`, 4);
     }
     public advanceSimulation() {
-        if (this.animationRunning) {
+        if (this.running) {
             return;
         }
         this.simulation.nextState();
@@ -287,12 +284,12 @@ export class Sandbox {
     public resumeSimulation() {
         if (!this.simulation.running) {
             this.simulation.run();
-            this.drawRunningSimulation();
+            this.runAnimation();
         }
     }
     public pauseSimulation() {
         if (this.simulation.running) {
-            this.animationRunning = false;
+            this.running = false;
             this.simulation.pause();
         }
     }
