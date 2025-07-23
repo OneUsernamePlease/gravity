@@ -9,13 +9,23 @@ let sandbox: Sandbox;
 
 document.addEventListener("DOMContentLoaded", initialize);
 function initialize() {
+    document.removeEventListener("DOMContentLoaded", initialize);
+    
     registerEvents();
     sandbox = new Sandbox(new Canvas(<HTMLCanvasElement>document.getElementById(CANVAS_ID)));
-    sandbox.initStatusBar("statusText"); // REFACTOR ME: use status bar instead of id-beginning of its fields
+    sandbox.initStatusBar("statusText"); // REFACTOR ME: use status bar element instead of id-beginning of its fields (yep, "statusText" is how the id of the statusBar-Elements starts)
     sandbox.initSandbox({x: window.innerWidth, y: window.innerHeight});
     sandbox.selectedCanvasClickAction = (document.querySelector('input[name="radioBtnMouseAction"]:checked') as HTMLInputElement).value;
     (<HTMLInputElement>document.getElementById("cbxElasticCollisions")).disabled = !sandbox.simulation.collisionDetection;
-    document.removeEventListener("DOMContentLoaded", initialize);
+
+    // REFACTOR ME: OBVIOUSLY, get rid of this disgusting, quick hotfix of something that is just an inconvenience and not even a bug
+    if ((<HTMLInputElement>document.getElementById("cbxDisplayVectors"))?.checked) {
+        sandbox.setStatusMessage("Green: acceleration - Red: velocity", 3);
+    } else {
+        sandbox.setStatusMessage("", 3);
+    }
+
+    document.getElementById("btnToggleSim")?.click(); // REFACTOR ME: there's got to be a better way
 }
 function registerEvents() {
     document.getElementById("btnToggleSim")?.addEventListener("click", toggleSimulationClicked);
@@ -83,7 +93,15 @@ function cbxElasticCollisionsChanged(event: Event) {
 }
 function cbxDisplayVectorsChanged(event: Event) {
     const checkbox = event.target as HTMLInputElement;
-    sandbox.animationSettings.displayVectors = checkbox ? checkbox.checked : false;
+    const displayVectors = checkbox ? checkbox.checked : false;
+    sandbox.animationSettings.displayVectors = displayVectors;
+    
+    if (displayVectors) {
+        sandbox.setStatusMessage("Green: acceleration - Red: velocity", 3);
+    } else {
+        sandbox.setStatusMessage("", 3);
+    }
+
     if (!sandbox.running) {
         sandbox.canvas.redrawSimulationState(sandbox.simulation.simulationState, sandbox.animationSettings.displayVectors);
     }
@@ -136,6 +154,7 @@ function canvasTouchEnd(this: HTMLElement, ev: TouchEvent) {
 }
 function resizeCanvas(this: Window, ev: UIEvent) {
     sandbox.resizeCanvas(this.innerWidth, this.innerHeight);
+    sandbox.setStatusMessage(`Canvas dimension: ${this.innerWidth} * ${this.innerHeight}`, 5);
 }
 
 function canvasMouseWheel(this: HTMLElement, ev: WheelEvent) {
