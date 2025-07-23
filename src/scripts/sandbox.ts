@@ -12,8 +12,10 @@ export class Sandbox {
     private _statusBar: { fields: HTMLElement[] } = { fields: [] };
     private _animationSettings: AnimationSettings;
     private _running: boolean;
-    private _canvasLeftMouseState: MouseBtnState = MouseBtnState.Up; // Refactor me: -> this is canvas stuff
+    private _canvasMainMouseState: MouseBtnState = MouseBtnState.Up; // Refactor me: -> this is canvas stuff
+    private _canvasSecondaryMouseState: MouseBtnState = MouseBtnState.Up; // Refactor me: -> this is canvas stuff
     private _lastMainMouseDownCanvasCoord: Vector2D = new Vector2D (0, 0); // Refactor me: -> this is canvas stuff
+    private _lastSecondaryMouseDownCanvasCoord: Vector2D = new Vector2D (0, 0); // Refactor me: -> this is canvas stuff
     private _selectedCanvasClickAction: string = "";
     //#region get, set, constr
     constructor(canvas: Canvas) {
@@ -44,17 +46,29 @@ export class Sandbox {
     set running(running: boolean) {
         this._running = running;
     }
-    get canvasLeftMouseState() {
-        return this._canvasLeftMouseState;
+    get canvasMainMouseState() {
+        return this._canvasMainMouseState;
     }
-    set canvasLeftMouseState(state: MouseBtnState) {
-        this._canvasLeftMouseState = state;
+    set canvasMainMouseState(state: MouseBtnState) {
+        this._canvasMainMouseState = state;
+    }
+    get canvasSecondaryMouseState() {
+        return this._canvasSecondaryMouseState;
+    }
+    set canvasSecondaryMouseState(state: MouseBtnState) {
+        this._canvasSecondaryMouseState = state;
     }
     get lastMainMouseDownCanvasCoord() {
         return this._lastMainMouseDownCanvasCoord;
     }
     set lastMainMouseDownCanvasCoord(coordinates: Vector2D) {
         this._lastMainMouseDownCanvasCoord = coordinates;
+    }
+    get lastSecondaryMouseDownCanvasCoord() {
+        return this._lastSecondaryMouseDownCanvasCoord;
+    }
+    set lastSecondaryMouseDownCanvasCoord(coordinates: Vector2D) {
+        this._lastSecondaryMouseDownCanvasCoord = coordinates;
     }
     get selectedCanvasClickAction() {
         return this._selectedCanvasClickAction;
@@ -95,8 +109,12 @@ export class Sandbox {
     }
     //#endregion
     //#region events and settings
+    public resizeCanvas(width: number, height: number) {
+        this.canvas.resize(width, height);
+        this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
+    }
     public canvasTouchStart(ev: TouchEvent) {
-        this.canvasLeftMouseState = MouseBtnState.Down;
+        this.canvasMainMouseState = MouseBtnState.Down;
     
         switch (CanvasClickAction[this.selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
             case CanvasClickAction.None:
@@ -110,7 +128,7 @@ export class Sandbox {
         }
     }
     public canvasTouchEnd(ev: TouchEvent) {
-        this.canvasLeftMouseState = MouseBtnState.Up;
+        this.canvasMainMouseState = MouseBtnState.Up;
         const touchPosition = this.canvas.getCanvasTouchEndPosition(ev);
         if (touchPosition.x > this.canvas.visibleCanvas.width || touchPosition.y > this.canvas.visibleCanvas.height || touchPosition.x < 0 || touchPosition.y < 0) {
             return;
@@ -134,15 +152,15 @@ export class Sandbox {
         }
 
     }
-    public leftMouseDown(ev: MouseEvent) {
-        this.canvasLeftMouseState = MouseBtnState.Down;
+    public mainMouseDown(ev: MouseEvent) {
+        this.canvasMainMouseState = MouseBtnState.Down;
         this.lastMainMouseDownCanvasCoord = this.canvas.getCanvasMousePosition(ev);
     }
-    public leftMouseUp(ev: MouseEvent) {
-        if (this.canvasLeftMouseState === MouseBtnState.Up) {
+    public mainMouseUp(ev: MouseEvent) {
+        if (this.canvasMainMouseState === MouseBtnState.Up) {
             return;
         }
-        this.canvasLeftMouseState = MouseBtnState.Up;
+        this.canvasMainMouseState = MouseBtnState.Up;
         const mousePosition: Vector2D = this.canvas.getCanvasMousePosition(ev);
         
         switch (CanvasClickAction[this.selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
@@ -162,9 +180,27 @@ export class Sandbox {
             this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
         }
     }
+    public secondaryMouseDown(ev: MouseEvent) {
+        this.canvasSecondaryMouseState = MouseBtnState.Down;
+        this.lastSecondaryMouseDownCanvasCoord = this.canvas.getCanvasMousePosition(ev);
+        console.log(this.lastSecondaryMouseDownCanvasCoord);
+    }
+    public secondaryMouseUp(ev: MouseEvent) {
+        ev.preventDefault();
+        this.canvasSecondaryMouseState = MouseBtnState.Up;
+    }
     public mouseMoving(ev: MouseEvent) {
-        if (this.canvasLeftMouseState === MouseBtnState.Up) {
-            return;
+        if (this.canvasSecondaryMouseState === MouseBtnState.Down) {
+            // current displacement
+            const currentPointerPosition = this.canvas.getCanvasMousePosition(ev);
+            const currentDisplacement = currentPointerPosition.subtract(this.lastSecondaryMouseDownCanvasCoord);
+            this.canvas.moveCanvas(new Vector2D(-(currentDisplacement.x), currentDisplacement.y));
+            
+            this.lastSecondaryMouseDownCanvasCoord = currentPointerPosition;
+
+            if (!this.running) {
+                this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
+            }
         }
     }
     public massInputChanged(inputElement: HTMLInputElement) {
@@ -277,7 +313,7 @@ export class Sandbox {
         if (this.running) {
             return;
         }
-        this.simulation.nextState();
+        this.simulation.advanceTick();
         this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
         this.updateSimulationStatusMessages();
     }
