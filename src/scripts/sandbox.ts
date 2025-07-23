@@ -191,10 +191,10 @@ export class Sandbox {
     }
     public mouseMoving(ev: MouseEvent) {
         if (this.canvasSecondaryMouseState === MouseBtnState.Down) {
-            // current displacement
             const currentPointerPosition = this.canvas.getCanvasMousePosition(ev);
             const currentDisplacement = currentPointerPosition.subtract(this.lastSecondaryMouseDownCanvasCoord);
-            this.canvas.moveCanvas(new Vector2D(-(currentDisplacement.x), currentDisplacement.y));
+            const displacementSimulationUnits = currentDisplacement.scale(this.canvas.canvasSpace.currentZoom);
+            this.canvas.moveCanvas(new Vector2D(-(displacementSimulationUnits.x), displacementSimulationUnits.y));
             
             this.lastSecondaryMouseDownCanvasCoord = currentPointerPosition;
 
