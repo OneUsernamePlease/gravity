@@ -33,6 +33,15 @@ export class Canvas {
         this._canvasSpace = canvasSpace;
     }
     //#endregion
+
+    //#region settings
+    public resize(width: number, height: number) {
+        this.visibleCanvas.width = width;
+        this.visibleCanvas.height = height;
+    }   
+
+    //#endregion
+
     //#region drawing stuff
     /**
      * @param position in canvas space
@@ -114,8 +123,13 @@ export class Canvas {
     /**
      * Origin {x:0,y:0} is at the top-left
      */
-    public setOrigin(newOrigin: Vector2D) {
+    private setOrigin(newOrigin: Vector2D) {
         this.canvasSpace.origin = newOrigin;
+    }
+    public moveCanvas(displacement: Vector2D) {
+        const originPosition = this._canvasSpace.origin;
+        const newOrigin = new Vector2D(originPosition.x + displacement.x, originPosition.y + displacement.y);
+        this.setOrigin(newOrigin);
     }
     public moveCanvasRight(distance: number) {
         this.setOrigin(new Vector2D(this.canvasSpace.origin.x + distance, this.canvasSpace.origin.y));
