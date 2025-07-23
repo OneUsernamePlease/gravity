@@ -1,79 +1,76 @@
 /* Basic page setup */
-body, html {
+html, body {
     margin: 0;
     padding: 0;
     height: 100%;
+    width: 100%;
     font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
     background-color: #252525;
     color: #ccc;
-}
-
-.content {
-    padding-bottom: 30px; /* space for status bar */
-    height: calc(100% - 30px);
+    overflow: hidden;
 }
 
 #mainContent {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex-grow: 1;
-    margin-top: 50px;
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
 }
 
-/* Header */
-#header {
-    text-align: center;
-}
-
-/* Canvas controls */
+/* Top controls (floating) */
 .canvasControlsTop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 10px;
-    margin-bottom: 30px; /* Increase space between the canvas controls and the canvas */
+    padding: 10px;
+    background-color: rgba(30, 30, 30, 0.8);
 }
 
-/* Canvas container */
-#canvasWrapper {
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start;
-    gap: 20px; /* Add space between the canvas and the controls */
+/* Canvas wrapper fills the screen */
+#canvasWrapper, #canvasContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
-/* Canvas container styles */
 #canvasContainer {
-    width: min-content;
-    height: min-content;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    width: 100%;
+    height: 100%;
     background-color: #000000;
-    border: 1px solid #ccc;
-    padding: 5px;
 }
 
 #canvasContainer canvas {
     /*do not set the canvas size in css*/
-    border: 1px solid #ccc;
+    display: block;
+    border: none;
 }
 
-/* Control bar */
+/* Right-side control bar (floating) */
 #controlBar {
+    position: absolute;
+    top: 60px; /* below top controls */
+    right: 0;
+    z-index: 10;
+    width: 250px;
+    max-height: calc(100vh - 90px);
+    overflow-y: auto;
+    background-color: rgba(50, 50, 50, 0.9);
+    padding: 10px;
+    border-radius: 5px 0 0 5px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    align-items: flex-start;
-    background-color: #333;
-    padding: 10px;
-    border-radius: 5px;
-    width: 200px;
 }
 
+/* buttons in the controlBar */
 #controlBar button {
     background-color: #444;
     border: none;
@@ -83,6 +80,10 @@ body, html {
     width: 100%;
     border-radius: 3px;
     transition: background-color 0.3s;
+}
+
+#controlBar button:hover {
+    background-color: #555;
 }
 
 #controlBar .bold {
@@ -105,14 +106,13 @@ body, html {
 }
 
 .splitInputContainer .splitInputControl {    
-    flex: 1;  /* Each button takes up half of the container width */
+    flex: 1;
     border-radius: 3px;
     gap: 10px;
 }
 
 .splitInputContainer .splitInputControl input,
-.splitInputContainer .splitInputControl label
-{   
+.splitInputContainer .splitInputControl label {   
     flex: 1;
     width: 90%;
     border-radius: 3px;
@@ -125,20 +125,22 @@ body, html {
 .hSeparator {
     width: 100%;
     height: 3px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 5px 0;
 }
 
-#controlBar button:hover {
-    background-color: #555;
-}
-
-/* Status bar styling */
-#statusBar {
-    position: fixed;
+/* Status bar at bottom */
+#footer {
+    position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
+    z-index: 10;
+}
+
+#statusBar {
     height: 30px;
-    background-color: #333;
+    background-color: rgba(30, 30, 30, 0.9);
     color: white;
     display: flex;
     justify-content: space-between;
@@ -160,11 +162,9 @@ body, html {
 #statusText1 {
     text-align: right;
 }
-
 #statusText2, #statusText3, #statusText4 {
     text-align: center;
 }
-
 #statusText5 {
     text-align: left;
 }
