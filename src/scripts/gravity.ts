@@ -148,7 +148,7 @@ export class Simulation {
         let distance: Vector2D = toCoordinate.subtract(fromCoordinate);
         return distance.scale(1 / timeFrameInSeconds);
     }
-    public nextState() {
+    public advanceTick() {
         this.updateAccelerationVectors();
         this.updateVelocitiesAndPositions();
         if (this.collisionDetection) {
@@ -187,7 +187,7 @@ export class Simulation {
         const dt = this.tickLength / 1000;
         if (!objectState.body.movable) { return; }
         objectState.velocity = objectState.velocity.add(objectState.acceleration.scale(dt));
-        objectState.position =  objectState.position.add(objectState.velocity.scale(dt));
+        objectState.position = objectState.position.add(objectState.velocity.scale(dt));
     }
     private updateVelocitiesAndPositions() {
         this.simulationState.forEach(objectState => {
@@ -263,7 +263,7 @@ export class Simulation {
     */
     private elasticCollision(body1: ObjectState, body2: ObjectState, restitution: number = 1) {
         const lowerBounds = 1;
-        
+
         // normal vector between the bodies
         const displacement = body1.position.displacementVector(body2.position);
         const distance = displacement.magnitude(); 
@@ -322,7 +322,7 @@ export class Simulation {
         const runSimulationStep = () => {
             if (this.running) {
                 setTimeout(runSimulationStep, this.tickLength);
-                this.nextState();
+                this.advanceTick();
             }
         };
         runSimulationStep();
