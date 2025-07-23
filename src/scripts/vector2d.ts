@@ -17,7 +17,7 @@ export class Vector2D {
         return result;
     }
     /**
-     * @returns v1 - v2
+     * @returns this - v
      */
     public subtract(v: Vector2D): Vector2D {
         return new Vector2D(this.x - v.x, this.y - v.y);
@@ -41,7 +41,7 @@ export class Vector2D {
     }
     /**
      * @param v Vector2D
-     * @returns Distance to v2
+     * @returns Distance to v
      */
     public distance(v: Vector2D): number {
         return Math.sqrt((v.x - this.x)**2 + (v.y - this.y)**2);
@@ -56,13 +56,26 @@ export class Vector2D {
         return new Vector2D(this.x * v.x, this.y * v.y);
     }
     /**
-     * @returns an array of two normalized vectors, both normal to v, both pointing in opposite directions
+     * @returns an array of two normalized vectors, both normal to this, both pointing in opposite directions
      */
-    public normalVectors(v: Vector2D): Vector2D[] {
+    public normalVectors(): Vector2D[] {
         const array: Vector2D[] = [];
-        v = v.normalize();
+        const v = this.normalize();
         array.push(new Vector2D(-v.y, v.x));
         array.push(new Vector2D(v.y, -v.x));
         return array;
+    }
+    /**
+     * Reflects this vector on reflectionSurface.
+     * @param reflectionSurface acts as a mirror
+     * @returns The reflected vector
+     */
+    public reflect(reflectionSurface: Vector2D): Vector2D {
+        reflectionSurface = reflectionSurface.normalize();
+        const axis = reflectionSurface.normalVectors()[0];
+        const dotAxis = this.dotProduct(axis);
+        const projection = axis.scale(dotAxis).scale(2);
+        const reflected = this.subtract(projection);
+        return reflected;
     }
 }
