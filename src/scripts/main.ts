@@ -12,7 +12,7 @@ function initialize() {
     registerEvents();
     sandbox = new Sandbox(new Canvas(<HTMLCanvasElement>document.getElementById(CANVAS_ID)));
     sandbox.initStatusBar("statusText"); // REFACTOR ME: use status bar instead of id-beginning of its fields
-    sandbox.initSandbox({x: 1280, y: 720});
+    sandbox.initSandbox({x: window.innerWidth, y: window.innerHeight});
     sandbox.selectedCanvasClickAction = (document.querySelector('input[name="radioBtnMouseAction"]:checked') as HTMLInputElement).value;
     (<HTMLInputElement>document.getElementById("cbxElasticCollisions")).disabled = !sandbox.simulation.collisionDetection;
     document.removeEventListener("DOMContentLoaded", initialize);
@@ -34,6 +34,8 @@ function registerEvents() {
     document.getElementById(CANVAS_ID)?.addEventListener("touchstart", canvasTouchStart);
     document.getElementById(CANVAS_ID)?.addEventListener("touchend", canvasTouchEnd);
     document.getElementById(CANVAS_ID)?.addEventListener("touchmove", canvasTouchMove);
+    document.getElementById(CANVAS_ID)?.addEventListener("wheel", canvasMouseWheel);
+    document.getElementById(CANVAS_ID)?.addEventListener("contextmenu", (ev) => {ev.preventDefault()});
     document.getElementById(MASS_INPUT_ID)?.addEventListener("change", massInputChanged);
     document.getElementById("cbxDisplayVectors")?.addEventListener("change", cbxDisplayVectorsChanged);
     document.getElementById("cbxCollisions")?.addEventListener("change", cbxCollisionsChanged);
@@ -41,6 +43,7 @@ function registerEvents() {
     document.querySelectorAll('input[name="radioBtnMouseAction"]').forEach((radioButton) => {
         radioButton.addEventListener('change', radioBtnMouseActionChanged);
       });
+    window.addEventListener("resize", resizeCanvas);
 }
 function zoomOutClicked(this: HTMLElement, ev: MouseEvent) {
     const zoomCenter = new Vector2D(sandbox.canvas.visibleCanvas.width / 2, sandbox.canvas.visibleCanvas.height / 2)
@@ -103,7 +106,9 @@ function resetClicked() {
 }
 function canvasMouseDown(this: HTMLElement, ev: MouseEvent) {
     if (ev.button === 0) {
-        sandbox.leftMouseDown(ev);
+        sandbox.mainMouseDown(ev);
+    } else if (ev.button === 2) {
+        sandbox.secondaryMouseDown(ev);
     }
 }
 function canvasMouseMove(this: HTMLElement, ev: MouseEvent) {
@@ -111,11 +116,14 @@ function canvasMouseMove(this: HTMLElement, ev: MouseEvent) {
 }
 function canvasMouseUp(this: HTMLElement, ev: MouseEvent) {
     if (ev.button === 0) {
-        sandbox.leftMouseUp(ev);
+        sandbox.mainMouseUp(ev);
+    } else if (ev.button === 2) {
+        sandbox.secondaryMouseUp(ev);
     }
 }
 function canvasMouseOut(this: HTMLElement, ev: MouseEvent) {
-    sandbox.canvasLeftMouseState = MouseBtnState.Up;
+    sandbox.canvasMainMouseState = MouseBtnState.Up;
+    sandbox.canvasSecondaryMouseState = MouseBtnState.Up;
 }
 function canvasTouchStart(this: HTMLElement, ev: TouchEvent) {
     sandbox.canvasTouchStart(ev);
@@ -126,3 +134,23 @@ function canvasTouchMove(this: HTMLElement, ev: TouchEvent) {
 function canvasTouchEnd(this: HTMLElement, ev: TouchEvent) {
     sandbox.canvasTouchEnd(ev);
 }
+function resizeCanvas(this: Window, ev: UIEvent) {
+    sandbox.resizeCanvas(this.innerWidth, this.innerHeight);
+}
+
+function canvasMouseWheel(this: HTMLElement, ev: WheelEvent) {
+    // don't resize the entire page
+    ev.preventDefault();
+    
+    const canvasRect = this.getBoundingClientRect();
+    const cursorPos = new Vector2D(ev.clientX - canvasRect.left, ev.clientY - canvasRect.top);
+    
+    if (ev.deltaY < 0) {
+        sandbox.zoomIn(cursorPos);
+    } else if (ev.deltaY > 0) {
+        sandbox.zoomOut(cursorPos);
+    }
+}
+
+
+
