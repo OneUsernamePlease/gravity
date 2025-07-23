@@ -33,49 +33,48 @@
                         <button id="btnScrollLeft" class="splitInputControl">Move Left</button>
                         <button id="btnScrollRight" class="splitInputControl">Move Right</button>
                     </div>
-                    <!--button>Control 4</button-->
+
                     <div class="hSeparator"></div>
-                    <div class="cvsCbxContainer">
+
+                    <div>
                         <label for="cbxDisplayVectors">Display Vectors</label>
                         <input type="checkbox" id="cbxDisplayVectors">
                     </div>
+
                     <div class="hSeparator"></div>
+
                     <label class="bold">Physics:</label>
-                    <div class="cvsCbxContainer">
+                    <div>
                         <label for="cbxCollisions">Collisions</label>
                         <input type="checkbox" id="cbxCollisions" checked>
                     </div>
-                    <div class="cvsCbxContainer">
+                    <div>
                         <label for="cbxElasticCollisions">Elastic Collisions</label>
                         <input type="checkbox" id="cbxElasticCollisions" checked>
                     </div>
+
+                    <div class="hSeparator"></div>
+
+                    <label class="bold">Click Action:</label>
                     <div>
-                        <div class="hSeparator"></div>
-                        <label class="bold">Click Action:</label>
-                        <div class="hSeparator"></div>
-                        <div>
-                            <label for="cvsRdbAdd">Add (Drag for Velocity)</label>
-                            <input type="radio" id="cvsRdbAdd"  value="AddBody" name="radioBtnMouseAction" checked>
-                        </div>
-                        <div class="hSeparator"></div>
-                        <div>
-                            <label for="cvsRdbNone">None</label>
-                            <input type="radio" id="cvsRdbNone" value="None" name="radioBtnMouseAction">                        
-                        </div>
+                        <label for="cvsRdbAdd">Add (Drag for Velocity)</label>
+                        <input type="radio" id="cvsRdbAdd"  value="AddBody" name="radioBtnMouseAction" checked>
                     </div>
                     <div>
-                        <div class="hSeparator"></div>
-                        <label class="bold">New Body:</label>
-                        <div class="hSeparator"></div>
-                        <div class="splitInputControl">
-                            <label for="massInput">Mass</label>
-                            <input type="number" id="massInput" value="1000" min="1" max="1000000000" step="100">
-                        </div>
-                        <div class="hSeparator"></div>
-                        <div>
-                            <label for="cbxBodyMovable">Moveable</label>
-                            <input type="checkbox" id="cbxBodyMovable" checked>
-                        </div>
+                        <label for="cvsRdbNone">None</label>
+                        <input type="radio" id="cvsRdbNone" value="None" name="radioBtnMouseAction">                        
+                    </div>
+
+                    <div class="hSeparator"></div>
+
+                    <label class="bold">New Body:</label>
+                    <div class="splitInputControl">
+                        <label for="massInput">Mass</label>
+                        <input type="number" id="massInput" value="1000" min="1" max="1000000000" step="100">
+                    </div>
+                    <div>
+                        <label for="cbxBodyMovable">Moveable</label>
+                        <input type="checkbox" id="cbxBodyMovable" checked>
                     </div>
                 </div>
             </div>
