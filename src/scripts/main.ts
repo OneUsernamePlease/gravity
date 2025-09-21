@@ -1,31 +1,38 @@
 import { Vector2D } from "./vector2d";
-import { CanvasClickAction, MouseBtnState } from "./types";
+import { MouseBtnState } from "./types";
 import { Canvas } from "./canvas";
 import * as tsEssentials from "./essentials";
 import { Sandbox } from "./sandbox";
-import { MASS_INPUT_ID, CANVAS_ID } from "../const";
+import * as c from "../const";
 
 let sandbox: Sandbox;
 
 document.addEventListener("DOMContentLoaded", initialize);
 function initialize() {
     document.removeEventListener("DOMContentLoaded", initialize);
-    
     registerEvents();
-    sandbox = new Sandbox(new Canvas(<HTMLCanvasElement>document.getElementById(CANVAS_ID)));
-    sandbox.initStatusBar("statusText"); // REFACTOR ME: use status bar element instead of id-beginning of its fields (yep, "statusText" is how the id of the statusBar-Elements starts)
-    sandbox.initSandbox({x: window.innerWidth, y: window.innerHeight});
+
+    initializeSandbox();
+    initializeSettingsFromUI();
+
+    sandbox.runSimulation();
+}
+function initializeSandbox() {
+    sandbox = new Sandbox(new Canvas(<HTMLCanvasElement>document.getElementById(c.CANVAS_ID)));
+    sandbox.initStatusBar(<HTMLDivElement>(document.getElementById(c.STATUS_BAR_ID)));
+    sandbox.initCanvasAndSimulation({x: window.innerWidth, y: window.innerHeight});
+}
+function initializeSettingsFromUI() { 
+    // REFACTOR ME: create a proper UI(+settings) object
     sandbox.selectedCanvasClickAction = (document.querySelector('input[name="radioBtnMouseAction"]:checked') as HTMLInputElement).value;
+    
     (<HTMLInputElement>document.getElementById("cbxElasticCollisions")).disabled = !sandbox.simulation.collisionDetection;
 
-    // REFACTOR ME: OBVIOUSLY, get rid of this disgusting, quick hotfix of something that is just an inconvenience and not even a bug
     if ((<HTMLInputElement>document.getElementById("cbxDisplayVectors"))?.checked) {
         sandbox.setStatusMessage("Green: acceleration - Red: velocity", 3);
     } else {
         sandbox.setStatusMessage("", 3);
     }
-
-    document.getElementById("btnToggleSim")?.click(); // REFACTOR ME: there's got to be a better way
 }
 function registerEvents() {
     document.getElementById("btnToggleSim")?.addEventListener("click", toggleSimulationClicked);
@@ -37,16 +44,16 @@ function registerEvents() {
     document.getElementById("btnScrollRight")?.addEventListener("click", scrollRightClicked);
     document.getElementById("btnScrollUp")?.addEventListener("click", scrollUpClicked);
     document.getElementById("btnScrollDown")?.addEventListener("click", scrollDownClicked);
-    document.getElementById(CANVAS_ID)?.addEventListener("mousedown", canvasMouseDown);
-    document.getElementById(CANVAS_ID)?.addEventListener("mouseup", canvasMouseUp);
-    document.getElementById(CANVAS_ID)?.addEventListener("mouseout", canvasMouseOut);
-    document.getElementById(CANVAS_ID)?.addEventListener("mousemove", canvasMouseMove);
-    document.getElementById(CANVAS_ID)?.addEventListener("touchstart", canvasTouchStart);
-    document.getElementById(CANVAS_ID)?.addEventListener("touchend", canvasTouchEnd);
-    document.getElementById(CANVAS_ID)?.addEventListener("touchmove", canvasTouchMove);
-    document.getElementById(CANVAS_ID)?.addEventListener("wheel", canvasMouseWheel);
-    document.getElementById(CANVAS_ID)?.addEventListener("contextmenu", (ev) => {ev.preventDefault()});
-    document.getElementById(MASS_INPUT_ID)?.addEventListener("change", massInputChanged);
+    document.getElementById(c.CANVAS_ID)?.addEventListener("mousedown", canvasMouseDown);
+    document.getElementById(c.CANVAS_ID)?.addEventListener("mouseup", canvasMouseUp);
+    document.getElementById(c.CANVAS_ID)?.addEventListener("mouseout", canvasMouseOut);
+    document.getElementById(c.CANVAS_ID)?.addEventListener("mousemove", canvasMouseMove);
+    document.getElementById(c.CANVAS_ID)?.addEventListener("touchstart", canvasTouchStart);
+    document.getElementById(c.CANVAS_ID)?.addEventListener("touchend", canvasTouchEnd);
+    document.getElementById(c.CANVAS_ID)?.addEventListener("touchmove", canvasTouchMove);
+    document.getElementById(c.CANVAS_ID)?.addEventListener("wheel", canvasMouseWheel);
+    document.getElementById(c.CANVAS_ID)?.addEventListener("contextmenu", (ev) => {ev.preventDefault()});
+    document.getElementById(c.MASS_INPUT_ID)?.addEventListener("change", massInputChanged);
     document.getElementById("cbxDisplayVectors")?.addEventListener("change", cbxDisplayVectorsChanged);
     document.getElementById("cbxCollisions")?.addEventListener("change", cbxCollisionsChanged);
     document.getElementById("cbxElasticCollisions")?.addEventListener("change", cbxElasticCollisionsChanged);
@@ -120,11 +127,13 @@ function nextStepClicked() {
 }
 function resetClicked() {
     sandbox.reset();
-    document.getElementById("btnToggleSim")!.innerHTML = "Play";
 }
 function canvasMouseDown(this: HTMLElement, ev: MouseEvent) {
     if (ev.button === 0) {
         sandbox.mainMouseDown(ev);
+    } else if (ev.button === 1) {
+        // prevent scroll-symbol
+        ev.preventDefault();
     } else if (ev.button === 2) {
         sandbox.secondaryMouseDown(ev);
     }

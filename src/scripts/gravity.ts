@@ -128,14 +128,32 @@ export class Simulation {
         }
         return this.simulationState.push(bodyOrObject);
     }
-    public clearObjects() {
+    private clearObjects() {
         this.simulationState = [];
     }
-    public removeFromObjectStates(index: number) {
+    private removeFromObjectStates(index: number) {
         this.simulationState.splice(index, 1);
     }
     public pause() {
         this.running = false;
+    }
+    public run() {
+        if (this.running) {
+            return;
+        }
+        this.running = true;
+
+        const runSimulationStep = () => {
+            if (this.running) {
+                setTimeout(runSimulationStep, this.tickLength);
+                this.advanceTick();
+            }
+        };
+        runSimulationStep();
+    }
+    public reset() {
+        this.clearObjects();
+        this.tickCount = 0;
     }
     /**
      * Calculates and returns the velocity vector needed to get from *fromCoordinate* to *toCoordinate* in *timeFrameInSeconds* seconds
@@ -312,19 +330,5 @@ export class Simulation {
     
         objectState1.position = objectState1.position.subtract(moveBody1);
         objectState2.position = objectState2.position.add(moveBody2);
-    }
-    public run() {
-        if (this.running) {
-            return;
-        }
-        this.running = true;
-
-        const runSimulationStep = () => {
-            if (this.running) {
-                setTimeout(runSimulationStep, this.tickLength);
-                this.advanceTick();
-            }
-        };
-        runSimulationStep();
     }
 }

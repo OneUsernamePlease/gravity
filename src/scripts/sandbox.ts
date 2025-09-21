@@ -9,7 +9,7 @@ export class Sandbox {
     private _canvas: Canvas;
     private _simulation: Simulation;
     private _inputs: Inputs;
-    private _statusBar: { fields: HTMLElement[] } = { fields: [] };
+    private _statusBar: { fields: HTMLSpanElement[] } = { fields: [] };
     private _animationSettings: AnimationSettings;
     private _running: boolean;
     private _canvasMainMouseState: MouseBtnState = MouseBtnState.Up; // Refactor me: -> this is canvas stuff
@@ -82,16 +82,14 @@ export class Sandbox {
      * generates an internal array of status-bar-field for later use.
      * @param fieldIdBeginsWith the status bar's fields' ids have the same start followed by a number (starting at 1)
      */
-    public initStatusBar(fieldIdBeginsWith: string) {
-        let i = 1;
-        let statusBarField = document.getElementById(fieldIdBeginsWith + i);
-        while (statusBarField !== null) {
-            this.statusBar.fields.push(statusBarField)
-            i++;
-            statusBarField = document.getElementById(fieldIdBeginsWith + i);
-        }
+    public initStatusBar(statusBar: HTMLDivElement) {
+        const statusBarFields = statusBar.querySelectorAll<HTMLSpanElement>(".statusBarItem");
+        statusBarFields.forEach(field => {
+            this.statusBar.fields.push(field);
+        });
+
     }
-    public initSandbox(canvasDimensions: {x: number, y: number}) {
+    public initCanvasAndSimulation(canvasDimensions: {x: number, y: number}) {
         this.initCanvas(canvasDimensions.x, canvasDimensions.y);
         this.initSimulation();
     }
@@ -223,9 +221,9 @@ export class Sandbox {
         loop();
     }
     /**
-     * @param fieldIndexOrId number of field, starting at one. OR id of the field
+     * @param fieldIndexOrId number of field (starting at one) OR id of the field
      */
-    public setStatusMessage(newMessage: string, fieldIndexOrId?: number | string, append: boolean = false) {
+    public setStatusMessage(message: string, fieldIndexOrId?: number | string, append: boolean = false) {
         let element: HTMLElement;
         if (typeof fieldIndexOrId === "number") {
             element = this.statusBar.fields[fieldIndexOrId - 1];
@@ -236,9 +234,9 @@ export class Sandbox {
         }
         
         if (append) {
-            element!.innerHTML += newMessage;
+            element!.innerHTML += message;
         } else {
-            element!.innerHTML = newMessage;
+            element!.innerHTML = message;
         }
     }
     /**
@@ -317,33 +315,27 @@ export class Sandbox {
         this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
         this.updateSimulationStatusMessages();
     }
-    public resumeSimulation() {
-        if (!this.simulation.running) {
+    public runSimulation() {
+        if (!this.running) {
+            document.getElementById("btnToggleSim")!.innerHTML = "Pause";
             this.simulation.run();
             this.runAnimation();
         }
     }
     public pauseSimulation() {
-        if (this.simulation.running) {
-            this.running = false;
-            this.simulation.pause();
-        }
+        this.running = false;
+        this.simulation.pause();
+        document.getElementById("btnToggleSim")!.innerHTML = "Play";
     }
     public toggleSimulation() {
-        if (this.simulation.running) {
+        if (this.running) {
             this.pauseSimulation();
-            document.getElementById("btnToggleSim")!.innerHTML = "Play";
         } else {
-            this.resumeSimulation();
-            document.getElementById("btnToggleSim")!.innerHTML = "Pause";
+            this.runSimulation();
         }
     }
     public reset() {
-        if (this.simulation.running) {
-            this.pauseSimulation();
-        }
-        this.simulation.clearObjects();
-        this.simulation.tickCount = 0;
+        this.simulation.reset();
         this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
         this.updateSimulationStatusMessages();
     }
