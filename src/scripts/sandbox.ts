@@ -22,7 +22,7 @@ export class Sandbox {
         this._canvas = canvas;
         this._simulation = new Simulation;
         this._inputs = new Inputs();
-        this._animationSettings = { defaultScrollRate: 0.1, defaultZoomStep: 1, frameLength: 25, displayVectors: true, tracePaths: false };
+        this._animationSettings = { defaultScrollRate: 0.1, defaultZoomStep: 1, frameLength: 25, displayVectors: true, tracePaths: true };
         this._running = false;
     }
     get canvas() {
@@ -87,7 +87,6 @@ export class Sandbox {
         statusBarFields.forEach(field => {
             this.statusBar.fields.push(field);
         });
-
     }
     public initCanvasAndSimulation(canvasDimensions: {x: number, y: number}) {
         this.initCanvas(canvasDimensions.x, canvasDimensions.y);
@@ -315,29 +314,33 @@ export class Sandbox {
         this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
         this.updateSimulationStatusMessages();
     }
-    public runSimulation() {
+    private runSimulation() {
         if (!this.running) {
             document.getElementById("btnToggleSim")!.innerHTML = "Pause";
             this.simulation.run();
             this.runAnimation();
         }
     }
-    public pauseSimulation() {
-        this.running = false;
-        this.simulation.pause();
-        document.getElementById("btnToggleSim")!.innerHTML = "Play";
-    }
     public toggleSimulation() {
         if (this.running) {
-            this.pauseSimulation();
+            this.stop();
         } else {
-            this.runSimulation();
+            this.run();
         }
     }
     public reset() {
         this.simulation.reset();
         this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
         this.updateSimulationStatusMessages();
+    }
+    public run() {
+        this.runSimulation();
+        this.runAnimation();
+    }
+    public stop() {
+        this.running = false;
+        this.simulation.pause();
+        document.getElementById("btnToggleSim")!.innerHTML = "Play";
     }
     //#endregion
 }

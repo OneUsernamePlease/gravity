@@ -1,5 +1,7 @@
 import { ObjectState } from "./types";
-import { Vector2D } from "./vector2d"
+import { Vector2D } from "./vector2d";
+import * as c from "../const";
+
 export class Body2d {
     private _mass: number;
     private _radius: number;
@@ -71,7 +73,7 @@ export class Simulation {
         this._tickLength = 10; // ms
         this._collisionDetection = false;
         this._elasticCollisions = false;
-        this._g = 50;
+        this._g = c.DEFAULT_G;
     }
     // #region get, set
     public get simulationState() {

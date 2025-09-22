@@ -15,14 +15,14 @@ function initialize() {
     initializeSandbox();
     initializeSettingsFromUI();
 
-    sandbox.runSimulation();
+    sandbox.run();
 }
 function initializeSandbox() {
     sandbox = new Sandbox(new Canvas(<HTMLCanvasElement>document.getElementById(c.CANVAS_ID)));
     sandbox.initStatusBar(<HTMLDivElement>(document.getElementById(c.STATUS_BAR_ID)));
     sandbox.initCanvasAndSimulation({x: window.innerWidth, y: window.innerHeight});
 }
-function initializeSettingsFromUI() { 
+function initializeSettingsFromUI() {
     // REFACTOR ME: create a proper UI(+settings) object
     sandbox.selectedCanvasClickAction = (document.querySelector('input[name="radioBtnMouseAction"]:checked') as HTMLInputElement).value;
     
@@ -33,6 +33,8 @@ function initializeSettingsFromUI() {
     } else {
         sandbox.setStatusMessage("", 3);
     }
+
+    setG(Number((<HTMLInputElement>document.getElementById("rangeG")).value));
 }
 function registerEvents() {
     document.getElementById("btnToggleSim")?.addEventListener("click", toggleSimulationClicked);
@@ -57,6 +59,8 @@ function registerEvents() {
     document.getElementById("cbxDisplayVectors")?.addEventListener("change", cbxDisplayVectorsChanged);
     document.getElementById("cbxCollisions")?.addEventListener("change", cbxCollisionsChanged);
     document.getElementById("cbxElasticCollisions")?.addEventListener("change", cbxElasticCollisionsChanged);
+    document.getElementById("rangeG")?.addEventListener("input", rangeInputGChanged);
+    document.getElementById("numberG")?.addEventListener("input", numberInputGChanged);
     document.querySelectorAll('input[name="radioBtnMouseAction"]').forEach((radioButton) => {
         radioButton.addEventListener('change', radioBtnMouseActionChanged);
       });
@@ -121,6 +125,27 @@ function radioBtnMouseActionChanged(event: Event): void {
 }
 function toggleSimulationClicked(this: HTMLElement, ev: MouseEvent) {
     sandbox.toggleSimulation();
+    if (sandbox.running) {
+        (<HTMLInputElement>document.getElementById("btnNextStep"))!.disabled = true;
+    } else {
+        (<HTMLInputElement>document.getElementById("btnNextStep"))!.disabled = false;
+    }
+}
+function rangeInputGChanged(this: HTMLElement, ev: Event) {
+    const newG: string = (<HTMLInputElement>this).value;
+    (<HTMLInputElement>document.getElementById("numberG"))!.value = newG;
+    setG(Number(newG));
+}
+function numberInputGChanged(this: HTMLElement, ev: Event) {
+    const newG: string = (<HTMLInputElement>this).value;
+    (<HTMLInputElement>document.getElementById("rangeG"))!.value = newG;
+    setG(Number(newG));
+}
+function setG(g: number) {
+    if (isNaN(g) || g < c.MIN_G || g > c.MAX_G) {
+        g = c.DEFAULT_G;
+    }
+    sandbox.simulation.g = g;
 }
 function nextStepClicked() {
     sandbox.advanceSimulation();
@@ -165,7 +190,6 @@ function resizeCanvas(this: Window, ev: UIEvent) {
     sandbox.resizeCanvas(this.innerWidth, this.innerHeight);
     sandbox.setStatusMessage(`Canvas dimension: ${this.innerWidth} * ${this.innerHeight}`, 5);
 }
-
 function canvasMouseWheel(this: HTMLElement, ev: WheelEvent) {
     // don't resize the entire page
     ev.preventDefault();
@@ -179,6 +203,3 @@ function canvasMouseWheel(this: HTMLElement, ev: WheelEvent) {
         sandbox.zoomOut(cursorPos);
     }
 }
-
-
-

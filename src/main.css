@@ -48,7 +48,6 @@ html, body {
 }
 
 #canvasContainer canvas {
-    /*do not set the canvas size in css*/
     display: block;
     border: none;
 }
@@ -68,6 +67,26 @@ html, body {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.slider-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+}
+
+.slider-container label {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.slider-container input[type="range"] {
+    width: 100%;
+}
+
+.slider-container input[type="number"] {
+    width: 90%;
 }
 
 /* buttons in the controlBar */

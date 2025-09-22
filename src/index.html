@@ -13,7 +13,7 @@
             <div class="canvasControlsTop">
                 <button id="btnResetSim">Reset</button>
                 <button id="btnToggleSim">Play</button>
-                <button id="btnNextStep">Next Step</button>
+                <button id="btnNextStep" disabled>Next Step</button>
                 <a href="https://github.com/OneUsernamePlease/gravity" target="_blank"><button>To the repository</button></a>
             </div>
             <div id="canvasWrapper">
@@ -51,6 +51,11 @@
                     <div>
                         <label for="cbxElasticCollisions">Elastic Collisions</label>
                         <input type="checkbox" id="cbxElasticCollisions" checked>
+                    </div>
+                    <div class="slider-container">
+                        <label for="rangeG">G (Gravitational Constant)</label>
+                        <input type="range" id="rangeG" name="rangeG" min="-10" max="100" value="50">
+                        <input type="number" id="numberG" min="-10" max="100" value="50">
                     </div>
 
                     <div class="hSeparator"></div>
