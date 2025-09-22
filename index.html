@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gravity</title>
-  <script type="module" crossorigin src="/gravity/assets/index-UtYQkc3h.js"></script>
-  <link rel="stylesheet" crossorigin href="/gravity/assets/index-BbrUTPaT.css">
+  <script type="module" crossorigin src="/gravity/assets/index-DgOzLsm6.js"></script>
+  <link rel="stylesheet" crossorigin href="/gravity/assets/index-d1PHkv49.css">
 </head>
 <body>
     <div>
@@ -13,7 +13,7 @@
             <div class="canvasControlsTop">
                 <button id="btnResetSim">Reset</button>
                 <button id="btnToggleSim">Play</button>
-                <button id="btnNextStep">Next Step</button>
+                <button id="btnNextStep" disabled>Next Step</button>
                 <a href="https://github.com/OneUsernamePlease/gravity" target="_blank"><button>To the repository</button></a>
             </div>
             <div id="canvasWrapper">
@@ -51,6 +51,11 @@
                     <div>
                         <label for="cbxElasticCollisions">Elastic Collisions</label>
                         <input type="checkbox" id="cbxElasticCollisions" checked>
+                    </div>
+                    <div class="slider-container">
+                        <label for="rangeG">G (Gravitational Constant)</label>
+                        <input type="range" id="rangeG" name="rangeG" min="-10" max="100" value="50">
+                        <input type="number" id="numberG" min="-10" max="100" value="50">
                     </div>
 
                     <div class="hSeparator"></div>
