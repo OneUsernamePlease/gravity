@@ -16,6 +16,13 @@
         - for a given simulationState, immediately calculate force/acceleration rather than calculating it when advancing to the next tick
 
 # feets/refactors/improvements:
+- move with middle mouse, select bodies with right (secondary) mouse
+- have a list of all bodies, to edit their properties
+
+- restructure
+    - new class UI (basically what the sandbox is now)
+        - contains canvas, top menu, side menu, status bar
+
 - improve the drawing implementations
     - save paths (circles of the bodies) instead of redefining every path every frame
     - only call draw methods if the object is (partially) within bounds
@@ -23,14 +30,14 @@
 
 - use workers and offscreen canvas
 
-- trace orbit paths
+- trace paths
+    - ui cbx
+        - toggle on: record all positions every (sim or animation?) frame, connect them w/ lines
+        - toggle off: clear paths
 
 - better zoom
     - slider
     - touch
-
-- resize canvas (especially for mobile)
-    - just use fullscreen
 
 - collision detection
     - elastic collision DONE
