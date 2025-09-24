@@ -102,10 +102,10 @@ export class Canvas {
     }
     private isLineVisible(startPoint: Vector2D, endPoint: Vector2D): boolean {
         // if the startPoint or endPoint is in the canvas, return true
-        if (essentials.isInRange(startPoint.x, 0, this.visibleCanvas.width) &&
-            essentials.isInRange(startPoint.y, 0, this.visibleCanvas.height) &&
-            essentials.isInRange(endPoint.x, 0, this.visibleCanvas.width) &&
-            essentials.isInRange(endPoint.y, 0, this.visibleCanvas.height)) {
+        if ((essentials.isInRange(startPoint.x, 0, this.visibleCanvas.width) &&
+            essentials.isInRange(startPoint.y, 0, this.visibleCanvas.height)) ||
+            (essentials.isInRange(endPoint.x, 0, this.visibleCanvas.width) &&
+            essentials.isInRange(endPoint.y, 0, this.visibleCanvas.height))) {
             return true;
         }
         // if both points are outside the canvas, check if the line intersects with any of the canvas edges
