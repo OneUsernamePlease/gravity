@@ -69,6 +69,9 @@ export function hexToDecimal(hex: string): number {
 export function ensureNumberInRange(n: number, min: number, max: number): number {
     return Math.max(min, Math.min(n, max))
 }
+export function isInRange(n: number, min: number, max: number): boolean {
+    return n >= min && n <= max;
+}
 //#endregion
 
 //#region string stuff

@@ -1,6 +1,7 @@
 import { Body2d } from "./gravity";
 import { CanvasSpace, ObjectState } from "./types";
 import { Vector2D } from "./vector2d";
+import * as essentials from "./essentials";
 
 export class Canvas {
     // let offscreenCanvas: OffscreenCanvas; // use this in a worker thread to render or draw on, then transfer content to the visible html-canvas
@@ -91,6 +92,27 @@ export class Canvas {
         if (displayVectors) {
             this.drawVectors(objectStates);
         }
+    }
+    private isCircleVisible(position: Vector2D, radius: number): boolean {
+        const inBoundsLeft = position.x + radius >= 0;
+        const inBoundsRight = position.x - radius <= this.visibleCanvas.width;
+        const inBoundsTop = position.y + radius >= 0;
+        const inBoundsBottom = position.y - radius <= this.visibleCanvas.height;
+        return inBoundsLeft && inBoundsRight && inBoundsTop && inBoundsBottom;
+    }
+    private isLineVisible(startPoint: Vector2D, endPoint: Vector2D): boolean {
+        // if the startPoint or endPoint is in the canvas, return true
+        if (essentials.isInRange(startPoint.x, 0, this.visibleCanvas.width) &&
+            essentials.isInRange(startPoint.y, 0, this.visibleCanvas.height) &&
+            essentials.isInRange(endPoint.x, 0, this.visibleCanvas.width) &&
+            essentials.isInRange(endPoint.y, 0, this.visibleCanvas.height)) {
+            return true;
+        }
+        // if both points are outside the canvas, check if the line intersects with any of the canvas edges
+        if (endPoint.x >= 0 && endPoint.x <= this.visibleCanvas.width && endPoint.y >= 0 && endPoint.y <= this.visibleCanvas.height) {
+            return true;
+        }
+        return false;
     }
     //#endregion
     private pointFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
