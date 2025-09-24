@@ -109,7 +109,10 @@ export class Canvas {
             return true;
         }
         // if both points are outside the canvas, check if the line intersects with any of the canvas edges
-        if (endPoint.x >= 0 && endPoint.x <= this.visibleCanvas.width && endPoint.y >= 0 && endPoint.y <= this.visibleCanvas.height) {
+        if (Vector2D.linesIntersecting([startPoint, endPoint], [new Vector2D(0, 0), new Vector2D(this.visibleCanvas.width, 0)], true) ||
+            Vector2D.linesIntersecting([startPoint, endPoint], [new Vector2D(this.visibleCanvas.width, 0), new Vector2D(this.visibleCanvas.width, this.visibleCanvas.height)], true) ||
+            Vector2D.linesIntersecting([startPoint, endPoint], [new Vector2D(this.visibleCanvas.width, this.visibleCanvas.height), new Vector2D(0, this.visibleCanvas.height)], true) ||
+            Vector2D.linesIntersecting([startPoint, endPoint], [new Vector2D(0, this.visibleCanvas.height), new Vector2D(0, 0)], true)) {
             return true;
         }
         return false;

@@ -84,7 +84,7 @@ export class Vector2D {
      * @param strict false by default. If true, the intersection must be within the points' distances, not just the infinite lines.
      * @returns the intersection point of the two lines, null if they don't intersect, or the line (defined by the two points) if they are identical
      */
-    private static linesIntersecting(line1: [p1: Vector2D, p2: Vector2D], line2: [q1: Vector2D, q2: Vector2D], strict = false): Vector2D | null | [Vector2D, Vector2D] {
+    public static linesIntersecting(line1: [p1: Vector2D, p2: Vector2D], line2: [q1: Vector2D, q2: Vector2D], strict = false): Vector2D | null | [Vector2D, Vector2D] {
         const [p1, p2] = line1;
         const [q1, q2] = line2;
 
