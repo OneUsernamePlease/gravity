@@ -64,7 +64,7 @@ function registerEvents() {
     document.querySelectorAll('input[name="radioBtnMouseAction"]').forEach((radioButton) => {
         radioButton.addEventListener('change', radioBtnMouseActionChanged);
       });
-    window.addEventListener("resize", resizeCanvas);
+    window.addEventListener("resize", windowResized);
 }
 function zoomOutClicked(this: HTMLElement, ev: MouseEvent) {
     const zoomCenter = new Vector2D(sandbox.canvas.visibleCanvas.width / 2, sandbox.canvas.visibleCanvas.height / 2)
@@ -186,7 +186,7 @@ function canvasTouchMove(this: HTMLElement, ev: TouchEvent) {
 function canvasTouchEnd(this: HTMLElement, ev: TouchEvent) {
     sandbox.canvasTouchEnd(ev);
 }
-function resizeCanvas(this: Window, ev: UIEvent) {
+function windowResized(this: Window, ev: UIEvent) {
     sandbox.resizeCanvas(this.innerWidth, this.innerHeight);
     sandbox.setStatusMessage(`Canvas dimension: ${this.innerWidth} * ${this.innerHeight}`, 5);
 }
