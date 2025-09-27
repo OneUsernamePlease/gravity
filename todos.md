@@ -10,7 +10,7 @@
     - canvas layers
     - mobile / responsive
     - workers and offscreen canvas
-    - vitest
+    - vitest in **watch mode** creates ./src/node_modules instead of using ./node_modules
 
 # bugs
     - mobile view (or just narrow width)
