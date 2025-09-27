@@ -48,10 +48,12 @@ export class Canvas {
      * @param position in canvas space
      * @param direction in canvas space
      */
-    public drawVector(position: Vector2D, direction: Vector2D, color?: string) {
+    public drawVector(position: Vector2D, direction: Vector2D, color: string = "white") {
         // optionally normalize the direction and scale later
-        if (color === undefined) { color = "white" }
         let endPosition: Vector2D = position.add(direction);
+        if (!this.isLineVisible(position, endPosition)) {
+            return;
+        }
         this.visibleCanvasContext.beginPath();
         this.visibleCanvasContext.lineWidth = 3;
         this.visibleCanvasContext.strokeStyle = color;
@@ -72,7 +74,10 @@ export class Canvas {
      * @param color default white
      */
     public drawBody(body: Body2d, position: Vector2D) {
-        let visibleRadius = Math.max(body.radius / this.canvasSpace.currentZoom, 1); // Minimum Radius of displayed body is one
+        let visibleRadius = Math.max(body.radius / this.canvasSpace.currentZoom, 1); // Minimum Radius of displayed body is 1
+        if (!this.isCircleVisible(position, visibleRadius)) {
+            return;
+        }
         this.visibleCanvasContext.beginPath();
         this.visibleCanvasContext.arc(position.x, position.y, visibleRadius, 0, Math.PI * 2);
         this.visibleCanvasContext.closePath();
@@ -81,12 +86,10 @@ export class Canvas {
     }
     public drawBodies(objectStates: ObjectState[]) {
         objectStates.forEach(object => {
-            // REFACTOR ME: draw only if body or its vectors are (partially) visible, otherwise return 
             this.drawBody(object.body, this.pointFromSimulationSpaceToCanvasSpace(object.position));
         });
     }
     public redrawSimulationState(objectStates: ObjectState[], displayVectors: boolean) {
-        // REFACTOR ME: instead of displayVectors, pass the current animationSettings, then extract the values here
         this.visibleCanvasContext.clearRect(0, 0, this.visibleCanvas.width, this.visibleCanvas.height);
         this.drawBodies(objectStates);
         if (displayVectors) {
@@ -102,17 +105,17 @@ export class Canvas {
     }
     private isLineVisible(startPoint: Vector2D, endPoint: Vector2D): boolean {
         // if the startPoint or endPoint is in the canvas, return true
-        if ((essentials.isInRange(startPoint.x, 0, this.visibleCanvas.width) &&
-            essentials.isInRange(startPoint.y, 0, this.visibleCanvas.height)) ||
-            (essentials.isInRange(endPoint.x, 0, this.visibleCanvas.width) &&
-            essentials.isInRange(endPoint.y, 0, this.visibleCanvas.height))) {
+        if ((essentials.isInRange(startPoint.x, 0, this.visibleCanvas.width) && essentials.isInRange(startPoint.y, 0, this.visibleCanvas.height)) ||
+            (essentials.isInRange(endPoint.x, 0, this.visibleCanvas.width) && essentials.isInRange(endPoint.y, 0, this.visibleCanvas.height))) 
+            {
             return true;
         }
         // if both points are outside the canvas, check if the line intersects with any of the canvas edges
         if (Vector2D.linesIntersecting([startPoint, endPoint], [new Vector2D(0, 0), new Vector2D(this.visibleCanvas.width, 0)], true) ||
             Vector2D.linesIntersecting([startPoint, endPoint], [new Vector2D(this.visibleCanvas.width, 0), new Vector2D(this.visibleCanvas.width, this.visibleCanvas.height)], true) ||
             Vector2D.linesIntersecting([startPoint, endPoint], [new Vector2D(this.visibleCanvas.width, this.visibleCanvas.height), new Vector2D(0, this.visibleCanvas.height)], true) ||
-            Vector2D.linesIntersecting([startPoint, endPoint], [new Vector2D(0, this.visibleCanvas.height), new Vector2D(0, 0)], true)) {
+            Vector2D.linesIntersecting([startPoint, endPoint], [new Vector2D(0, this.visibleCanvas.height), new Vector2D(0, 0)], true)) 
+            {
             return true;
         }
         return false;
