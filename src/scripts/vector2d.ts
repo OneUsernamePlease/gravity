@@ -82,7 +82,8 @@ export class Vector2D {
      * @param line1 defined by two points
      * @param line2 defined by two points
      * @param strict false by default. If true, the intersection must be within the points' distances, not just the infinite lines.
-     * @returns the intersection point of the two lines, null if they don't intersect, or the line (defined by the two points) if they are identical
+     * @returns the intersection of the two lines: a point, null if they don't intersect, or a line (defined by two points) if they are identical, or collinear and overlapping
+     * https://stackoverflow.com/a/565282/97076991 - authored by ai
      */
     public static linesIntersecting(line1: [p1: Vector2D, p2: Vector2D], line2: [q1: Vector2D, q2: Vector2D], strict = false): Vector2D | null | [Vector2D, Vector2D] {
         const [p1, p2] = line1;
@@ -97,7 +98,7 @@ export class Vector2D {
 
         if (rCrossS === 0) {
             if (qmpCrossR === 0) {
-                // lines are collinear
+                // collinear
                 if (strict) {
                     // overlap
                     const t0 = q1.subtract(p1).dotProduct(r) / r.dotProduct(r);
@@ -115,14 +116,14 @@ export class Vector2D {
                     }
                 }
 
-                // lines are identical
+                // identical
                 return [p1, p2];
             }
             // parallel
             return null;
         }
 
-        // not parallel
+        // point intersection
         const t = (qMinusP.x * s.y - qMinusP.y * s.x) / rCrossS;
         const u = (qMinusP.x * r.y - qMinusP.y * r.x) / rCrossS;
 
@@ -135,5 +136,4 @@ export class Vector2D {
         const intersection = p1.add(r.scale(t));
         return intersection;
     }
-
 }

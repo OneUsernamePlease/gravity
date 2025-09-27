@@ -5,7 +5,8 @@ import * as tsEssentials from "./essentials";
 import { Sandbox } from "./sandbox";
 import * as c from "../const";
 
-let sandbox: Sandbox;
+let sandbox: Sandbox; // ie. gravity-animation-controller
+// ui Objects (toDo) 
 
 document.addEventListener("DOMContentLoaded", initialize);
 function initialize() {

@@ -78,7 +78,8 @@ export function isInRange(n: number, min: number, max: number): boolean {
 /**
  * Removes all occurrences of charToRemove from the beginning of str
  * @param str the string to be modified
- * @param charToRemove ***optional*** If no value is provided the first character of str is used.
+ * @param charToRemove ***optional*** If no value is provided the first character of str is used. Can be more than one character.
+ * @returns the modified string
  */
 export function removeLeadingChar(str: string, charToRemove?: string): string {
     if (str.length < 1) { return ""; }
