@@ -88,7 +88,7 @@ export class Vector2D {
     public static linesIntersecting(line1: [p1: Vector2D, p2: Vector2D], line2: [q1: Vector2D, q2: Vector2D], strict = false): Vector2D | null | [Vector2D, Vector2D] {
         const [p1, p2] = line1;
         const [q1, q2] = line2;
-
+        
         const r = p2.subtract(p1);
         const s = q2.subtract(q1);
         const rCrossS = r.x * s.y - r.y * s.x;
@@ -107,10 +107,14 @@ export class Vector2D {
                     const tMin = Math.max(0, Math.min(t0, t1));
                     const tMax = Math.min(1, Math.max(t0, t1));
 
-                    if (tMin <= tMax) {
+                    if (tMin <= tMax) { // < overlap is line, = overlap is point
                         const pointA = p1.add(r.scale(tMin));
                         const pointB = p1.add(r.scale(tMax));
-                        return [pointA, pointB];
+                        if (tMin === tMax) {
+                            return pointA;
+                        } else {
+                            return [pointA, pointB];
+                        }
                     } else {
                         return null;
                     }
