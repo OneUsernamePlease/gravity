@@ -6,12 +6,12 @@
     "vitest": "^3.2.4"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
     "serve": "vite preview",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "test": "vitest --run"
+    "test": "vitest"
   },
   "type": "module",
   "homepage": "https://oneusernameplease.github.io/gravity/"
