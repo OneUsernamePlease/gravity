@@ -47,7 +47,7 @@ export class Vector2D {
         return Math.sqrt((v.x - this.x)**2 + (v.y - this.y)**2);
     }
     /**
-     * returns a vector pointing to v
+     * returns a vector pointing from this to v
      */
     public displacementVector(v: Vector2D) {
         return v.subtract(this);
@@ -81,7 +81,7 @@ export class Vector2D {
     /**
      * @param line1 defined by two points
      * @param line2 defined by two points
-     * @param strict false by default. If true, the intersection must be within the points' distances, not just the infinite lines.
+     * @param strict false by default. If true, the intersection must be within the line segments defined by the coordinates, not just the infinite lines.
      * @returns the intersection of the two lines: a point, null if they don't intersect, or a line (defined by two points) if they are identical, or collinear and overlapping
      * https://stackoverflow.com/a/565282/97076991 - authored by ai
      */
@@ -100,22 +100,24 @@ export class Vector2D {
             if (qmpCrossR === 0) {
                 // collinear
                 if (strict) {
-                    // overlap
                     const t0 = q1.subtract(p1).dotProduct(r) / r.dotProduct(r);
                     const t1 = q2.subtract(p1).dotProduct(r) / r.dotProduct(r);
 
                     const tMin = Math.max(0, Math.min(t0, t1));
                     const tMax = Math.min(1, Math.max(t0, t1));
 
-                    if (tMin <= tMax) { // < overlap is line, = overlap is point
+                    if (tMin <= tMax) {
                         const pointA = p1.add(r.scale(tMin));
                         const pointB = p1.add(r.scale(tMax));
                         if (tMin === tMax) {
+                            // overlap at a point
                             return pointA;
                         } else {
+                            // overlap at a line
                             return [pointA, pointB];
                         }
                     } else {
+                        // no overlap
                         return null;
                     }
                 }

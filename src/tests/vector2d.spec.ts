@@ -5,7 +5,7 @@ test('test test', () => {
   expect(true).toBe(true);
 });
 
-test("horizontal colinear line segments partial intersection (strict) - returns intersecting line endpoint", () => {
+test("horizontal colinear line segments partial intersection (strict) - returns intersection line endpoints", () => {
     const line1Start = new Vector2D(0,0);
     const line1End = new Vector2D(10,0);
     const line2Start = new Vector2D(9,0);

@@ -20,7 +20,7 @@ function initialize() {
 }
 function initializeSandbox() {
     sandbox = new Sandbox(new Canvas(<HTMLCanvasElement>document.getElementById(c.CANVAS_ID)));
-    sandbox.initStatusBar(<HTMLDivElement>(document.getElementById(c.STATUS_BAR_ID)));
+    sandbox.ui.initStatusBar(<HTMLDivElement>(document.getElementById(c.STATUS_BAR_ID)));
     sandbox.initCanvasAndSimulation({x: window.innerWidth, y: window.innerHeight});
 }
 function initializeSettingsFromUI() {
@@ -30,9 +30,9 @@ function initializeSettingsFromUI() {
     (<HTMLInputElement>document.getElementById("cbxElasticCollisions")).disabled = !sandbox.simulation.collisionDetection;
 
     if ((<HTMLInputElement>document.getElementById("cbxDisplayVectors"))?.checked) {
-        sandbox.setStatusMessage("Green: acceleration - Red: velocity", 3);
+        sandbox.ui.setStatusMessage("Green: acceleration - Red: velocity", 3);
     } else {
-        sandbox.setStatusMessage("", 3);
+        sandbox.ui.setStatusMessage("", 3);
     }
 
     setG(Number((<HTMLInputElement>document.getElementById("rangeG")).value));
@@ -109,9 +109,9 @@ function cbxDisplayVectorsChanged(event: Event) {
     sandbox.animationSettings.displayVectors = displayVectors;
     
     if (displayVectors) {
-        sandbox.setStatusMessage("Green: acceleration - Red: velocity", 3);
+        sandbox.ui.setStatusMessage("Green: acceleration - Red: velocity", 3);
     } else {
-        sandbox.setStatusMessage("", 3);
+        sandbox.ui.setStatusMessage("", 3);
     }
 
     if (!sandbox.running) {
@@ -189,7 +189,7 @@ function canvasTouchEnd(this: HTMLElement, ev: TouchEvent) {
 }
 function windowResized(this: Window, ev: UIEvent) {
     sandbox.resizeCanvas(this.innerWidth, this.innerHeight);
-    sandbox.setStatusMessage(`Canvas dimension: ${this.innerWidth} * ${this.innerHeight}`, 5);
+    sandbox.ui.setStatusMessage(`Canvas dimension: ${this.innerWidth} * ${this.innerHeight}`, 5);
 }
 function canvasMouseWheel(this: HTMLElement, ev: WheelEvent) {
     // don't resize the entire page

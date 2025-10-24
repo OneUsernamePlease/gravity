@@ -155,21 +155,21 @@ export class Canvas {
         this.canvasSpace.origin = newOrigin;
     }
     public moveCanvas(displacement: Vector2D) {
-        const originPosition = this._canvasSpace.origin;
-        const newOrigin = new Vector2D(originPosition.x + displacement.x, originPosition.y + displacement.y);
+        const originPosition = this.canvasSpace.origin;
+        const newOrigin = originPosition.add(displacement);
         this.setOrigin(newOrigin);
     }
     public moveCanvasRight(distance: number) {
-        this.setOrigin(new Vector2D(this.canvasSpace.origin.x + distance, this.canvasSpace.origin.y));
+        this.moveCanvas(new Vector2D(distance, 0));
     }
     public moveCanvasLeft(distance: number) {
-        this.setOrigin(new Vector2D(this.canvasSpace.origin.x - distance, this.canvasSpace.origin.y ));
+        this.moveCanvas(new Vector2D(-distance, 0));
     }
     public moveCanvasUp(distance: number) {
-        this.setOrigin(new Vector2D(this.canvasSpace.origin.x, this.canvasSpace.origin.y + distance));
+        this.moveCanvas(new Vector2D(0, distance));
     }
     public moveCanvasDown(distance: number) {
-        this.setOrigin(new Vector2D(this.canvasSpace.origin.x, this.canvasSpace.origin.y - distance));
+        this.moveCanvas(new Vector2D(0, -distance));
     }
     public zoomOut(zoomCenter: Vector2D, zoomStep: number) {
         const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
