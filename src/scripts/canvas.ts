@@ -2,6 +2,11 @@ import { Body2d } from "./gravity";
 import { CanvasSpace, ObjectState } from "./types";
 import { Vector2D } from "./vector2d";
 import * as essentials from "./essentials";
+/*
+all position here should be in canvas space
+
+*/
+
 
 export class Canvas {
     // let offscreenCanvas: OffscreenCanvas; // use this in a worker thread to render or draw on, then transfer content to the visible html-canvas
@@ -9,6 +14,7 @@ export class Canvas {
     private _visibleCanvas: HTMLCanvasElement;
     private _visibleCanvasContext: CanvasRenderingContext2D;
     private _canvasSpace: CanvasSpace;
+    private _running: boolean = false;
     constructor(visibleCanvas: HTMLCanvasElement) {
         this._visibleCanvas = visibleCanvas;
         this._visibleCanvasContext = visibleCanvas.getContext("2d")!;
@@ -32,6 +38,16 @@ export class Canvas {
     }
     set canvasSpace(canvasSpace: CanvasSpace) {
         this._canvasSpace = canvasSpace;
+    }
+    get running() {
+        return this._running;
+    }
+    set running(running: boolean) {
+        this._running = running;
+    }
+    // additional getters
+    get currentZoom(): number {
+        return this.canvasSpace.currentZoom;
     }
     //#endregion
 
@@ -74,7 +90,7 @@ export class Canvas {
      * @param color default white
      */
     public drawBody(body: Body2d, position: Vector2D) {
-        let visibleRadius = Math.max(body.radius / this.canvasSpace.currentZoom, 1); // Minimum Radius of displayed body is 1
+        let visibleRadius = Math.max(body.radius / this.currentZoom, 1); // Minimum Radius of displayed body is 1
         if (!this.isCircleVisible(position, visibleRadius)) {
             return;
         }
@@ -121,62 +137,38 @@ export class Canvas {
         return false;
     }
     //#endregion
-    private pointFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
-    // transformation:
-    // 1. shift (point in SimSpace - Origin of C in SimSpace)
-    // 2. flip (y axis point in opposite directions)
-    // 3. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
-    const shifted: Vector2D = simVector.subtract(this.canvasSpace.origin);
-    const flipped: Vector2D = new Vector2D(shifted.x, shifted.y * -1);
-    const scaled: Vector2D = flipped.scale(1 / this.canvasSpace.currentZoom);
-    return scaled;
-    }
-    private directionFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
-        // transformation:
-        // 1. flip (y axis are in opposite directions)
-        // 2. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
-        const flipped: Vector2D = new Vector2D(simVector.x, simVector.y * -1);
-        const scaled: Vector2D = flipped.scale(1 / this.canvasSpace.currentZoom);
-        return scaled;
-    }
-    public pointFromCanvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
-        // transformation:
-        // 1. scale (canvasVector * zoom in simulationUnits/canvasUnit)
-        // 2. flip (y axis are in opposite directions)
-        // 3. shift (scaledAndFlippedPoint + Origin of C in SimSpace)
-        let simulationVector: Vector2D;
-        simulationVector = canvasVector.scale(this.canvasSpace.currentZoom).hadamardProduct(new Vector2D(1, this.canvasSpace.orientationY)).add(this.canvasSpace.origin);
-        return simulationVector;
-    }
+    
     /**
      * Origin {x:0,y:0} is at the top-left
      */
     private setOrigin(newOrigin: Vector2D) {
         this.canvasSpace.origin = newOrigin;
     }
-    public moveCanvas(displacement: Vector2D) {
+    public moveOrigin(displacement: { x: number, y: number}) {
         const originPosition = this.canvasSpace.origin;
         const newOrigin = originPosition.add(displacement);
         this.setOrigin(newOrigin);
     }
-    public moveCanvasRight(distance: number) {
-        this.moveCanvas(new Vector2D(distance, 0));
+    public scrollRight(distance: number) {
+        this.moveOrigin(new Vector2D(distance, 0));
     }
-    public moveCanvasLeft(distance: number) {
-        this.moveCanvas(new Vector2D(-distance, 0));
+    public scrollLeft(distance: number) {
+        this.moveOrigin(new Vector2D(-distance, 0));
     }
-    public moveCanvasUp(distance: number) {
-        this.moveCanvas(new Vector2D(0, distance));
+    public scrollUp(distance: number) {
+        this.moveOrigin(new Vector2D(0, distance));
     }
-    public moveCanvasDown(distance: number) {
-        this.moveCanvas(new Vector2D(0, -distance));
+    public scrollDown(distance: number) {
+        this.moveOrigin(new Vector2D(0, -distance));
     }
     public zoomOut(zoomCenter: Vector2D, zoomStep: number) {
         const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
-        const newZoom = this.canvasSpace.currentZoom + zoomStep;
+        const newZoom = this.currentZoom + zoomStep;
 
         this.canvasSpace.origin = new Vector2D(this.canvasSpace.origin.x - shiftOrigin.x, this.canvasSpace.origin.y + shiftOrigin.y);
         this.canvasSpace.currentZoom = newZoom;
+
+        return newZoom;
     }
     public zoomIn(zoomCenter: Vector2D, zoomStep: number) {
         if (this.canvasSpace.currentZoom <= 1) { 
@@ -192,7 +184,32 @@ export class Canvas {
         let shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
         this.canvasSpace.origin = new Vector2D(this.canvasSpace.origin.x + shiftOrigin.x, this.canvasSpace.origin.y - shiftOrigin.y);
         this.canvasSpace.currentZoom = newZoom;
+        
+        return newZoom;
     }
+    private pointFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
+    // transformation:
+    // 1. shift (point in SimSpace - Origin of C in SimSpace)
+    // 2. flip (y axis point in opposite directions)
+    // 3. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
+    const shifted: Vector2D = simVector.subtract(this.canvasSpace.origin);
+    const flipped: Vector2D = new Vector2D(shifted.x, shifted.y * -1);
+    const scaled: Vector2D = flipped.scale(1 / this.currentZoom);
+    return scaled;
+    }
+    private directionFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
+        // transformation:
+        // 1. flip (y axis are in opposite directions)
+        // 2. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
+        const flipped: Vector2D = new Vector2D(simVector.x, simVector.y * -1);
+        const scaled: Vector2D = flipped.scale(1 / this.currentZoom);
+        return scaled;
+    }
+    /* 
+
+    ELIMINATED - absolute positions are evaluated in main.ts (events should not be passed down),
+    relative positions in app.ts
+
     public getCanvasMousePosition(event: MouseEvent): Vector2D {
         const rect = this.visibleCanvas.getBoundingClientRect();
         const x = event.clientX - rect.left;
@@ -209,4 +226,5 @@ export class Canvas {
         const touch = event.changedTouches[0];
         return new Vector2D(touch.clientX - rect.left, touch.clientY - rect.top)
     }
+        */
 }

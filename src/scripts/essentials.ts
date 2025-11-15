@@ -100,7 +100,7 @@ export function getInputValue(inputId: string): string
 export function getInputValue(input: string | HTMLInputElement): string {
     let inputElement: HTMLInputElement;
     if (typeof input === "string") {
-        inputElement = <HTMLInputElement>document.getElementById(input);
+        inputElement = document.getElementById(input) as HTMLInputElement;
     } else {
         inputElement = input;
     }
@@ -123,15 +123,9 @@ export function getInputNumber(input: string | HTMLInputElement): number {
  * @param inputId id for a checkable input (radioButton, checkbox)
  * @returns true if checked, false otherwise
  */
-export function isChecked(inputElement: HTMLInputElement): boolean
-export function isChecked(inputId: string): boolean
-export function isChecked(input: string | HTMLInputElement): boolean {
+export function isChecked(input: string): boolean{
     let checkbox: HTMLInputElement;
-    if (typeof input === "string") {
-        checkbox = document.getElementById(input) as HTMLInputElement;
-    } else {
-        checkbox = input;
-    }
+    checkbox = document.getElementById(input) as HTMLInputElement;
     return checkbox ? checkbox.checked : false;
 }
 //#endregion

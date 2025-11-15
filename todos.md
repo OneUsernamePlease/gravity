@@ -1,11 +1,15 @@
-# currently/next working on:
+# TODO:
+    - improve the status bar
+        - maxN -> status bar can have between 1 and N fields.
+        - only show when display is wide enough
     - some refactors
-        - remove color from Body2d, (in Canvas or similar) extend Body2d and add color
+        - main keeps track of the events, and delegates
+            - don't pass events down to the components
         - restructure
             - sandbox is the new main -> outsource
                 - pageController that coordinates everything
                 - inputs.ts - remove inputs from sandbox?
-    - dont just calculate forces only before advancing a tick  
+    - don't just calculate forces only before advancing a tick  
         - at every change (body placed, g changed)
     - canvas layers
     - mobile / responsive
@@ -13,16 +17,21 @@
     - vitest in **watch mode** creates ./src/node_modules instead of using ./node_modules
 
 # bugs
+    - adding body with velocity, while zooming: when adding a body, at mouseDown store the pointer's simulation position, currently the positions will be wrong when zooming while dragging for adding a body
     - mobile view (or just narrow width)
     - elastic collisions (that should be 100% elastic) are not
     - in theory a body can move at above c so introduce a limit we shall
     - when Display Vectors is active, the displayed acceleration vector for a given body is actually the vector from the previous tick.
         - for a given simulationState, immediately calculate force/acceleration rather than calculating it when advancing to the next tick
+    - add small epsilon for Vector2d.lineIntersection()
 
 # feets/refactors/improvements:
+- use pointer events instead of mouse&touch
 - move with middle mouse, select bodies with right (secondary) mouse
 - have a list of all bodies, to edit their properties
 - immovable bodies should have a different color
+
+- Save/load simulationState
 
 - restructure
     - new class UI (basically what the sandbox is now)

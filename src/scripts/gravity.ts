@@ -97,9 +97,9 @@ export class Simulation {
     public get tickLength() {
         return this._tickLength;
     }
-    public set tickLength(t: number) {
-        this._tickLength = t;
-    }
+    //public set tickLength(t: number) {
+    //    this._tickLength = t;
+    //}
     public get collisionDetection() {
         return this._collisionDetection;
     }
@@ -116,6 +116,9 @@ export class Simulation {
         return this._g;
     }
     public set g(g: number) {
+        if (isNaN(g) || g < c.MIN_G || g > c.MAX_G) {
+            g = c.DEFAULT_G;
+        }
         this._g = g;
     }
 // #endregion
