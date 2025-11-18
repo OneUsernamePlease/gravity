@@ -1,11 +1,12 @@
 import { Body2d } from "./gravity";
 import * as tsEssentials from "./essentials";
 import { MASS_INPUT_ID } from "../const";
-import { IUI } from "./types";
+import { IUI, RadioButtonGroup, StatusBar } from "./types";
+import { App } from "./app";
 
 export class UI implements IUI {
 // All UI Elements
-    private _statusBar: { fields: HTMLSpanElement[] } = { fields: [] };
+    statusBar: StatusBar;
     resetButton: HTMLElement;
     playPauseButton: HTMLElement;
     stepButton: HTMLElement;
@@ -20,16 +21,15 @@ export class UI implements IUI {
     collisionDetectionCheckbox: HTMLInputElement;
     elasticCollisionsCheckbox: HTMLInputElement;
     gravitationalConstantInput: HTMLInputElement;
-    clickActionSelect: HTMLSelectElement;
-    addBodyMassInput: HTMLInputElement;
-    addBodyMovableCheckbox: HTMLInputElement;
-    
+    gravitationalConstantRangeInput: HTMLInputElement;
+    clickAction: RadioButtonGroup;
+    massInput: HTMLInputElement;
+    addBodyMovable: HTMLInputElement;
+
     private _selectedMass: number;
     
     //#region get, set
-    get statusBar() {
-        return this._statusBar;
-    }
+
     public get selectedMass() {
         return this._selectedMass;
     }
@@ -38,14 +38,83 @@ export class UI implements IUI {
     }
 
     //#endregion
-    constructor() {
-        this.playPauseButton = document.getElementById("btnToggleSim")!;
-        
-        
+    constructor(private app: App) {
+        this.resetButton                        = document.getElementById("btnResetSim")!;
+        this.playPauseButton                    = document.getElementById("btnToggleSim")!;
+        this.stepButton                         = document.getElementById("btnNextStep")!;
+        this.repositoryLink                     = document.getElementById("repoLink")!;
+        this.zoomInButton                       = document.getElementById("btnZoomIn")!;
+        this.zoomOutButton                      = document.getElementById("btnZoomOut")!;
+        this.scrollUpButton                     = document.getElementById("btnScrollUp")!;
+        this.scrollDownButton                   = document.getElementById("btnScrollDown")!;
+        this.scrollLeftButton                   = document.getElementById("btnScrollLeft")!;
+        this.scrollRightButton                  = document.getElementById("btnScrollRight")!;
+        this.displayVectorsCheckbox             = document.getElementById("cbxDisplayVectors")! as HTMLInputElement;
+        this.collisionDetectionCheckbox         = document.getElementById("cbxCollisions")! as HTMLInputElement;
+        this.elasticCollisionsCheckbox          = document.getElementById("cbxElasticCollisions")! as HTMLInputElement;
+        this.gravitationalConstantInput         = document.getElementById("numberG")! as HTMLInputElement;
+        this.gravitationalConstantRangeInput    = document.getElementById("rangeG")! as HTMLInputElement;
+        this.massInput                          = document.getElementById("massInput")! as HTMLInputElement;
+        this.addBodyMovable                     = document.getElementById("cbxBodyMovable")! as HTMLInputElement;
+        this.clickAction = {
+            name: "radioBtnMouseAction",
+            buttons: Array.from(document.querySelectorAll('input[name="radioBtnMouseAction"]')) as HTMLInputElement[]
+        };
+        this.statusBar = (() => {
+            const bar = document.getElementById("statusBar") as HTMLDivElement;
+            return {
+                bar: bar,
+                fields: Array.from((bar.querySelectorAll(".statusBarItem")) as NodeListOf<HTMLSpanElement>)
+            };
+        })();
+
+
+        this.registerEvents();
         
         this._selectedMass = tsEssentials.getInputNumber(MASS_INPUT_ID);
 
-        (document.getElementById(MASS_INPUT_ID)! as HTMLInputElement).step = this.calculateMassInputStep();
+        this.massInput.step = this.calculateMassInputStep();
+    }
+    private registerEvents() {
+
+        this.resetButton.addEventListener("click", () => this.app.reset());
+        this.playPauseButton.addEventListener("click", () => this.app.toggleSimulation());
+        this.stepButton.addEventListener("click", () => this.app.advanceOneTick());
+        this.zoomInButton.addEventListener("click", () => this.zoomInClicked());
+        this.zoomOutButton.addEventListener("click", () => this.zoomOutClicked());
+        this.scrollUpButton.addEventListener("click", () => this.app.scrollViewUp());
+        this.scrollDownButton.addEventListener("click", () => this.app.scrollViewDown());
+        this.scrollLeftButton.addEventListener("click", () => this.app.scrollViewLeft());
+        this.scrollRightButton.addEventListener("click", () => this.app.scrollViewRight());
+        this.displayVectorsCheckbox.addEventListener("change", () => this.app.cbxDisplayVectorsChanged(this.displayVectorsCheckbox));
+        this.collisionDetectionCheckbox.addEventListener("change", () => this.app.cbxCollisionsChanged(this.collisionDetectionCheckbox));
+        this.elasticCollisionsCheckbox.addEventListener("change", () => this.app.cbxElasticCollisionsChanged(this.elasticCollisionsCheckbox));
+        this.gravitationalConstantInput.addEventListener("", () => this.app.numberInputGChanged(this.gravitationalConstantInput));
+        this.gravitationalConstantRangeInput.addEventListener("change", () => this.app.rangeInputGChanged(this.gravitationalConstantRangeInput));
+        this.massInput.addEventListener("change", () => this.updateSelectedMass(this.massInput));
+                this.clickAction.buttons.forEach((radioButton) => {
+            radioButton.addEventListener('change', () => this.radioBtnMouseActionChanged(radioButton));
+        });
+    }
+    public simulationStopped() {
+        this.playPauseButton.innerHTML = "&#9654;"; // play symbol
+    }
+    public simulationResumed() {
+        this.playPauseButton.innerHTML = "&#10074;&#10074;"; // pause symbol
+        this.app.updateSimulationStatusMessages();
+    }
+    public zoomInClicked() {
+        const newZoom = this.app.zoomIn();
+        this.setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
+    }
+    public zoomOutClicked() {
+        const newZoom = this.app.zoomOut();
+        this.setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
+    }
+    public radioBtnMouseActionChanged(element: HTMLInputElement): void {
+        if (element && element.type === 'radio') {
+            this.app.selectedCanvasClickAction = element.value;
+        }
     }
 
     public body2dFromInputs(): Body2d {
@@ -84,14 +153,5 @@ export class UI implements IUI {
             element!.innerHTML = message;
         }
     }
-    /**
-     * generates an internal array of status-bar-field for later use.
-     * @param fieldIdBeginsWith the status bar's fields' ids have the same start followed by a number (starting at 1)
-     */
-    public initStatusBar(statusBar: HTMLDivElement) {
-        const statusBarFields = statusBar.querySelectorAll(".statusBarItem") as NodeListOf<HTMLSpanElement>;
-        statusBarFields.forEach(field => {
-            this.statusBar.fields.push(field);
-        });
-    }
+
 }

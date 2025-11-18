@@ -2,7 +2,7 @@ import { Canvas } from "./canvas";
 import { Body2d } from "./gravity";
 import * as tsEssentials from "./essentials";
 import { Vector2D } from "./vector2d";
-import { CanvasClickAction, ButtonState } from "./types";
+import { CanvasClickAction, ButtonState, IUI } from "./types";
 import { UI } from "./ui";
 import { GravityAnimationController } from "./gravity-animation-controller";
 import * as c from "../const";
@@ -32,10 +32,9 @@ export class App {
     get running() {
         return this.gravityAnimationController.running;
     }
-    constructor(canvasId: string) {
-        const canvas = new Canvas(document.getElementById(canvasId) as HTMLCanvasElement)
-        this._gravityAnimationController = new GravityAnimationController(canvas);        
-        this._ui = new UI();
+    constructor() {
+        this._gravityAnimationController = new GravityAnimationController(this);        
+        this._ui = new UI(this);
     }
     //#endregion
     
@@ -43,10 +42,9 @@ export class App {
     public initialize() {
         this.initializeSettingsFromUI();
         this.initAnimationController({x: window.innerWidth, y: window.innerHeight});
-        this.ui.initStatusBar(document.getElementById(c.STATUS_BAR_ID) as HTMLDivElement);        
     }
     public initAnimationController(canvasDimensions: {x: number, y: number}) {
-        this.gravityAnimationController.initialize(canvasDimensions);
+        this.gravityAnimationController.initialize(canvasDimensions.x, canvasDimensions.y);
         this.ui.setStatusMessage(`Canvas dimension: ${canvasDimensions.x} * ${canvasDimensions.y}`, 5);
     }
     public initializeSettingsFromUI() {
@@ -68,12 +66,11 @@ export class App {
     //#region output/drawing
     public run() {
         this.gravityAnimationController.run();
-        this.updateSimulationStatusMessages();
-        document.getElementById("btnToggleSim")!.innerHTML = "Pause";
+        this.ui.simulationResumed();
     }
-    public advanceOneTick() {
-        this.gravityAnimationController.advanceOneTick();
-        this.updateSimulationStatusMessages();
+    public stop() {
+        this.gravityAnimationController.stop();
+        this.ui.simulationStopped();
     }
     public toggleSimulation() {
         if (this.running) {
@@ -84,18 +81,18 @@ export class App {
             (document.getElementById("btnNextStep") as HTMLInputElement)!.disabled = true;
         }
     }
+    public advanceOneTick() {
+        this.gravityAnimationController.advanceOneTick();
+        this.updateSimulationStatusMessages();
+    }
     public reset() {
         this.gravityAnimationController.reset();
         this.updateSimulationStatusMessages();
     }
-    public stop() {
-        this.gravityAnimationController.stop();
-        document.getElementById("btnToggleSim")!.innerHTML = "Play";
-    }
     /**
      * Updates the status fields for tick count and number of bodies
      */
-    private updateSimulationStatusMessages() {
+    public updateSimulationStatusMessages() {
         // maybe add optional parameters for which status fields to update
         this.ui.setStatusMessage(`Simulation Tick: ${this.gravityAnimationController.tickCount}`, 2);
         this.ui.setStatusMessage(`Number of Bodies: ${this.gravityAnimationController.bodyCount}`, 1);
@@ -109,6 +106,18 @@ export class App {
     
     //#region interaction
     /* !!!!!! moved to gravity-animation-controller.ts - logic should be over there, being called from here */
+    public getCanvasMousePosition(event: MouseEvent): Vector2D {
+        const rect = this.gravityAnimationController.canvas.visibleCanvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        return new Vector2D(x, y);
+    }
+    public absoluteToCanvasPosition(absolutePosition: Vector2D): Vector2D {
+        const canvasRect = this.gravityAnimationController.canvas.visibleCanvas.getBoundingClientRect();
+        const x = absolutePosition.x - canvasRect.left;
+        const y = absolutePosition.y - canvasRect.top;
+        return new Vector2D(x, y);
+    }
     public scrollView(displacement: {x: number, y: number}) {
         this.gravityAnimationController.scrollView(displacement);
     }
@@ -127,32 +136,19 @@ export class App {
     public setG(g: number) {
         this.gravityAnimationController.setG(g);
     }
-    public zoomOut(zoomCenter: Vector2D, zoomStep?: number) {
+    public zoomOut(zoomCenter?: Vector2D, zoomStep?: number): number {
         const newZoom = this.gravityAnimationController.canvasZoomOut(zoomCenter, zoomStep);
         this.ui.setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
-
-        //const zoomCenter = new Vector2D(app.canvas.visibleCanvas.width / 2, app.canvas.visibleCanvas.height / 2);
-        //app.zoomOut(zoomCenter);
+        return newZoom;
     }
-    public zoomIn(zoomCenter: Vector2D, zoomStep?: number) {
+    public zoomIn(zoomCenter?: Vector2D, zoomStep?: number) {
         const newZoom = this.gravityAnimationController.canvasZoomIn(zoomCenter, zoomStep);
         this.ui.setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
-    }
-
-    public zoomOutClicked() {
-        const zoomCenter = new Vector2D(this.gravityAnimationController.width / 2, this.gravityAnimationController.height / 2);
-        this.zoomOut(zoomCenter);
-    }
-    public zoomInClicked() {
-        const zoomCenter = new Vector2D(this.gravityAnimationController.width / 2, this.gravityAnimationController.height / 2)
-        this.zoomIn(zoomCenter);
+        return newZoom;
     }
     public resizeCanvas(width: number, height: number) {
         this.gravityAnimationController.resizeCanvas(width, height);
         this.ui.setStatusMessage(`Canvas dimension: ${width} * ${height}`, 5);
-    }
-    public massInputChanged(inputElement: HTMLInputElement) {
-        this.ui.updateSelectedMass(inputElement);
     }
     public cbxCollisionsChanged(inputElement: HTMLInputElement) {
         const checked = inputElement.checked;
@@ -185,11 +181,7 @@ export class App {
         (document.getElementById("numberG") as HTMLInputElement)!.value = newG;
         this.setG(Number(newG));
     }
-    public radioBtnMouseActionChanged(element: HTMLInputElement): void {
-        if (element && element.type === 'radio') {
-            this.selectedCanvasClickAction = element.value;
-        }
-    }
+
     public canvasSecondaryMouseDragging(movement: Vector2D){
         const movementInSimulationUnits = movement.scale(this.gravityAnimationController.zoom);
         this.scrollView({ x: -(movementInSimulationUnits.x), y: movementInSimulationUnits.y });
@@ -209,7 +201,7 @@ export class App {
                 break;
         }
     }
-    public canvasMainMouseUp(absoluteMousePosition: {x: number, y: number}) {
+    public canvasMainMouseUp(absoluteMousePosition: Vector2D) {
         
         switch (CanvasClickAction[this.selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
             case CanvasClickAction.None:
@@ -217,11 +209,11 @@ export class App {
             case CanvasClickAction.AddBody:
                 const bodyBeingAdded: Body2d = this.ui.body2dFromInputs();
                 if (bodyBeingAdded.mass <= 0) { break; }
-
-
                 const mousePositionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
-                const vel: Vector2D = this.gravityAnimationController.simulation.calculateVelocityBetweenPoints(this.gravityAnimationController.pointFromCanvasSpaceToSimulationSpace(this.lastMainMouseDownSimulationCoord), this.gravityAnimationController.pointFromCanvasSpaceToSimulationSpace(mousePositionVector));
-                this.gravityAnimationController.addBody(bodyBeingAdded, mousePositionVector, vel);
+                const mousePositionOnCanvas: Vector2D = this.absoluteToCanvasPosition(mousePositionVector);
+                const mousePositionInSimSpace: Vector2D = this.gravityAnimationController.pointFromCanvasSpaceToSimulationSpace(mousePositionOnCanvas);
+                const vel: Vector2D = this.gravityAnimationController.simulation.calculateVelocityBetweenPoints(this.lastMainMouseDownSimulationCoord, mousePositionInSimSpace);
+                this.gravityAnimationController.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
                 this.ui.setStatusMessage(`Number of Bodies: ${this.gravityAnimationController.simulation.simulationState.length}`, 1);
                 break;
             default:

@@ -4,12 +4,14 @@ import * as tsEssentials from "./essentials";
 import { AnimationSettings } from "./types";
 import * as c from "../const";
 import { Vector2D } from "./vector2d";
+import { App } from "./app";
 
 export class GravityAnimationController {
     private _canvas: Canvas;
     private _simulation: Simulation;
     private _animationSettings: AnimationSettings;
     private _running: boolean;
+//#region get, set
     get canvas(): Canvas {
         return this._canvas;
     }
@@ -50,16 +52,19 @@ export class GravityAnimationController {
     get zoom(): number {
         return this.canvas.currentZoom;
     }
-    constructor(canvas: Canvas) {
-        this._canvas = canvas;
+//#endregion
+    constructor(private app: App) {
+        this._canvas = new Canvas(document.getElementById("theCanvas") as HTMLCanvasElement);
+        
+
         this._simulation = new Simulation;
         this._animationSettings = { defaultScrollRate: 0.1, defaultZoomStep: 1, frameLength: 25, displayVectors: true, tracePaths: true };
         this._running = false;
     }
 
-    //#region initialization
-    public initialize(canvasDimensions: {x: number, y: number}) {
-        this.initCanvas(canvasDimensions.x, canvasDimensions.y);
+//#region initialization
+    public initialize(width: number, height: number) {
+        this.initCanvas(width, height);
         this.initSimulation();
     }
     private initCanvas(width: number, height: number) {
@@ -99,7 +104,6 @@ export class GravityAnimationController {
     private runSimulation() {
         if (!this.running) {
             this.simulation.run();
-            this.runAnimation();
         }
     }
     private runAnimation() {
@@ -111,6 +115,7 @@ export class GravityAnimationController {
             if (this.running) {
                 setTimeout(loop, this.animationSettings.frameLength);
                 this.redrawSimulation();
+                this.app.updateSimulationStatusMessages();
             }
         };   
         loop();
@@ -130,7 +135,10 @@ export class GravityAnimationController {
 //#region interaction
     public addBody(body: Body2d, position: Vector2D, velocity: Vector2D = new Vector2D(0, 0)) {
         this.simulation.addObject(body, position, velocity);
-        this.redrawSimulation();
+        this.redrawSimulation();        
+        tsEssentials.log(`add body at: ${position.toString()}`);
+        tsEssentials.log(`add body velocity: ${velocity.toString()}`);
+        
     }
     public setG(g: number) {
         this.simulation.g = g;
@@ -145,7 +153,10 @@ export class GravityAnimationController {
         this.canvas.resize(width, height);
         this.redrawSimulation();
     }
-    public canvasZoomOut(zoomCenter: Vector2D, zoomStep?: number) {
+    public canvasZoomOut(zoomCenter?: Vector2D, zoomStep?: number): number {
+        if (zoomCenter === undefined) {
+            zoomCenter = new Vector2D(this.width / 2, this.height / 2);
+        }
         if (zoomStep === undefined) {
             zoomStep = this.animationSettings.defaultZoomStep;
         }
@@ -154,7 +165,10 @@ export class GravityAnimationController {
         
         return newZoom;
     }
-    public canvasZoomIn(zoomCenter: Vector2D, zoomStep?: number) {
+    public canvasZoomIn(zoomCenter?: Vector2D, zoomStep?: number): number {
+        if (zoomCenter === undefined) {
+            zoomCenter = new Vector2D(this.width / 2, this.height / 2);
+        }
         if (zoomStep === undefined) {
             zoomStep = this.animationSettings.defaultZoomStep;
         }

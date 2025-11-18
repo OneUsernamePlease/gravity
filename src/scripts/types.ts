@@ -49,8 +49,13 @@ export interface ObjectState {
     UI stuff
 */
 export interface StatusBar {
+    bar: HTMLDivElement
     fields: HTMLSpanElement[];
-}    
+}
+export interface RadioButtonGroup {
+    name: string;
+    buttons: HTMLInputElement[];
+}
 export interface IUI {
     statusBar: StatusBar;
     // top menu
@@ -73,7 +78,7 @@ export interface IUI {
     elasticCollisionsCheckbox: HTMLInputElement;
     gravitationalConstantInput: HTMLInputElement;
 
-    clickActionSelect: HTMLSelectElement;
-    addBodyMassInput: HTMLInputElement;
-    addBodyMovableCheckbox: HTMLInputElement;
+    clickAction: HTMLSelectElement | RadioButtonGroup;
+    massInput: HTMLInputElement;
+    addBodyMovable: HTMLInputElement;
 }

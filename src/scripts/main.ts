@@ -19,103 +19,32 @@ function initialize() {
     app.run();
 }
 function initializeApp() {
-    app = new App(c.CANVAS_ID);
+    app = new App();
     app.initialize();
 }
 function registerEvents() {
-    document.getElementById("btnToggleSim")?.addEventListener("click", toggleSimulationClicked);
-    document.getElementById("btnNextStep")?.addEventListener("click", nextStepClicked);
-    document.getElementById("btnResetSim")?.addEventListener("click", resetClicked);
-    document.getElementById("btnZoomOut")?.addEventListener("click", zoomOutClicked);
-    document.getElementById("btnZoomIn")?.addEventListener("click", zoomInClicked);
-    document.getElementById("btnScrollLeft")?.addEventListener("click", scrollLeftClicked);
-    document.getElementById("btnScrollRight")?.addEventListener("click", scrollRightClicked);
-    document.getElementById("btnScrollUp")?.addEventListener("click", scrollUpClicked);
-    document.getElementById("btnScrollDown")?.addEventListener("click", scrollDownClicked);
     document.getElementById(c.CANVAS_ID)?.addEventListener("mousedown", canvasMouseDown);
     document.getElementById(c.CANVAS_ID)?.addEventListener("mouseup", canvasMouseUp);
-    //document.getElementById(c.CANVAS_ID)?.addEventListener("mouseout", canvasMouseOut);
     document.getElementById(c.CANVAS_ID)?.addEventListener("mousemove", canvasMouseMoving);
     document.getElementById(c.CANVAS_ID)?.addEventListener("touchstart", canvasTouchStart);
     document.getElementById(c.CANVAS_ID)?.addEventListener("touchend", canvasTouchEnd);
     document.getElementById(c.CANVAS_ID)?.addEventListener("touchmove", canvasTouchMove);
     document.getElementById(c.CANVAS_ID)?.addEventListener("wheel", canvasMouseWheel);
     document.getElementById(c.CANVAS_ID)?.addEventListener("contextmenu", (ev) => {ev.preventDefault()});
-    document.getElementById(c.MASS_INPUT_ID)?.addEventListener("change", massInputChanged);
-    document.getElementById("cbxDisplayVectors")?.addEventListener("change", cbxDisplayVectorsChanged);
-    document.getElementById("cbxCollisions")?.addEventListener("change", cbxCollisionsChanged);
-    document.getElementById("cbxElasticCollisions")?.addEventListener("change", cbxElasticCollisionsChanged);
-    document.getElementById("rangeG")?.addEventListener("input", rangeInputGChanged);
-    document.getElementById("numberG")?.addEventListener("input", numberInputGChanged);
-    document.querySelectorAll('input[name="radioBtnMouseAction"]').forEach((radioButton) => {
-        radioButton.addEventListener('change', radioBtnMouseActionChanged);
-        });
     document.addEventListener("mousedown", mouseDown);
     window.addEventListener("resize", windowResized);
 }
-function zoomOutClicked(this: HTMLElement, ev: MouseEvent) {
-    app.zoomOutClicked();
-}
-function zoomInClicked(this: HTMLElement, ev: MouseEvent) {
-    app.zoomInClicked();
-}
-function scrollLeftClicked(this: HTMLElement, ev: MouseEvent) {
-    app.scrollViewLeft();
-}
-function scrollRightClicked(this: HTMLElement, ev: MouseEvent) {
-    app.scrollViewRight();
-}
-function scrollUpClicked(this: HTMLElement, ev: MouseEvent) {
-    app.scrollViewUp();
-}
-function scrollDownClicked(this: HTMLElement, ev: MouseEvent) {
-    app.scrollViewDown();
-}
-function massInputChanged(this: HTMLElement) {
-    const input = this as HTMLInputElement;
-    app.massInputChanged(input);
-}
-function cbxCollisionsChanged(this: HTMLElement, ev: Event) {
-    const checkbox = this as HTMLInputElement;
-    app.cbxCollisionsChanged(checkbox);
-}
-function cbxElasticCollisionsChanged(this: HTMLElement, ev: Event) {
-    const checkbox = this as HTMLInputElement;
-    app.cbxElasticCollisionsChanged(checkbox);
-}
-function cbxDisplayVectorsChanged(this: HTMLElement, ev: Event) {
-    const checkbox = this as HTMLInputElement;
-    app.cbxDisplayVectorsChanged(checkbox);
-}
-function radioBtnMouseActionChanged(this: HTMLElement, ev: Event): void {
-    const radio = this as HTMLInputElement;
-    app.radioBtnMouseActionChanged(radio);
-}
-function toggleSimulationClicked(this: HTMLElement, ev: MouseEvent) {
-    app.toggleSimulation();
-}
-function rangeInputGChanged(this: HTMLElement, ev: Event) {
-    const input = this as HTMLInputElement;
-    app.rangeInputGChanged(input);
-}
-function numberInputGChanged(this: HTMLElement, ev: Event) {
-    const input = this as HTMLInputElement;
-    app.numberInputGChanged(input);
-}
-function nextStepClicked() {
-    app.advanceOneTick();
-}
-function resetClicked() {
-    app.reset();
-}
+
 function windowResized(this: Window, ev: UIEvent) {
     let windowWidth = this.innerWidth;
     let windowHeight = this.innerHeight;
     app.resizeCanvas(windowWidth, windowHeight);
 }
 function canvasMouseDown(this: HTMLElement, ev: MouseEvent) {
+    const absoluteMousePosition: Vector2D = getAbsoluteMousePosition(ev);
     if (ev.button === MouseButtons.Main) {
-        const absoluteMousePosition: Vector2D = getAbsoluteMousePosition(ev);
+        tsEssentials.log(`main mouse down absolute pos: ${absoluteMousePosition.toString()}`);
+        tsEssentials.log(`main mouse down on canvas ${app.absoluteToCanvasPosition(absoluteMousePosition).toString()}`);
         app.canvasMainMouseDown(absoluteMousePosition);
     } else if (ev.button === MouseButtons.Wheel) {
         ev.preventDefault(); // prevent scroll-symbol
@@ -131,9 +60,11 @@ function canvasMouseMoving(this: HTMLElement, ev: MouseEvent) {
     }
 }
 function canvasMouseUp(this: HTMLElement, ev: MouseEvent) {
+    const absoluteMousePosition: Vector2D = getAbsoluteMousePosition(ev);
     switch (ev.button) {
         case MouseButtons.Main:
-            const absoluteMousePosition: Vector2D = getAbsoluteMousePosition(ev);
+            tsEssentials.log(`main mouse up absolute pos: ${absoluteMousePosition.toString()}`);
+            tsEssentials.log(`main mouse up on canvas ${app.absoluteToCanvasPosition(absoluteMousePosition).toString()}`);
             app.canvasMainMouseUp(absoluteMousePosition);
             mouse.main.state = ButtonState.Up;
             break;
@@ -157,9 +88,6 @@ function canvasMouseUp(this: HTMLElement, ev: MouseEvent) {
             break;
     }
 }
-function canvasMouseOut(this: HTMLElement, ev: MouseEvent) {
-    // probably not needed any more
-}
 function canvasTouchStart(this: HTMLElement, ev: TouchEvent) {
     //app.canvasTouchStart(ev);
 }
@@ -173,13 +101,14 @@ function canvasMouseWheel(this: HTMLElement, ev: WheelEvent) {
     // don't resize the entire page
     ev.preventDefault();
     
-    const canvasRect = this.getBoundingClientRect();
-    const cursorPos = new Vector2D(ev.clientX - canvasRect.left, ev.clientY - canvasRect.top);
-    
+    const cursorPos = getAbsoluteMousePosition(ev);
+    const posInCanvasSpace = app.absoluteToCanvasPosition(cursorPos);
+    const positionInSimSpace = app.gravityAnimationController.pointFromCanvasSpaceToSimulationSpace(posInCanvasSpace);
+
     if (ev.deltaY < 0) {
-        app.zoomIn(cursorPos);
+        app.zoomIn(positionInSimSpace);
     } else if (ev.deltaY > 0) {
-        app.zoomOut(cursorPos);
+        app.zoomOut(positionInSimSpace);
     }
 }
 function mouseDown(this: Document, ev: MouseEvent) {
@@ -197,7 +126,7 @@ function mouseDown(this: Document, ev: MouseEvent) {
     }
 }
 // functions that are not listeners
-function getAbsoluteMousePosition(ev: MouseEvent): Vector2D {
+function getAbsoluteMousePosition(ev: MouseEvent | WheelEvent): Vector2D {
     const position = new Vector2D(ev.clientX,  ev.clientY);
     return position;
 }

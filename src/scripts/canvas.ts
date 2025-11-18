@@ -161,18 +161,18 @@ export class Canvas {
     public scrollDown(distance: number) {
         this.moveOrigin(new Vector2D(0, -distance));
     }
-    public zoomOut(zoomCenter: Vector2D, zoomStep: number) {
+    public zoomOut(zoomCenter: Vector2D, zoomStep: number): number {
         const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
         const newZoom = this.currentZoom + zoomStep;
 
-        this.canvasSpace.origin = new Vector2D(this.canvasSpace.origin.x - shiftOrigin.x, this.canvasSpace.origin.y + shiftOrigin.y);
+        this.moveOrigin(shiftOrigin);
         this.canvasSpace.currentZoom = newZoom;
 
         return newZoom;
     }
-    public zoomIn(zoomCenter: Vector2D, zoomStep: number) {
-        if (this.canvasSpace.currentZoom <= 1) { 
-            return; 
+    public zoomIn(zoomCenter: Vector2D, zoomStep: number): number {
+        if (this.currentZoom <= 1) { 
+            return this.currentZoom; 
         }
 
         let newZoom = this.canvasSpace.currentZoom - zoomStep;
@@ -181,8 +181,8 @@ export class Canvas {
             zoomStep = this.canvasSpace.currentZoom - 1;
         }
         
-        let shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
-        this.canvasSpace.origin = new Vector2D(this.canvasSpace.origin.x + shiftOrigin.x, this.canvasSpace.origin.y - shiftOrigin.y);
+        const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
+        this.moveOrigin(shiftOrigin);
         this.canvasSpace.currentZoom = newZoom;
         
         return newZoom;
@@ -207,15 +207,10 @@ export class Canvas {
     }
     /* 
 
-    ELIMINATED - absolute positions are evaluated in main.ts (events should not be passed down),
+    ELIMINATED - absolute positions are evaluated in main.ts
     relative positions in app.ts
 
-    public getCanvasMousePosition(event: MouseEvent): Vector2D {
-        const rect = this.visibleCanvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        return new Vector2D(x, y);
-    }
+
     public getCanvasTouchPosition(event: TouchEvent): Vector2D {
         const rect = this.visibleCanvas.getBoundingClientRect();
         const touch = event.touches[0];
