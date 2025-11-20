@@ -1,7 +1,7 @@
 import { Canvas } from "./canvas";
 import { Body2d, Simulation } from "./gravity";
-import * as tsEssentials from "./essentials";
-import { AnimationSettings } from "./types";
+import * as util from "./essentials";
+import { AnimationSettings, ButtonState, MouseButtons } from "./types";
 import * as c from "../const";
 import { Vector2D } from "./vector2d";
 import { App } from "./app";
@@ -56,6 +56,14 @@ export class GravityAnimationController {
     constructor(private app: App) {
         this._canvas = new Canvas(document.getElementById("theCanvas") as HTMLCanvasElement);
         
+        this.canvas.visibleCanvas.addEventListener("mousedown", (ev) => this.canvasMouseDown(ev as MouseEvent));
+        this.canvas.visibleCanvas.addEventListener("mouseup", (ev) => this.canvasMouseUp(ev as MouseEvent));
+        this.canvas.visibleCanvas.addEventListener("mousemove", (ev) => this.canvasMouseMoving(ev as MouseEvent));
+        //this.canvas.visibleCanvas.addEventListener("touchstart", () => this.canvasTouchStart);
+        //this.canvas.addEventListener("touchend", () => this.canvasTouchEnd);
+        //this.canvas.addEventListener("touchmove", () => this.canvasTouchMove);
+        this.canvas.visibleCanvas.addEventListener("wheel", () => this.canvasMouseWheel);
+        this.canvas.visibleCanvas.addEventListener("contextmenu", (ev) => {ev.preventDefault()});
 
         this._simulation = new Simulation;
         this._animationSettings = { defaultScrollRate: 0.1, defaultZoomStep: 1, frameLength: 25, displayVectors: true, tracePaths: true };
@@ -70,17 +78,81 @@ export class GravityAnimationController {
     private initCanvas(width: number, height: number) {
         this.canvas.visibleCanvas.width = width;
         this.canvas.visibleCanvas.height = height;
-        this.animationSettings.displayVectors = tsEssentials.isChecked("cbxDisplayVectors");
+
+        // REFACTOR ME: apply settings after initialization
+        this.animationSettings.displayVectors = this.app.ui.displayVectorsCheckbox.checked;
         
         // offscreenCanvas = new OffscreenCanvas(visibleCanvas.clientWidth, visibleCanvas.clientHeight);
         // offscreenCanvasCtx = offscreenCanvas.getContext("2d")!;
     }
     private initSimulation() {
-        this.simulation.collisionDetection = tsEssentials.isChecked("cbxCollisions");
-        this.simulation.elasticCollisions = tsEssentials.isChecked("cbxElasticCollisions");
+        this.simulation.collisionDetection = this.app.ui.collisionDetectionCheckbox.checked;
+        this.simulation.elasticCollisions = this.app.ui.elasticCollisionsCheckbox.checked;
     }
 //#endregion
+//#region interaction
 
+    private canvasMouseDown(ev: MouseEvent) {
+        const absoluteMousePosition: Vector2D = new Vector2D(util.getAbsoluteMousePosition(ev));
+        if (ev.button === MouseButtons.Main) {
+            this.app.canvasMainMouseDown(absoluteMousePosition);
+        } else if (ev.button === MouseButtons.Wheel) {
+            ev.preventDefault(); // prevent scroll-symbol
+        } else if (ev.button === MouseButtons.Secondary) {
+            // handled at document level
+        }
+    }
+
+    private canvasMouseMoving(ev: MouseEvent) {
+        if (c.mouse.secondary.state === ButtonState.Down) {
+            const currentMovement = new Vector2D(ev.movementX, ev.movementY);
+            this.app.canvasSecondaryMouseDragging(currentMovement);
+            c.mouse.secondary.downCoordinates = { x: ev.clientX, y: ev.clientY };
+        }
+    }
+
+    private canvasMouseUp(ev: MouseEvent) {
+        const absoluteMousePosition: Vector2D = new Vector2D(util.getAbsoluteMousePosition(ev));
+        switch (ev.button) {
+            case MouseButtons.Main:
+                this.app.canvasMainMouseUp(absoluteMousePosition);
+                c.mouse.main.state = ButtonState.Up;
+                break;
+        
+            case MouseButtons.Wheel:
+                // prevent scroll-symbol
+                ev.preventDefault();
+                
+                c.mouse.wheel.state = ButtonState.Down;
+                c.mouse.wheel.downCoordinates = { x: ev.clientX, y: ev.clientY };
+                break;
+        
+            case MouseButtons.Secondary:
+                // prevent context menu
+                ev.preventDefault();
+                
+                c.mouse.secondary.state = ButtonState.Up;
+                break;
+        
+            default:
+                break;
+        }
+    }
+    private canvasMouseWheel(ev: WheelEvent) {
+        // don't resize the entire page
+        ev.preventDefault();
+        
+        const cursorPos = new Vector2D(util.getAbsoluteMousePosition(ev));
+        const posInCanvasSpace = this.app.absoluteToCanvasPosition(cursorPos);
+        const positionInSimSpace = this.app.gravityAnimationController.pointFromCanvasSpaceToSimulationSpace(posInCanvasSpace);
+
+        if (ev.deltaY < 0) {
+            this.app.zoomIn(positionInSimSpace);
+        } else if (ev.deltaY > 0) {
+            this.app.zoomOut(positionInSimSpace);
+        }
+    }
+//#endregion
 //#region control methods
     public run() {
         this.runSimulation();
@@ -135,10 +207,7 @@ export class GravityAnimationController {
 //#region interaction
     public addBody(body: Body2d, position: Vector2D, velocity: Vector2D = new Vector2D(0, 0)) {
         this.simulation.addObject(body, position, velocity);
-        this.redrawSimulation();        
-        tsEssentials.log(`add body at: ${position.toString()}`);
-        tsEssentials.log(`add body velocity: ${velocity.toString()}`);
-        
+        this.redrawSimulation();
     }
     public setG(g: number) {
         this.simulation.g = g;

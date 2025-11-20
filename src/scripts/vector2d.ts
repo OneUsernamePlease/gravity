@@ -1,11 +1,17 @@
 export class Vector2D {
     public x: number;
     public y: number;
-    constructor(x?: number, y?: number) {
-        if (x === undefined) { x = 0; }
-        if (y === undefined) { y = 0; }
-        this.x = x;
-        this.y = y;
+    constructor();
+    constructor(pos: {x: number, y: number});
+    constructor(x: number, y: number)
+    constructor(a?: number | {x: number, y: number}, b?: number) {
+        if (typeof a === "object") {
+            this.x = a.x;
+            this.y = a.y;
+        } else {
+            this.x = a ?? 0;
+            this.y = b ?? 0;
+        }
     }
     public toString() {
         return `x: ${this.x}, y: ${this.y}`;

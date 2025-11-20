@@ -2,11 +2,6 @@ import { Body2d } from "./gravity";
 import { CanvasSpace, ObjectState } from "./types";
 import { Vector2D } from "./vector2d";
 import * as essentials from "./essentials";
-/*
-all position here should be in canvas space
-
-*/
-
 
 export class Canvas {
     // let offscreenCanvas: OffscreenCanvas; // use this in a worker thread to render or draw on, then transfer content to the visible html-canvas

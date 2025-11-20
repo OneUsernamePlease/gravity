@@ -1,6 +1,6 @@
 import { Canvas } from "./canvas";
 import { Body2d } from "./gravity";
-import * as tsEssentials from "./essentials";
+import * as util from "./essentials";
 import { Vector2D } from "./vector2d";
 import { CanvasClickAction, ButtonState, IUI } from "./types";
 import { UI } from "./ui";
@@ -75,10 +75,8 @@ export class App {
     public toggleSimulation() {
         if (this.running) {
             this.stop();
-            (document.getElementById("btnNextStep") as HTMLInputElement)!.disabled = false;
         } else {
             this.run();
-            (document.getElementById("btnNextStep") as HTMLInputElement)!.disabled = true;
         }
     }
     public advanceOneTick() {

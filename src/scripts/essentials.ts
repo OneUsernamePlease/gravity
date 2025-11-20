@@ -95,8 +95,6 @@ export function removeLeadingChar(str: string, charToRemove?: string): string {
 //#endregion
 
 //#region input stuff
-export function getInputValue(inputElement: HTMLInputElement): string 
-export function getInputValue(inputId: string): string 
 export function getInputValue(input: string | HTMLInputElement): string {
     let inputElement: HTMLInputElement;
     if (typeof input === "string") {
@@ -111,21 +109,10 @@ export function getInputValue(input: string | HTMLInputElement): string {
  * @returns element's value attribute; 0 if value is not numeric
  */
 export function getInputNumber(input: string | HTMLInputElement): number {
-    let inputValue: string
-    if (typeof input === "string") {
-        inputValue = getInputValue(input);
-    } else {
-        inputValue = getInputValue(input);
-    }
+    const inputValue = getInputValue(input);
     return isNumeric(inputValue) ? +inputValue : 0;
 }
-/**
- * @param inputId id for a checkable input (radioButton, checkbox)
- * @returns true if checked, false otherwise
- */
-export function isChecked(input: string): boolean{
-    let checkbox: HTMLInputElement;
-    checkbox = document.getElementById(input) as HTMLInputElement;
-    return checkbox ? checkbox.checked : false;
+export function getAbsoluteMousePosition(ev: MouseEvent | WheelEvent): {x: number, y: number} {
+    return {x: ev.clientX, y: ev.clientY};
 }
 //#endregion

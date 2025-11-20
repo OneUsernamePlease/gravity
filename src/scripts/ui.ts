@@ -1,5 +1,5 @@
 import { Body2d } from "./gravity";
-import * as tsEssentials from "./essentials";
+import * as util from "./essentials";
 import { MASS_INPUT_ID } from "../const";
 import { IUI, RadioButtonGroup, StatusBar } from "./types";
 import { App } from "./app";
@@ -7,16 +7,16 @@ import { App } from "./app";
 export class UI implements IUI {
 // All UI Elements
     statusBar: StatusBar;
-    resetButton: HTMLElement;
-    playPauseButton: HTMLElement;
-    stepButton: HTMLElement;
+    resetButton: HTMLInputElement;
+    playPauseButton: HTMLInputElement;
+    stepButton: HTMLInputElement;
     repositoryLink: HTMLElement;
-    zoomInButton: HTMLElement;
-    zoomOutButton: HTMLElement;
-    scrollUpButton: HTMLElement;
-    scrollDownButton: HTMLElement;
-    scrollLeftButton: HTMLElement;
-    scrollRightButton: HTMLElement;
+    zoomInButton: HTMLInputElement;
+    zoomOutButton: HTMLInputElement;
+    scrollUpButton: HTMLInputElement;
+    scrollDownButton: HTMLInputElement;
+    scrollLeftButton: HTMLInputElement;
+    scrollRightButton: HTMLInputElement;
     displayVectorsCheckbox: HTMLInputElement;
     collisionDetectionCheckbox: HTMLInputElement;
     elasticCollisionsCheckbox: HTMLInputElement;
@@ -39,16 +39,16 @@ export class UI implements IUI {
 
     //#endregion
     constructor(private app: App) {
-        this.resetButton                        = document.getElementById("btnResetSim")!;
-        this.playPauseButton                    = document.getElementById("btnToggleSim")!;
-        this.stepButton                         = document.getElementById("btnNextStep")!;
+        this.resetButton                        = document.getElementById("btnResetSim")! as HTMLInputElement;
+        this.playPauseButton                    = document.getElementById("btnToggleSim")! as HTMLInputElement;
+        this.stepButton                         = document.getElementById("btnNextStep")! as HTMLInputElement;
         this.repositoryLink                     = document.getElementById("repoLink")!;
-        this.zoomInButton                       = document.getElementById("btnZoomIn")!;
-        this.zoomOutButton                      = document.getElementById("btnZoomOut")!;
-        this.scrollUpButton                     = document.getElementById("btnScrollUp")!;
-        this.scrollDownButton                   = document.getElementById("btnScrollDown")!;
-        this.scrollLeftButton                   = document.getElementById("btnScrollLeft")!;
-        this.scrollRightButton                  = document.getElementById("btnScrollRight")!;
+        this.zoomInButton                       = document.getElementById("btnZoomIn")! as HTMLInputElement;
+        this.zoomOutButton                      = document.getElementById("btnZoomOut")! as HTMLInputElement;
+        this.scrollUpButton                     = document.getElementById("btnScrollUp")! as HTMLInputElement;
+        this.scrollDownButton                   = document.getElementById("btnScrollDown")! as HTMLInputElement;
+        this.scrollLeftButton                   = document.getElementById("btnScrollLeft")! as HTMLInputElement;
+        this.scrollRightButton                  = document.getElementById("btnScrollRight")! as HTMLInputElement;
         this.displayVectorsCheckbox             = document.getElementById("cbxDisplayVectors")! as HTMLInputElement;
         this.collisionDetectionCheckbox         = document.getElementById("cbxCollisions")! as HTMLInputElement;
         this.elasticCollisionsCheckbox          = document.getElementById("cbxElasticCollisions")! as HTMLInputElement;
@@ -71,7 +71,7 @@ export class UI implements IUI {
 
         this.registerEvents();
         
-        this._selectedMass = tsEssentials.getInputNumber(MASS_INPUT_ID);
+        this._selectedMass = util.getInputNumber(this.massInput);
 
         this.massInput.step = this.calculateMassInputStep();
     }
@@ -98,9 +98,12 @@ export class UI implements IUI {
     }
     public simulationStopped() {
         this.playPauseButton.innerHTML = "&#9654;"; // play symbol
+        this.stepButton.disabled = false;
     }
     public simulationResumed() {
         this.playPauseButton.innerHTML = "&#10074;&#10074;"; // pause symbol
+        
+        (this.stepButton as HTMLInputElement)!.disabled = true;
         this.app.updateSimulationStatusMessages();
     }
     public zoomInClicked() {
@@ -118,12 +121,12 @@ export class UI implements IUI {
     }
 
     public body2dFromInputs(): Body2d {
-        const movable = tsEssentials.isChecked("cbxBodyMovable");
+        const movable = this.addBodyMovable.checked;
         return new Body2d(this.selectedMass, movable);
     }
     public updateSelectedMass(inputElement: HTMLInputElement) {
         const inputValue = inputElement.value;
-        this.selectedMass = tsEssentials.isNumeric(inputValue) ? +inputValue : 0;
+        this.selectedMass = util.isNumeric(inputValue) ? +inputValue : 0;
         inputElement.step = this.calculateMassInputStep();
     }
     /**
