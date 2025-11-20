@@ -8,7 +8,6 @@ import { GravityAnimationController } from "./gravity-animation-controller";
 import * as c from "../const";
 
 export class App {
-    // this is going to be the app controller, managing ui and gravity sim+animation
     private _ui: UI;
     private _gravityAnimationController: GravityAnimationController;
     private _selectedCanvasClickAction: string = "";
@@ -35,31 +34,30 @@ export class App {
     constructor() {
         this._gravityAnimationController = new GravityAnimationController(this);        
         this._ui = new UI(this);
+        this.initializeSettingsFromUI();
+        this.initAnimationController({x: window.innerWidth, y: window.innerHeight});
     }
     //#endregion
     
     //#region setup
-    public initialize() {
-        this.initializeSettingsFromUI();
-        this.initAnimationController({x: window.innerWidth, y: window.innerHeight});
-    }
+
     public initAnimationController(canvasDimensions: {x: number, y: number}) {
         this.gravityAnimationController.initialize(canvasDimensions.x, canvasDimensions.y);
         this.ui.setStatusMessage(`Canvas dimension: ${canvasDimensions.x} * ${canvasDimensions.y}`, 5);
     }
     public initializeSettingsFromUI() {
-        // REFACTOR ME: create a proper UI(+settings) object
-        this.selectedCanvasClickAction = (document.querySelector('input[name="radioBtnMouseAction"]:checked') as HTMLInputElement).value;
+        this.selectedCanvasClickAction = this.ui.getSelectedClickAction();
+        (document.querySelector('input[name="radioBtnMouseAction"]:checked') as HTMLInputElement).value;
         
-        (document.getElementById("cbxElasticCollisions") as HTMLInputElement).disabled = !this.gravityAnimationController.simulation.collisionDetection;
+        this.ui.elasticCollisionsCheckbox.disabled = !this.gravityAnimationController.simulation.collisionDetection;
     
-        if ((document.getElementById("cbxDisplayVectors") as HTMLInputElement)?.checked) {
+        if (this.ui.displayVectorsCheckbox.checked) {
             this.ui.setStatusMessage("Green: acceleration - Red: velocity", 3);
         } else {
             this.ui.setStatusMessage("", 3);
         }
     
-        this.setG(Number((document.getElementById("rangeG") as HTMLInputElement).value));
+        this.setG(Number(this.ui.gravitationalConstantRangeInput.value));
     }
     //#endregion
 
@@ -148,6 +146,8 @@ export class App {
         this.gravityAnimationController.resizeCanvas(width, height);
         this.ui.setStatusMessage(`Canvas dimension: ${width} * ${height}`, 5);
     }
+
+    // Move the appropriate logic to UI, rename functions for whatever's left
     public cbxCollisionsChanged(inputElement: HTMLInputElement) {
         const checked = inputElement.checked;
         const cbxElastic: HTMLInputElement = document.getElementById("cbxElasticCollisions") as HTMLInputElement;
@@ -167,7 +167,7 @@ export class App {
     }
     public cbxDisplayVectorsChanged(checkbox: HTMLInputElement) {
         const displayVectors = checkbox ? checkbox.checked : false;
-        
+        this.gravityAnimationController.setDisplayVectors(displayVectors)
         if (displayVectors) {
             this.ui.setStatusMessage("Green: acceleration - Red: velocity", 3);
         } else {
@@ -185,6 +185,7 @@ export class App {
         this.scrollView({ x: -(movementInSimulationUnits.x), y: movementInSimulationUnits.y });
     }
 
+    // MOVE TO G-ANIMATION-CONTROLLER
     // MOUSE AND TOUCH EVENTS THAT NEED SOME WORK DONE
     public canvasMainMouseDown(absoluteMousePosition: {x: number, y: number}) {
         switch (CanvasClickAction[this.selectedCanvasClickAction as keyof typeof CanvasClickAction]) {

@@ -6,24 +6,16 @@ import { App } from "./app";
 import * as c from "../const";
 
 let app: App;
-const mouse: Mouse = { main: { state: ButtonState.Up, downCoordinates: null }, 
-                     secondary: { state: ButtonState.Up, downCoordinates: null }, 
-                     wheel: { state: ButtonState.Up, downCoordinates: null} };
-// ui Objects (toDo) 
 
 document.addEventListener("DOMContentLoaded", initialize);
 function initialize() {
-    document.removeEventListener("DOMContentLoaded", initialize);
-    initializeApp();
     registerEvents();
+    app = new App();
     app.run();
 }
-function initializeApp() {
-    app = new App();
-    app.initialize();
-}
+
 function registerEvents() {
-    
+    document.removeEventListener("DOMContentLoaded", initialize);
     document.addEventListener("mousedown", mouseDown);
     window.addEventListener("resize", windowResized);
 }
@@ -48,14 +40,4 @@ function mouseDown(this: Document, ev: MouseEvent) {
         c.mouse.secondary.downCoordinates = { x: ev.clientX, y: ev.clientY };
     }
 }
-// functions that are not listeners
 
-function canvasTouchStart(this: HTMLElement, ev: TouchEvent) {
-    //app.canvasTouchStart(ev);
-}
-function canvasTouchMove(this: HTMLElement, ev: TouchEvent) {
-    //app.canvasTouchMove(ev); // toDo
-}
-function canvasTouchEnd(this: HTMLElement, ev: TouchEvent) {
-    //app.canvasTouchEnd(ev);
-}

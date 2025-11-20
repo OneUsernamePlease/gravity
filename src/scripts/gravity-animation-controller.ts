@@ -27,7 +27,7 @@ export class GravityAnimationController {
     get animationSettings(): AnimationSettings {
         return this._animationSettings;
     }
-    set animationSettings(animationSettings: AnimationSettings) {
+    private set animationSettings(animationSettings: AnimationSettings) {
         this._animationSettings = animationSettings;
     }
     get running(): boolean {
@@ -212,7 +212,7 @@ export class GravityAnimationController {
     public setG(g: number) {
         this.simulation.g = g;
     }
-    public displayVectors(display: boolean) {
+    public setDisplayVectors(display: boolean) {
         this.animationSettings.displayVectors = display;
         if (!this.running) {
             this.redrawSimulation();

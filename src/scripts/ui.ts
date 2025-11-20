@@ -92,7 +92,7 @@ export class UI implements IUI {
         this.gravitationalConstantInput.addEventListener("", () => this.app.numberInputGChanged(this.gravitationalConstantInput));
         this.gravitationalConstantRangeInput.addEventListener("change", () => this.app.rangeInputGChanged(this.gravitationalConstantRangeInput));
         this.massInput.addEventListener("change", () => this.updateSelectedMass(this.massInput));
-                this.clickAction.buttons.forEach((radioButton) => {
+        this.clickAction.buttons.forEach((radioButton) => {
             radioButton.addEventListener('change', () => this.radioBtnMouseActionChanged(radioButton));
         });
     }
@@ -119,7 +119,14 @@ export class UI implements IUI {
             this.app.selectedCanvasClickAction = element.value;
         }
     }
+    public getSelectedClickAction() {
+        return this.getSelectedValue(this.clickAction) ?? this.clickAction.buttons[0].value;
+    }
 
+    public getSelectedValue(group: RadioButtonGroup): string | null {
+        const selected = group.buttons.find(btn => btn.checked);
+        return selected?.value ?? null;
+    }
     public body2dFromInputs(): Body2d {
         const movable = this.addBodyMovable.checked;
         return new Body2d(this.selectedMass, movable);
