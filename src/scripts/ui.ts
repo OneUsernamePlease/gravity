@@ -83,8 +83,8 @@ export class UI implements IUI {
         this.resetButton.addEventListener("click", () => this.app.reset());
         this.playPauseButton.addEventListener("click", () => this.app.toggleSimulation());
         this.stepButton.addEventListener("click", () => this.app.advanceOneTick());
-        this.zoomInButton.addEventListener("click", () => this.zoomInClicked());
-        this.zoomOutButton.addEventListener("click", () => this.zoomOutClicked());
+        this.zoomInButton.addEventListener("click", () => this.app.zoomIn());
+        this.zoomOutButton.addEventListener("click", () => this.app.zoomOut());
         this.scrollUpButton.addEventListener("click", () => this.app.scrollViewUp());
         this.scrollDownButton.addEventListener("click", () => this.app.scrollViewDown());
         this.scrollLeftButton.addEventListener("click", () => this.app.scrollViewLeft());
@@ -95,9 +95,6 @@ export class UI implements IUI {
         this.gravitationalConstantInput.addEventListener("", () => this.numberInputGChanged());
         this.gravitationalConstantRangeInput.addEventListener("change", () => this.rangeInputGChanged());
         this.massInput.addEventListener("change", () => this.updateSelectedMass());
-        this.clickAction.buttons.forEach((radioButton) => {
-            //radioButton.addEventListener('change', () => this.radioBtnMouseActionChanged(radioButton));
-        });
     }
     public cbxDisplayVectorsChanged() {
         const displayVectors = this.displayVectorsCheckbox.checked;
@@ -141,11 +138,13 @@ export class UI implements IUI {
     }
     public zoomInClicked() {
         const newZoom = this.app.zoomIn();
-        this.setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
     }
     public zoomOutClicked() {
         const newZoom = this.app.zoomOut();
-        this.setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
+    }
+    public updateStatusBarZoom() {
+        const currentZoom = this.app.gravityAnimationController.zoom;
+        this.setStatusMessage(`Zoom: ${currentZoom} (m per pixel)`, 4);
     }
     public getSelectedClickAction() {
         return this.getSelectedValue(this.clickAction) ?? this.clickAction.buttons[0].value;

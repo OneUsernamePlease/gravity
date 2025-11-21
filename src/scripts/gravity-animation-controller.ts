@@ -230,6 +230,7 @@ export class GravityAnimationController {
         }
         const newZoom = this.canvas.zoomOut(zoomCenter, zoomStep);
         this.redrawSimulation();
+        this.app.updateZoomStatusMessage();
         
         return newZoom;
     }
@@ -242,6 +243,7 @@ export class GravityAnimationController {
         }
         const newZoom = this.canvas.zoomIn(zoomCenter, zoomStep);
         this.redrawSimulation();
+        this.app.updateZoomStatusMessage();
 
         return newZoom;
     }

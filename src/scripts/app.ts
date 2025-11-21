@@ -71,6 +71,9 @@ export class App {
         this.ui.setStatusMessage(`Simulation Tick: ${this.gravityAnimationController.tickCount}`, 2);
         this.ui.setStatusMessage(`Number of Bodies: ${this.gravityAnimationController.bodyCount}`, 1);
     }
+    public updateZoomStatusMessage() {
+        this.ui.updateStatusBarZoom();
+    }
     public redraw() {
         if (!this.running) {
             this.gravityAnimationController.redrawSimulation();
@@ -112,12 +115,10 @@ export class App {
     }
     public zoomOut(zoomCenter?: Vector2D, zoomStep?: number): number {
         const newZoom = this.gravityAnimationController.zoomOut(zoomCenter, zoomStep);
-        this.ui.setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
         return newZoom;
     }
     public zoomIn(zoomCenter?: Vector2D, zoomStep?: number) {
         const newZoom = this.gravityAnimationController.zoomIn(zoomCenter, zoomStep);
-        this.ui.setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
         return newZoom;
     }
     public resizeCanvas(width: number, height: number) {
@@ -133,18 +134,15 @@ export class App {
     public setElasticCollisions(elasticCollisions: boolean) {
         this.gravityAnimationController.simulation.elasticCollisions = elasticCollisions;
     }
-
     public setDisplayVectors(displayVectors: boolean) {
         this.gravityAnimationController.setDisplayVectors(displayVectors)
     }
-
     public canvasSecondaryMouseDragging(movement: Vector2D){
         const movementInSimulationUnits = movement.scale(this.gravityAnimationController.zoom);
         this.scrollView({ x: -(movementInSimulationUnits.x), y: movementInSimulationUnits.y });
     }
 
     // MOVE TO G-ANIMATION-CONTROLLER
-    // MOUSE AND TOUCH EVENTS THAT NEED SOME WORK DONE
     public canvasMainMouseDown(absoluteMousePosition: {x: number, y: number}) {
         switch (CanvasClickAction[this.ui.getSelectedClickAction() as keyof typeof CanvasClickAction]) {
             case CanvasClickAction.None:
