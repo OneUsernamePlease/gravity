@@ -6,11 +6,11 @@ import { CanvasClickAction, ButtonState, IUI } from "./types";
 import { UI } from "./ui";
 import { GravityAnimationController } from "./gravity-animation-controller";
 import * as c from "../const";
+import { B } from "vitest/dist/chunks/worker.d.1GmBbd7G";
 
 export class App {
     private _ui: UI;
     private _gravityAnimationController: GravityAnimationController;
-    private _selectedCanvasClickAction: string = "";
     private lastMainMouseDownSimulationCoord: Vector2D = new Vector2D(0, 0);
     //#region get, set, constr
     get gravityAnimationController() {
@@ -22,19 +22,12 @@ export class App {
     get ui() {
         return this._ui;
     }
-    get selectedCanvasClickAction() {
-        return this._selectedCanvasClickAction;
-    }
-    set selectedCanvasClickAction(clickAction: string) {
-        this._selectedCanvasClickAction = clickAction;
-    }
     get running() {
         return this.gravityAnimationController.running;
     }
     constructor() {
         this._gravityAnimationController = new GravityAnimationController(this);        
         this._ui = new UI(this);
-        this.initializeSettingsFromUI();
         this.initAnimationController({x: window.innerWidth, y: window.innerHeight});
     }
     //#endregion
@@ -43,21 +36,6 @@ export class App {
 
     public initAnimationController(canvasDimensions: {x: number, y: number}) {
         this.gravityAnimationController.initialize(canvasDimensions.x, canvasDimensions.y);
-        this.ui.setStatusMessage(`Canvas dimension: ${canvasDimensions.x} * ${canvasDimensions.y}`, 5);
-    }
-    public initializeSettingsFromUI() {
-        this.selectedCanvasClickAction = this.ui.getSelectedClickAction();
-        (document.querySelector('input[name="radioBtnMouseAction"]:checked') as HTMLInputElement).value;
-        
-        this.ui.elasticCollisionsCheckbox.disabled = !this.gravityAnimationController.simulation.collisionDetection;
-    
-        if (this.ui.displayVectorsCheckbox.checked) {
-            this.ui.setStatusMessage("Green: acceleration - Red: velocity", 3);
-        } else {
-            this.ui.setStatusMessage("", 3);
-        }
-    
-        this.setG(Number(this.ui.gravitationalConstantRangeInput.value));
     }
     //#endregion
 
@@ -133,12 +111,12 @@ export class App {
         this.gravityAnimationController.setG(g);
     }
     public zoomOut(zoomCenter?: Vector2D, zoomStep?: number): number {
-        const newZoom = this.gravityAnimationController.canvasZoomOut(zoomCenter, zoomStep);
+        const newZoom = this.gravityAnimationController.zoomOut(zoomCenter, zoomStep);
         this.ui.setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
         return newZoom;
     }
     public zoomIn(zoomCenter?: Vector2D, zoomStep?: number) {
-        const newZoom = this.gravityAnimationController.canvasZoomIn(zoomCenter, zoomStep);
+        const newZoom = this.gravityAnimationController.zoomIn(zoomCenter, zoomStep);
         this.ui.setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
         return newZoom;
     }
@@ -148,36 +126,16 @@ export class App {
     }
 
     // Move the appropriate logic to UI, rename functions for whatever's left
-    public cbxCollisionsChanged(inputElement: HTMLInputElement) {
-        const checked = inputElement.checked;
-        const cbxElastic: HTMLInputElement = document.getElementById("cbxElasticCollisions") as HTMLInputElement;
-        const elasticChecked = cbxElastic.checked;
-        this.gravityAnimationController.simulation.collisionDetection = checked;
-        this.gravityAnimationController.simulation.elasticCollisions = elasticChecked;
-    
-        cbxElastic.disabled = !checked;
+    public setCollisionDetection(collisionDetection: boolean, elasticCollisions = false) {
+        this.gravityAnimationController.simulation.collisionDetection = collisionDetection;
+        this.gravityAnimationController.simulation.elasticCollisions = elasticCollisions;
     }
-    public cbxElasticCollisionsChanged(element: HTMLInputElement) {
-        this.gravityAnimationController.simulation.elasticCollisions = element.checked;
+    public setElasticCollisions(elasticCollisions: boolean) {
+        this.gravityAnimationController.simulation.elasticCollisions = elasticCollisions;
     }
-    public numberInputGChanged(element: HTMLInputElement) {
-        const newG: string = element.value;
-        (document.getElementById("rangeG") as HTMLInputElement)!.value = newG;
-        this.gravityAnimationController.setG(Number(newG));
-    }
-    public cbxDisplayVectorsChanged(checkbox: HTMLInputElement) {
-        const displayVectors = checkbox ? checkbox.checked : false;
+
+    public setDisplayVectors(displayVectors: boolean) {
         this.gravityAnimationController.setDisplayVectors(displayVectors)
-        if (displayVectors) {
-            this.ui.setStatusMessage("Green: acceleration - Red: velocity", 3);
-        } else {
-            this.ui.setStatusMessage("", 3);
-        }
-    }
-    public rangeInputGChanged(element: HTMLInputElement) {
-        const newG: string = (element as HTMLInputElement).value;
-        (document.getElementById("numberG") as HTMLInputElement)!.value = newG;
-        this.setG(Number(newG));
     }
 
     public canvasSecondaryMouseDragging(movement: Vector2D){
@@ -188,7 +146,7 @@ export class App {
     // MOVE TO G-ANIMATION-CONTROLLER
     // MOUSE AND TOUCH EVENTS THAT NEED SOME WORK DONE
     public canvasMainMouseDown(absoluteMousePosition: {x: number, y: number}) {
-        switch (CanvasClickAction[this.selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
+        switch (CanvasClickAction[this.ui.getSelectedClickAction() as keyof typeof CanvasClickAction]) {
             case CanvasClickAction.None:
                 break;
             case CanvasClickAction.AddBody:
@@ -202,7 +160,7 @@ export class App {
     }
     public canvasMainMouseUp(absoluteMousePosition: Vector2D) {
         
-        switch (CanvasClickAction[this.selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
+        switch (CanvasClickAction[this.ui.getSelectedClickAction() as keyof typeof CanvasClickAction]) {
             case CanvasClickAction.None:
                 break;
             case CanvasClickAction.AddBody:

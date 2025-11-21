@@ -26,16 +26,9 @@ export class UI implements IUI {
     massInput: HTMLInputElement;
     addBodyMovable: HTMLInputElement;
 
-    private _selectedMass: number;
     
     //#region get, set
 
-    public get selectedMass() {
-        return this._selectedMass;
-    }
-    public set selectedMass(inputValue: number) {
-        this._selectedMass = inputValue;
-    }
 
     //#endregion
     constructor(private app: App) {
@@ -68,12 +61,22 @@ export class UI implements IUI {
             };
         })();
 
-
         this.registerEvents();
-        
-        this._selectedMass = util.getInputNumber(this.massInput);
-
+        this.initialize();
+    }
+    private initialize() {
+        this.elasticCollisionsCheckbox.disabled = !this.collisionDetectionCheckbox.checked;
         this.massInput.step = this.calculateMassInputStep();
+        
+        if (this.displayVectorsCheckbox.checked) {
+            this.setStatusMessage("Green: acceleration - Red: velocity", 3);
+        } else {
+            this.setStatusMessage("", 3);
+        }
+        
+        this.setStatusMessage(`Canvas dimension: ${this.app.gravityAnimationController.width} * ${this.app.gravityAnimationController.height}`, 5);
+
+        this.app.setG(Number(this.gravitationalConstantRangeInput.value));
     }
     private registerEvents() {
 
@@ -86,15 +89,45 @@ export class UI implements IUI {
         this.scrollDownButton.addEventListener("click", () => this.app.scrollViewDown());
         this.scrollLeftButton.addEventListener("click", () => this.app.scrollViewLeft());
         this.scrollRightButton.addEventListener("click", () => this.app.scrollViewRight());
-        this.displayVectorsCheckbox.addEventListener("change", () => this.app.cbxDisplayVectorsChanged(this.displayVectorsCheckbox));
-        this.collisionDetectionCheckbox.addEventListener("change", () => this.app.cbxCollisionsChanged(this.collisionDetectionCheckbox));
-        this.elasticCollisionsCheckbox.addEventListener("change", () => this.app.cbxElasticCollisionsChanged(this.elasticCollisionsCheckbox));
-        this.gravitationalConstantInput.addEventListener("", () => this.app.numberInputGChanged(this.gravitationalConstantInput));
-        this.gravitationalConstantRangeInput.addEventListener("change", () => this.app.rangeInputGChanged(this.gravitationalConstantRangeInput));
-        this.massInput.addEventListener("change", () => this.updateSelectedMass(this.massInput));
+        this.displayVectorsCheckbox.addEventListener("change", () => this.cbxDisplayVectorsChanged());
+        this.collisionDetectionCheckbox.addEventListener("change", () => this.cbxCollisionsChanged());
+        this.elasticCollisionsCheckbox.addEventListener("change", () => this.cbxElasticCollisionsChanged());
+        this.gravitationalConstantInput.addEventListener("", () => this.numberInputGChanged());
+        this.gravitationalConstantRangeInput.addEventListener("change", () => this.rangeInputGChanged());
+        this.massInput.addEventListener("change", () => this.updateSelectedMass());
         this.clickAction.buttons.forEach((radioButton) => {
-            radioButton.addEventListener('change', () => this.radioBtnMouseActionChanged(radioButton));
+            //radioButton.addEventListener('change', () => this.radioBtnMouseActionChanged(radioButton));
         });
+    }
+    public cbxDisplayVectorsChanged() {
+        const displayVectors = this.displayVectorsCheckbox.checked;
+        this.app.setDisplayVectors(displayVectors)
+        if (displayVectors) {
+            this.setStatusMessage("Green: acceleration - Red: velocity", 3);
+        } else {
+            this.setStatusMessage("", 3);
+        }
+    }
+    public cbxCollisionsChanged() {
+        const checked = this.collisionDetectionCheckbox.checked;
+        const elasticChecked = this.elasticCollisionsCheckbox.checked;
+        
+        this.elasticCollisionsCheckbox.disabled = !checked;
+        
+        this.app.setCollisionDetection(checked, elasticChecked);
+    }
+    public cbxElasticCollisionsChanged() {
+        this.app.setElasticCollisions(this.elasticCollisionsCheckbox.checked);
+    }
+    public numberInputGChanged() {
+        const newG: string = this.gravitationalConstantInput.value;
+        this.gravitationalConstantRangeInput.value = newG;
+        this.app.setG(Number(newG));
+    }
+    public rangeInputGChanged() {
+            const newG: string = this.gravitationalConstantRangeInput.value;
+            this.gravitationalConstantInput.value = newG;
+            this.app.setG(Number(newG));
     }
     public simulationStopped() {
         this.playPauseButton.innerHTML = "&#9654;"; // play symbol
@@ -114,11 +147,6 @@ export class UI implements IUI {
         const newZoom = this.app.zoomOut();
         this.setStatusMessage(`Zoom: ${newZoom} (m per pixel)`, 4);
     }
-    public radioBtnMouseActionChanged(element: HTMLInputElement): void {
-        if (element && element.type === 'radio') {
-            this.app.selectedCanvasClickAction = element.value;
-        }
-    }
     public getSelectedClickAction() {
         return this.getSelectedValue(this.clickAction) ?? this.clickAction.buttons[0].value;
     }
@@ -129,19 +157,18 @@ export class UI implements IUI {
     }
     public body2dFromInputs(): Body2d {
         const movable = this.addBodyMovable.checked;
-        return new Body2d(this.selectedMass, movable);
+        return new Body2d(util.getInputNumber(this.massInput), movable);
     }
-    public updateSelectedMass(inputElement: HTMLInputElement) {
-        const inputValue = inputElement.value;
-        this.selectedMass = util.isNumeric(inputValue) ? +inputValue : 0;
-        inputElement.step = this.calculateMassInputStep();
+    public updateSelectedMass() {
+        const inputValue = this.massInput.value;
+        this.massInput.step = this.calculateMassInputStep();
     }
     /**
      * The step is equal to 10% of the input value, rounded down to the nearest power of 10.
      * @returns Step as a string. Step is always at least 1 or larger.
      */
     private calculateMassInputStep(): string {
-        let step = (10 ** (Math.floor(Math.log10(this.selectedMass)) - 1));
+        let step = (10 ** (Math.floor(Math.log10(util.getInputNumber(this.massInput))) - 1));
         return step < 1 ? "1" : step.toString();
     }
     /**

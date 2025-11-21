@@ -62,7 +62,7 @@ export class GravityAnimationController {
         //this.canvas.visibleCanvas.addEventListener("touchstart", () => this.canvasTouchStart);
         //this.canvas.addEventListener("touchend", () => this.canvasTouchEnd);
         //this.canvas.addEventListener("touchmove", () => this.canvasTouchMove);
-        this.canvas.visibleCanvas.addEventListener("wheel", () => this.canvasMouseWheel);
+        this.canvas.visibleCanvas.addEventListener("wheel", (ev) => this.canvasMouseWheel(ev as WheelEvent));
         this.canvas.visibleCanvas.addEventListener("contextmenu", (ev) => {ev.preventDefault()});
 
         this._simulation = new Simulation;
@@ -144,12 +144,11 @@ export class GravityAnimationController {
         
         const cursorPos = new Vector2D(util.getAbsoluteMousePosition(ev));
         const posInCanvasSpace = this.app.absoluteToCanvasPosition(cursorPos);
-        const positionInSimSpace = this.app.gravityAnimationController.pointFromCanvasSpaceToSimulationSpace(posInCanvasSpace);
 
         if (ev.deltaY < 0) {
-            this.app.zoomIn(positionInSimSpace);
+            this.zoomIn(posInCanvasSpace);
         } else if (ev.deltaY > 0) {
-            this.app.zoomOut(positionInSimSpace);
+            this.zoomOut(posInCanvasSpace);
         }
     }
 //#endregion
@@ -222,9 +221,9 @@ export class GravityAnimationController {
         this.canvas.resize(width, height);
         this.redrawSimulation();
     }
-    public canvasZoomOut(zoomCenter?: Vector2D, zoomStep?: number): number {
+    public zoomOut(zoomCenter?: Vector2D, zoomStep?: number): number {
         if (zoomCenter === undefined) {
-            zoomCenter = new Vector2D(this.width / 2, this.height / 2);
+            zoomCenter = new Vector2D(this.canvas.visibleCanvas.width / 2, this.canvas.visibleCanvas.height / 2);
         }
         if (zoomStep === undefined) {
             zoomStep = this.animationSettings.defaultZoomStep;
@@ -234,7 +233,7 @@ export class GravityAnimationController {
         
         return newZoom;
     }
-    public canvasZoomIn(zoomCenter?: Vector2D, zoomStep?: number): number {
+    public zoomIn(zoomCenter?: Vector2D, zoomStep?: number): number {
         if (zoomCenter === undefined) {
             zoomCenter = new Vector2D(this.width / 2, this.height / 2);
         }
@@ -246,7 +245,7 @@ export class GravityAnimationController {
 
         return newZoom;
     }
-    public setCanvasZoom(zoom: number, zoomCenter: Vector2D) { 
+    public setCanvasView(origin: Vector2D, zoom: number) { 
         // toDo
     }
 
