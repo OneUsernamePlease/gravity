@@ -160,7 +160,7 @@ export class Canvas {
         const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
         const newZoom = this.currentZoom + zoomStep;
 
-        this.moveOrigin(shiftOrigin);
+        this.moveOrigin(shiftOrigin.hadamardProduct({x: -1, y: 1}));
         this.canvasSpace.currentZoom = newZoom;
 
         return newZoom;
@@ -177,7 +177,7 @@ export class Canvas {
         }
         
         const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
-        this.moveOrigin(shiftOrigin);
+        this.moveOrigin(shiftOrigin.hadamardProduct({x: 1, y: -1}));
         this.canvasSpace.currentZoom = newZoom;
         
         return newZoom;
