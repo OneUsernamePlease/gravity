@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { test } from "vitest";
 import { Body2d, Simulation } from "../scripts/gravity";
 import { Vector2D } from "../scripts/vector2d";
 

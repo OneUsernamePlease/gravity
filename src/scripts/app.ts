@@ -1,12 +1,8 @@
-import { Canvas } from "./canvas";
 import { Body2d } from "./gravity";
-import * as util from "./essentials";
 import { Vector2D } from "./vector2d";
-import { CanvasClickAction, ButtonState, IUI } from "./types";
+import { CanvasClickAction } from "./types";
 import { UI } from "./ui";
 import { GravityAnimationController } from "./gravity-animation-controller";
-import * as c from "../const";
-import { B } from "vitest/dist/chunks/worker.d.1GmBbd7G";
 
 export class App {
     private _ui: UI;

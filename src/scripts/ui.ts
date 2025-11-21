@@ -1,6 +1,5 @@
 import { Body2d } from "./gravity";
 import * as util from "./essentials";
-import { MASS_INPUT_ID } from "../const";
 import { IUI, RadioButtonGroup, StatusBar } from "./types";
 import { App } from "./app";
 
@@ -159,7 +158,6 @@ export class UI implements IUI {
         return new Body2d(util.getInputNumber(this.massInput), movable);
     }
     public updateSelectedMass() {
-        const inputValue = this.massInput.value;
         this.massInput.step = this.calculateMassInputStep();
     }
     /**

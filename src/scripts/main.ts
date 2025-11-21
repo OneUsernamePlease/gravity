@@ -1,7 +1,4 @@
-import { Vector2D } from "./vector2d";
-import { MouseButton, ButtonState, Mouse, MouseButtons } from "./types";
-import { Canvas } from "./canvas";
-import * as util from "./essentials";
+import { ButtonState, MouseButtons } from "./types";
 import { App } from "./app";
 import * as c from "../const";
 
