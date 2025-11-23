@@ -61,9 +61,8 @@ export class UI implements IUI {
         })();
 
         this.registerEvents();
-        this.initialize();
     }
-    private initialize() {
+    public initialize() {
         this.elasticCollisionsCheckbox.disabled = !this.collisionDetectionCheckbox.checked;
         this.massInput.step = this.calculateMassInputStep();
         
@@ -90,7 +89,7 @@ export class UI implements IUI {
         this.displayVectorsCheckbox.addEventListener("change", () => this.cbxDisplayVectorsChanged());
         this.collisionDetectionCheckbox.addEventListener("change", () => this.cbxCollisionsChanged());
         this.elasticCollisionsCheckbox.addEventListener("change", () => this.cbxElasticCollisionsChanged());
-        this.gravitationalConstantInput.addEventListener("", () => this.numberInputGChanged());
+        this.gravitationalConstantInput.addEventListener("change", () => this.numberInputGChanged());
         this.gravitationalConstantRangeInput.addEventListener("change", () => this.rangeInputGChanged());
         this.massInput.addEventListener("change", () => this.updateSelectedMass());
     }

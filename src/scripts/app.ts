@@ -24,7 +24,12 @@ export class App {
     constructor() {
         this._gravityAnimationController = new GravityAnimationController(this);        
         this._ui = new UI(this);
+
+        this.initialize();
+    }
+    private initialize() {
         this.gravityAnimationController.initialize(window.innerWidth, window.innerHeight);
+        this.ui.initialize();
     }
     //#endregion
 
