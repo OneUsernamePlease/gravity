@@ -15,6 +15,7 @@ export interface Mouse {
 export interface MouseButton {
     state: ButtonState;
     downCoordinates: { x: number, y: number } | null; // coordinates of the mouse when button was pressed down
+    downCoordinatesInSimSpace?: { x: number, y: number } | Vector2D;
 }
 export enum ButtonState {
     Up = 0,

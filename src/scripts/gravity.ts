@@ -166,9 +166,10 @@ export class Simulation {
      * @param fromCoordinate value in simulation space
      * @param timeFrameInSeconds *optional* defaults to 1
      */
-    public calculateVelocityBetweenPoints(toCoordinate: Vector2D, fromCoordinate: Vector2D, timeFrameInSeconds: number = 1): Vector2D {
+    public calculateVelocityBetweenPoints(toCoordinate: Vector2D | {x: number, y: number}, fromCoordinate: Vector2D, timeFrameInSeconds: number = 1): Vector2D {
         if (timeFrameInSeconds <= 0) { timeFrameInSeconds = 1; }
-        let distance: Vector2D = toCoordinate.subtract(fromCoordinate);
+        const toVector = toCoordinate instanceof Vector2D ? toCoordinate : new Vector2D(toCoordinate)
+        const distance: Vector2D = toVector.subtract(fromCoordinate);
         return distance.scale(1 / timeFrameInSeconds);
     }
     public advanceTick() {

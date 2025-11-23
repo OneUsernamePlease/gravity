@@ -1,13 +1,14 @@
 import { ButtonState, MouseButtons } from "./types";
 import { App } from "./app";
-import * as c from "../const";
+import { mouse } from "../const";
 
 let app: App;
 
 document.addEventListener("DOMContentLoaded", initialize);
 function initialize() {
-    registerEvents();
     app = new App();
+    registerEvents();
+
     app.run();
 }
 
@@ -25,16 +26,16 @@ function windowResized(this: Window, ev: UIEvent) {
 
 function mouseDown(this: Document, ev: MouseEvent) {
     if (ev.button === MouseButtons.Main) {
-        c.mouse.main.state = ButtonState.Down;
-        c.mouse.main.downCoordinates = { x: ev.clientX, y: ev.clientY };
+        mouse.main.state = ButtonState.Down;
+        mouse.main.downCoordinates = { x: ev.clientX, y: ev.clientY };
 
     } else if (ev.button === MouseButtons.Wheel) {
-        c.mouse.wheel.state = ButtonState.Down;
-        c.mouse.wheel.downCoordinates = { x: ev.clientX, y: ev.clientY };
+        mouse.wheel.state = ButtonState.Down;
+        mouse.wheel.downCoordinates = { x: ev.clientX, y: ev.clientY };
 
     } else if (ev.button === MouseButtons.Secondary) {
-        c.mouse.secondary.state = ButtonState.Down;
-        c.mouse.secondary.downCoordinates = { x: ev.clientX, y: ev.clientY };
+        mouse.secondary.state = ButtonState.Down;
+        mouse.secondary.downCoordinates = { x: ev.clientX, y: ev.clientY };
     }
 }
 

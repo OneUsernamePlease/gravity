@@ -78,7 +78,6 @@ export class UI implements IUI {
         this.app.setG(Number(this.gravitationalConstantRangeInput.value));
     }
     private registerEvents() {
-
         this.resetButton.addEventListener("click", () => this.app.reset());
         this.playPauseButton.addEventListener("click", () => this.app.toggleSimulation());
         this.stepButton.addEventListener("click", () => this.app.advanceOneTick());
@@ -134,12 +133,6 @@ export class UI implements IUI {
         
         (this.stepButton as HTMLInputElement)!.disabled = true;
         this.app.updateSimulationStatusMessages();
-    }
-    public zoomInClicked() {
-        const newZoom = this.app.zoomIn();
-    }
-    public zoomOutClicked() {
-        const newZoom = this.app.zoomOut();
     }
     public updateStatusBarZoom() {
         const currentZoom = this.app.gravityAnimationController.zoom;

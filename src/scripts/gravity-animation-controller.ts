@@ -106,7 +106,7 @@ export class GravityAnimationController {
     private canvasMouseMoving(ev: MouseEvent) {
         if (c.mouse.secondary.state === ButtonState.Down) {
             const currentMovement = new Vector2D(ev.movementX, ev.movementY);
-            this.app.canvasSecondaryMouseDragging(currentMovement);
+            this.app.scrollCanvas(currentMovement);
             c.mouse.secondary.downCoordinates = { x: ev.clientX, y: ev.clientY };
         }
     }
@@ -231,7 +231,7 @@ export class GravityAnimationController {
         const newZoom = this.canvas.zoomOut(zoomCenter, zoomStep);
         this.redrawSimulation();
         this.app.updateZoomStatusMessage();
-        
+
         return newZoom;
     }
     public zoomIn(zoomCenter?: Vector2D, zoomStep?: number): number {

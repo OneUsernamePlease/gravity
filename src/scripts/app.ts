@@ -3,11 +3,11 @@ import { Vector2D } from "./vector2d";
 import { CanvasClickAction } from "./types";
 import { UI } from "./ui";
 import { GravityAnimationController } from "./gravity-animation-controller";
+import { mouse } from "../const";
 
 export class App {
     private _ui: UI;
     private _gravityAnimationController: GravityAnimationController;
-    private lastMainMouseDownSimulationCoord: Vector2D = new Vector2D(0, 0);
     //#region get, set, constr
     get gravityAnimationController() {
         return this._gravityAnimationController;
@@ -24,14 +24,7 @@ export class App {
     constructor() {
         this._gravityAnimationController = new GravityAnimationController(this);        
         this._ui = new UI(this);
-        this.initAnimationController({x: window.innerWidth, y: window.innerHeight});
-    }
-    //#endregion
-    
-    //#region setup
-
-    public initAnimationController(canvasDimensions: {x: number, y: number}) {
-        this.gravityAnimationController.initialize(canvasDimensions.x, canvasDimensions.y);
+        this.gravityAnimationController.initialize(window.innerWidth, window.innerHeight);
     }
     //#endregion
 
@@ -79,20 +72,11 @@ export class App {
     
     //#region interaction
     /* !!!!!! moved to gravity-animation-controller.ts - logic should be over there, being called from here */
-    public getCanvasMousePosition(event: MouseEvent): Vector2D {
-        const rect = this.gravityAnimationController.canvas.visibleCanvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        return new Vector2D(x, y);
-    }
     public absoluteToCanvasPosition(absolutePosition: Vector2D): Vector2D {
         const canvasRect = this.gravityAnimationController.canvas.visibleCanvas.getBoundingClientRect();
         const x = absolutePosition.x - canvasRect.left;
         const y = absolutePosition.y - canvasRect.top;
         return new Vector2D(x, y);
-    }
-    public scrollView(displacement: {x: number, y: number}) {
-        this.gravityAnimationController.scrollView(displacement);
     }
     public scrollViewRight(distance?: number) {
         this.gravityAnimationController.canvasScrollRight(distance);
@@ -133,9 +117,9 @@ export class App {
     public setDisplayVectors(displayVectors: boolean) {
         this.gravityAnimationController.setDisplayVectors(displayVectors)
     }
-    public canvasSecondaryMouseDragging(movement: Vector2D){
-        const movementInSimulationUnits = movement.scale(this.gravityAnimationController.zoom);
-        this.scrollView({ x: -(movementInSimulationUnits.x), y: movementInSimulationUnits.y });
+    public scrollCanvas(movementOnCanvas: Vector2D){
+        const movementInSimulationUnits = movementOnCanvas.scale(this.gravityAnimationController.zoom);
+        this.gravityAnimationController.scrollView({ x: -(movementInSimulationUnits.x), y: movementInSimulationUnits.y });
     }
 
     // MOVE TO G-ANIMATION-CONTROLLER
@@ -146,14 +130,13 @@ export class App {
             case CanvasClickAction.AddBody:
                 const positionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
                 const positionInSimSpace: Vector2D = this.gravityAnimationController.pointFromCanvasSpaceToSimulationSpace(positionVector);
-                this.lastMainMouseDownSimulationCoord = positionInSimSpace;
+                mouse.main.downCoordinatesInSimSpace = positionInSimSpace;
                 break;
             default:
                 break;
         }
     }
     public canvasMainMouseUp(absoluteMousePosition: Vector2D) {
-        
         switch (CanvasClickAction[this.ui.getSelectedClickAction() as keyof typeof CanvasClickAction]) {
             case CanvasClickAction.None:
                 break;
@@ -163,7 +146,7 @@ export class App {
                 const mousePositionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
                 const mousePositionOnCanvas: Vector2D = this.absoluteToCanvasPosition(mousePositionVector);
                 const mousePositionInSimSpace: Vector2D = this.gravityAnimationController.pointFromCanvasSpaceToSimulationSpace(mousePositionOnCanvas);
-                const vel: Vector2D = this.gravityAnimationController.simulation.calculateVelocityBetweenPoints(this.lastMainMouseDownSimulationCoord, mousePositionInSimSpace);
+                const vel: Vector2D = this.gravityAnimationController.simulation.calculateVelocityBetweenPoints(mouse.main.downCoordinatesInSimSpace!, mousePositionInSimSpace);
                 this.gravityAnimationController.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
                 this.ui.setStatusMessage(`Number of Bodies: ${this.gravityAnimationController.simulation.simulationState.length}`, 1);
                 break;
