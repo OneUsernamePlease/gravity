@@ -7,6 +7,12 @@ export interface AnimationSettings {
     displayVectors: boolean;
     tracePaths: boolean;
 }
+export enum PointerAction {
+    None = 0,
+    AddBody = 1,
+    Scroll = 2,
+    Zoom = 3
+}
 export interface Mouse {
    main: MouseButton;
    secondary: MouseButton;
@@ -14,17 +20,11 @@ export interface Mouse {
 }
 export interface MouseButton {
     state: ButtonState;
-    downCoordinates: { x: number, y: number } | null; // coordinates of the mouse when button was pressed down
     downCoordinatesInSimSpace?: { x: number, y: number } | Vector2D;
 }
 export enum ButtonState {
     Up = 0,
     Down = 1,
-}
-export enum CanvasClickAction {
-    None = 0,
-    AddBody = 1,
-    ScrollCanvas = 2,
 }
 export enum MouseButtons {
     Main = 0,

@@ -50,6 +50,8 @@ html, body {
 #canvasContainer canvas {
     display: block;
     border: none;
+
+    touch-action: none;
 }
 
 /* Right-side control bar (floating) */

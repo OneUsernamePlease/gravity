@@ -7,7 +7,7 @@ export const MAX_G = 100;
 //#endregion
 
 //#region other global stuff
-export const mouse: Mouse = { main: { state: ButtonState.Up, downCoordinates: null, downCoordinatesInSimSpace: undefined }, 
-                     secondary: { state: ButtonState.Up, downCoordinates: null }, 
-                     wheel: { state: ButtonState.Up, downCoordinates: null} };
+export const mouse: Mouse = { main: { state: ButtonState.Up, downCoordinatesInSimSpace: undefined }, 
+                     secondary: { state: ButtonState.Up }, 
+                     wheel: { state: ButtonState.Up} };
 //#endregion

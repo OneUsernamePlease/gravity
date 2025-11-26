@@ -1,7 +1,7 @@
 import { Canvas } from "./canvas";
 import { Body2d, Simulation } from "./gravity";
 import * as util from "./essentials";
-import { AnimationSettings, ButtonState, MouseButtons } from "./types";
+import { AnimationSettings, ButtonState, MouseButtons, PointerAction } from "./types";
 import * as c from "../const";
 import { Vector2D } from "./vector2d";
 import { App } from "./app";
@@ -11,6 +11,9 @@ export class GravityAnimationController {
     private _simulation: Simulation;
     private _animationSettings: AnimationSettings;
     private _running: boolean;
+    // ---
+    private activePointers = new Map<number, PointerEvent>();
+    private touchAction: PointerAction = PointerAction.None;
 //#region get, set
     get canvas(): Canvas {
         return this._canvas;
@@ -53,24 +56,22 @@ export class GravityAnimationController {
         return this.canvas.currentZoom;
     }
 //#endregion
-    constructor(private app: App) {
-        this._canvas = new Canvas(document.getElementById("theCanvas") as HTMLCanvasElement);
-        
-        this.canvas.visibleCanvas.addEventListener("mousedown", (ev) => this.canvasMouseDown(ev as MouseEvent));
-        this.canvas.visibleCanvas.addEventListener("mouseup", (ev) => this.canvasMouseUp(ev as MouseEvent));
-        this.canvas.visibleCanvas.addEventListener("mousemove", (ev) => this.canvasMouseMoving(ev as MouseEvent));
-        //this.canvas.visibleCanvas.addEventListener("touchstart", () => this.canvasTouchStart);
-        //this.canvas.addEventListener("touchend", () => this.canvasTouchEnd);
-        //this.canvas.addEventListener("touchmove", () => this.canvasTouchMove);
-        this.canvas.visibleCanvas.addEventListener("wheel", (ev) => this.canvasMouseWheel(ev as WheelEvent));
-        this.canvas.visibleCanvas.addEventListener("contextmenu", (ev) => {ev.preventDefault()});
-
+//#region initialization
+    constructor(private app: App, elementId: string = "theCanvas") {
+        this._canvas = new Canvas(document.getElementById(elementId) as HTMLCanvasElement);
         this._simulation = new Simulation;
         this._animationSettings = { defaultScrollRate: 0.1, defaultZoomStep: 1, frameLength: 25, displayVectors: true, tracePaths: true };
         this._running = false;
+        
+        this.canvas.visibleCanvas.addEventListener("pointerdown", (ev) => this.canvasPointerDown(ev as PointerEvent));
+        this.canvas.visibleCanvas.addEventListener("pointerup", (ev) => this.canvasPointerUp(ev as PointerEvent));
+        this.canvas.visibleCanvas.addEventListener("pointermove", (ev) => this.canvasPointerMoving(ev as PointerEvent));
+        this.canvas.visibleCanvas.addEventListener("pointercancel", (ev) => this.cancelPointer(ev as PointerEvent));
+
+        this.canvas.visibleCanvas.addEventListener("wheel", (ev) => this.canvasMouseWheel(ev as WheelEvent));
+        this.canvas.visibleCanvas.addEventListener("contextmenu", (ev) => {ev.preventDefault()});
     }
 
-//#region initialization
     public initialize(width: number, height: number) {
         this.initCanvas(width, height);
         this.initSimulation();
@@ -91,58 +92,136 @@ export class GravityAnimationController {
     }
 //#endregion
 //#region interaction
-
-    private canvasMouseDown(ev: MouseEvent) {
-        const absoluteMousePosition: Vector2D = new Vector2D(util.getAbsoluteMousePosition(ev));
-        if (ev.button === MouseButtons.Main) {
-            this.app.canvasMainMouseDown(absoluteMousePosition);
-        } else if (ev.button === MouseButtons.Wheel) {
-            ev.preventDefault(); // prevent scroll-symbol
-        } else if (ev.button === MouseButtons.Secondary) {
-            // handled at document level
-        }
-    }
-
-    private canvasMouseMoving(ev: MouseEvent) {
-        if (c.mouse.secondary.state === ButtonState.Down) {
-            const currentMovement = new Vector2D(ev.movementX, ev.movementY);
-            this.app.scrollCanvas(currentMovement);
-            c.mouse.secondary.downCoordinates = { x: ev.clientX, y: ev.clientY };
-        }
-    }
-
-    private canvasMouseUp(ev: MouseEvent) {
-        const absoluteMousePosition: Vector2D = new Vector2D(util.getAbsoluteMousePosition(ev));
-        switch (ev.button) {
-            case MouseButtons.Main:
-                this.app.canvasMainMouseUp(absoluteMousePosition);
-                c.mouse.main.state = ButtonState.Up;
+    private canvasPointerDown(ev: PointerEvent) {
+        const absolutePointerPosition: Vector2D = new Vector2D(util.getAbsolutePointerPosition(ev));
+        switch (ev.pointerType) {
+            case "mouse":
+                switch (ev.button) {
+                    case MouseButtons.Main:
+                        c.mouse.main.state = ButtonState.Down;
+                        this.app.canvasMainMouseDown(absolutePointerPosition);
+                        break;
+                    case MouseButtons.Wheel:
+                        c.mouse.wheel.state = ButtonState.Down;
+                        ev.preventDefault(); // prevent scroll-symbol
+                        break;
+                    case MouseButtons.Secondary:
+                        c.mouse.secondary.state = ButtonState.Down;
+                        break;
+                    default:
+                        break;
+                }
                 break;
         
-            case MouseButtons.Wheel:
-                // prevent scroll-symbol
-                ev.preventDefault();
-                
-                c.mouse.wheel.state = ButtonState.Down;
-                c.mouse.wheel.downCoordinates = { x: ev.clientX, y: ev.clientY };
+            case "touch":
+                this.activePointers.set(ev.pointerId, ev);
+
+
                 break;
         
-            case MouseButtons.Secondary:
-                // prevent context menu
-                ev.preventDefault();
+            case "pen":
                 
-                c.mouse.secondary.state = ButtonState.Up;
                 break;
         
             default:
+                console.log("unknown pointerType: " + ev.pointerType);
+                break;
+        }
+        
+        
+        
+        
+
+    }
+    private canvasPointerUp(ev: PointerEvent) {
+        const absolutePointerPosition: Vector2D = new Vector2D(util.getAbsolutePointerPosition(ev));
+        
+        switch (ev.pointerType) {
+            case "mouse":
+                switch (ev.button) {
+                    case MouseButtons.Main:
+                        c.mouse.main.state = ButtonState.Up;
+
+                        this.app.canvasMainMouseUp(absolutePointerPosition);
+                        break;
+                
+                    case MouseButtons.Wheel:
+                        c.mouse.wheel.state = ButtonState.Up;
+                        
+                        // prevent scroll-symbol
+                        ev.preventDefault();
+                        break;
+                
+                    case MouseButtons.Secondary:
+                        c.mouse.secondary.state = ButtonState.Up;
+                        
+                        // prevent context menu
+                        ev.preventDefault();
+                        break;
+                
+                    default:
+                        break;
+                }
+                break;
+        
+            case "touch":
+                if (!this.activePointers.has(ev.pointerId)) {
+                    return;
+                }
+                
+
+                this.activePointers.delete(ev.pointerId);
+                break;
+        
+            case "pen":
+                
+                break;
+        
+            default:
+                console.log("unknown pointerType: " + ev.pointerType);
+                break;
+        }
+        
+    }
+    private canvasPointerMoving(ev: PointerEvent) {
+        
+        switch (ev.pointerType) {
+            case "mouse":
+                if (c.mouse.wheel.state === ButtonState.Down) {
+                    const currentMovement = new Vector2D(ev.movementX, ev.movementY);
+                    this.app.scrollCanvas(currentMovement);
+                }
+                break;
+        
+            case "touch":
+                // if 1 activePointer -> add object
+
+                // if 2 activePointers -> cancel adding and start to scroll and/or zoom
+
+                // if >=3 activePointers -> ??? ignore all or 3+
+
+                break;
+        
+            case "pen":
+                
+                break;
+        
+            default:
+                console.log("unknown pointerType");
                 break;
         }
     }
+    private cancelPointer(ev: PointerEvent) {
+        this.activePointers.delete(ev.pointerId);
+        
+        // cancel the current pointers' action
+    }
+
     private canvasMouseWheel(ev: WheelEvent) {
         // don't resize the entire page
         ev.preventDefault();
         
-        const cursorPos = new Vector2D(util.getAbsoluteMousePosition(ev));
+        const cursorPos = new Vector2D(util.getAbsolutePointerPosition(ev));
         const posInCanvasSpace = this.app.absoluteToCanvasPosition(cursorPos);
 
         if (ev.deltaY < 0) {
@@ -203,7 +282,7 @@ export class GravityAnimationController {
     }
 //#endregion
 
-//#region interaction
+//#region interaction 2
     public addBody(body: Body2d, position: Vector2D, velocity: Vector2D = new Vector2D(0, 0)) {
         this.simulation.addObject(body, position, velocity);
         this.redrawSimulation();

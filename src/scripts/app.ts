@@ -1,6 +1,6 @@
 import { Body2d } from "./gravity";
 import { Vector2D } from "./vector2d";
-import { CanvasClickAction } from "./types";
+import { PointerAction } from "./types";
 import { UI } from "./ui";
 import { GravityAnimationController } from "./gravity-animation-controller";
 import { mouse } from "../const";
@@ -129,10 +129,10 @@ export class App {
 
     // MOVE TO G-ANIMATION-CONTROLLER
     public canvasMainMouseDown(absoluteMousePosition: {x: number, y: number}) {
-        switch (CanvasClickAction[this.ui.getSelectedClickAction() as keyof typeof CanvasClickAction]) {
-            case CanvasClickAction.None:
+        switch (PointerAction[this.ui.getSelectedClickAction() as keyof typeof PointerAction]) {
+            case PointerAction.None:
                 break;
-            case CanvasClickAction.AddBody:
+            case PointerAction.AddBody:
                 const positionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
                 const positionInSimSpace: Vector2D = this.gravityAnimationController.pointFromCanvasSpaceToSimulationSpace(positionVector);
                 mouse.main.downCoordinatesInSimSpace = positionInSimSpace;
@@ -142,10 +142,10 @@ export class App {
         }
     }
     public canvasMainMouseUp(absoluteMousePosition: Vector2D) {
-        switch (CanvasClickAction[this.ui.getSelectedClickAction() as keyof typeof CanvasClickAction]) {
-            case CanvasClickAction.None:
+        switch (PointerAction[this.ui.getSelectedClickAction() as keyof typeof PointerAction]) {
+            case PointerAction.None:
                 break;
-            case CanvasClickAction.AddBody:
+            case PointerAction.AddBody:
                 const bodyBeingAdded: Body2d = this.ui.body2dFromInputs();
                 if (bodyBeingAdded.mass <= 0) { break; }
                 const mousePositionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
@@ -160,48 +160,5 @@ export class App {
         }
         this.redraw();
     }
-    public secondaryMouseUp() {
-        
-    }
-    /*
-    public canvasTouchStart(ev: TouchEvent) {
-        this.canvasMainMouseState = ButtonState.Down;
-
-        switch (CanvasClickAction[this.selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
-            case CanvasClickAction.None:
-                break;
-            case CanvasClickAction.AddBody:
-                ev.preventDefault();
-                this.lastMainMouseDownCanvasCoord = this.canvas.getCanvasTouchPosition(ev);
-                break;
-            default:
-                break;
-        }
-    }
-    public canvasTouchEnd(ev: TouchEvent) {
-        this.canvasMainMouseState = ButtonState.Up;
-        const touchPosition = this.canvas.getCanvasTouchEndPosition(ev);
-        if (touchPosition.x > this.canvas.visibleCanvas.width || touchPosition.y > this.canvas.visibleCanvas.height || touchPosition.x < 0 || touchPosition.y < 0) {
-            return;
-        }
-
-        switch (CanvasClickAction[this.selectedCanvasClickAction as keyof typeof CanvasClickAction]) {
-            case CanvasClickAction.None:
-                break;
-            case CanvasClickAction.AddBody:
-                const bodyBeingAdded = this.ui.body2dFromInputs();    
-                if (bodyBeingAdded.mass <= 0) { break; }
-                const vel: Vector2D = this.simulation.calculateVelocityBetweenPoints(this.canvas.pointFromCanvasSpaceToSimulationSpace(this.lastMainMouseDownCanvasCoord), this.canvas.pointFromCanvasSpaceToSimulationSpace(touchPosition));
-                this.simulation.addObject(bodyBeingAdded, this.canvas.pointFromCanvasSpaceToSimulationSpace(touchPosition), vel);
-                this.ui.setStatusMessage(`Number of Bodies: ${this.simulation.simulationState.length}`, 1);
-                break;
-            default:
-                break;
-        }
-        if (!this.running) {
-            this.gravityAnimationController.redrawSimulation();
-        }
-    }
-    */
 }
     //#endregion

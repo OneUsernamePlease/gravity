@@ -59,8 +59,8 @@ export class Body2d {
 }
 export class Simulation {
     private _simulationState: ObjectState[];
-    public _running: boolean;
-    public _tickCount: number;
+    private _running: boolean;
+    private _tickCount: number;
     private _tickLength: number;
     private _collisionDetection: boolean;
     private _elasticCollisions: boolean;

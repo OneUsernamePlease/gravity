@@ -1,8 +1,8 @@
 export class Vector2D {
     public x: number;
     public y: number;
-    constructor();
-    constructor(pos: {x: number, y: number});
+    constructor()
+    constructor(pos: {x: number, y: number})
     constructor(x: number, y: number)
     constructor(a?: number | {x: number, y: number}, b?: number) {
         if (typeof a === "object") {

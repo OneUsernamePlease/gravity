@@ -112,7 +112,8 @@ export function getInputNumber(input: string | HTMLInputElement): number {
     const inputValue = getInputValue(input);
     return isNumeric(inputValue) ? +inputValue : 0;
 }
-export function getAbsoluteMousePosition(ev: MouseEvent | WheelEvent): {x: number, y: number} {
-    return {x: ev.clientX, y: ev.clientY};
+export function getAbsolutePointerPosition(ev: PointerEvent | WheelEvent): { x: number, y: number } {
+    return { x: ev.clientX, y: ev.clientY };
 }
+
 //#endregion
