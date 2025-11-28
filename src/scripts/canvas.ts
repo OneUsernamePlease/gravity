@@ -2,6 +2,7 @@ import { Body2d } from "./gravity";
 import { CanvasSpace, ObjectState } from "./types";
 import { Vector2D } from "./vector2d";
 import * as essentials from "./essentials";
+import { MAX_ZOOM, MIN_ZOOM } from "../const";
 
 export class Canvas {
     // let offscreenCanvas: OffscreenCanvas; // use this in a worker thread to render or draw on, then transfer content to the visible html-canvas
@@ -136,7 +137,7 @@ export class Canvas {
     /**
      * Origin {x:0,y:0} is at the top-left
      */
-    private setOrigin(newOrigin: Vector2D) {
+    public setOrigin(newOrigin: Vector2D) {
         this.canvasSpace.origin = newOrigin;
     }
     public moveOrigin(displacement: { x: number, y: number}) {
@@ -157,23 +158,31 @@ export class Canvas {
         this.moveOrigin(new Vector2D(0, -distance));
     }
     public zoomOut(zoomCenter: Vector2D, zoomStep: number): number {
-        const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
-        const newZoom = this.currentZoom + zoomStep;
+        if (this.currentZoom >= MAX_ZOOM) { 
+            return this.currentZoom; 
+        }
 
+        let newZoom = this.currentZoom + zoomStep;
+        if(newZoom > MAX_ZOOM) {
+            newZoom = MAX_ZOOM;
+            zoomStep = MAX_ZOOM - this.canvasSpace.currentZoom;
+        }
+        
+        const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
         this.moveOrigin(shiftOrigin.hadamardProduct({x: -1, y: 1}));
         this.canvasSpace.currentZoom = newZoom;
 
         return newZoom;
     }
     public zoomIn(zoomCenter: Vector2D, zoomStep: number): number {
-        if (this.currentZoom <= 1) { 
+        if (this.currentZoom <= MIN_ZOOM) { 
             return this.currentZoom; 
         }
 
         let newZoom = this.canvasSpace.currentZoom - zoomStep;
-        if (newZoom < 1) {
-            newZoom = 1;
-            zoomStep = this.canvasSpace.currentZoom - 1;
+        if (newZoom < MIN_ZOOM) {
+            newZoom = MIN_ZOOM;
+            zoomStep = this.canvasSpace.currentZoom - MIN_ZOOM;
         }
         
         const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
@@ -181,6 +190,10 @@ export class Canvas {
         this.canvasSpace.currentZoom = newZoom;
         
         return newZoom;
+    }
+    public setZoom(newZoom: number) {
+        newZoom = essentials.numberInRange(newZoom, MIN_ZOOM, MAX_ZOOM);
+        this.canvasSpace.currentZoom = newZoom;
     }
     private pointFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
     // transformation:

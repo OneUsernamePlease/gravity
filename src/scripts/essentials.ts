@@ -60,13 +60,16 @@ export function hexToDecimal(hex: string): number {
     return valid ? num : 0;
 }
 /**
- * ensures min <= n <= max (Inclusive!)
+ * 
+ * @returns n if n satisfies min <= n <= max, otherwise min or max are returned
  * @param n number to test against upper and lower bounds
  * @param min the lowest allowed value for n
  * @param max the highest allowed value for n
- * @returns n if n satisfies min <= n <= max, otherwise min or max are returned
  */
-export function ensureNumberInRange(n: number, min: number, max: number): number {
+export function numberInRange(n: number, min: number, max: number): number {
+    if (min > max) {
+        throw new Error("In ensureNumberInRange: min cannot be greater than max");
+    }
     return Math.max(min, Math.min(n, max))
 }
 export function isInRange(n: number, min: number, max: number): boolean {

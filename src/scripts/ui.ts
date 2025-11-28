@@ -131,7 +131,7 @@ export class UI implements IUI {
         this.playPauseButton.innerHTML = "&#10074;&#10074;"; // pause symbol
         
         (this.stepButton as HTMLInputElement)!.disabled = true;
-        this.app.updateSimulationStatusMessages();
+        this.app.updateStatusBarSimulationMessages();
     }
     public updateStatusBarZoom() {
         const currentZoom = this.app.gravityAnimationController.zoom;

@@ -7,7 +7,12 @@ export interface AnimationSettings {
     displayVectors: boolean;
     tracePaths: boolean;
 }
-export enum PointerAction {
+export enum TouchAction {
+    None = 0,
+    AddBody = 1,
+    ManipulateView = 2
+}
+export enum MouseAction {
     None = 0,
     AddBody = 1,
     Scroll = 2,
@@ -31,7 +36,7 @@ export enum MouseButtons {
     Wheel = 1,
     Secondary = 2,
 }
-export interface CanvasSpace { 
+export interface CanvasSpace {
     // use this to transform simulationSpace to canvasSpace and back
     origin: Vector2D, // the canvas' origin in simulation space
     currentZoom: number, // simulationUnits (meter) per canvasUnit

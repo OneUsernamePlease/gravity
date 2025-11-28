@@ -1,8 +1,8 @@
 import { Canvas } from "./canvas";
 import { Body2d, Simulation } from "./gravity";
 import * as util from "./essentials";
-import { AnimationSettings, ButtonState, MouseButtons, PointerAction } from "./types";
-import * as c from "../const";
+import { AnimationSettings, ButtonState, MouseButtons, MouseAction, TouchAction } from "./types";
+import { MOUSE } from "../const";
 import { Vector2D } from "./vector2d";
 import { App } from "./app";
 
@@ -12,8 +12,10 @@ export class GravityAnimationController {
     private _animationSettings: AnimationSettings;
     private _running: boolean;
     // ---
-    private activePointers = new Map<number, PointerEvent>();
-    private touchAction: PointerAction = PointerAction.None;
+    private activeTouches = new Map<number, PointerEvent>();
+    private touchAction: TouchAction = TouchAction.None;
+    private primaryTouchId: number | null = null;
+    private secondaryTouchId: number | null = null;
 //#region get, set
     get canvas(): Canvas {
         return this._canvas;
@@ -68,7 +70,7 @@ export class GravityAnimationController {
         this.canvas.visibleCanvas.addEventListener("pointermove", (ev) => this.canvasPointerMoving(ev as PointerEvent));
         this.canvas.visibleCanvas.addEventListener("pointercancel", (ev) => this.cancelPointer(ev as PointerEvent));
 
-        this.canvas.visibleCanvas.addEventListener("wheel", (ev) => this.canvasMouseWheel(ev as WheelEvent));
+        this.canvas.visibleCanvas.addEventListener("wheel", (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
         this.canvas.visibleCanvas.addEventListener("contextmenu", (ev) => {ev.preventDefault()});
     }
 
@@ -93,84 +95,76 @@ export class GravityAnimationController {
 //#endregion
 //#region interaction
     private canvasPointerDown(ev: PointerEvent) {
-        const absolutePointerPosition: Vector2D = new Vector2D(util.getAbsolutePointerPosition(ev));
+        
         switch (ev.pointerType) {
             case "mouse":
-                switch (ev.button) {
-                    case MouseButtons.Main:
-                        c.mouse.main.state = ButtonState.Down;
-                        this.app.canvasMainMouseDown(absolutePointerPosition);
-                        break;
-                    case MouseButtons.Wheel:
-                        c.mouse.wheel.state = ButtonState.Down;
-                        ev.preventDefault(); // prevent scroll-symbol
-                        break;
-                    case MouseButtons.Secondary:
-                        c.mouse.secondary.state = ButtonState.Down;
-                        break;
-                    default:
-                        break;
-                }
+                this.canvasMouseDown(ev);
                 break;
         
             case "touch":
-                this.activePointers.set(ev.pointerId, ev);
-
-
+                this.canvasTouchStart(ev);
                 break;
-        
+
             case "pen":
                 
                 break;
-        
+
             default:
                 console.log("unknown pointerType: " + ev.pointerType);
                 break;
         }
         
-        
-        
-        
-
+       
     }
     private canvasPointerUp(ev: PointerEvent) {
         const absolutePointerPosition: Vector2D = new Vector2D(util.getAbsolutePointerPosition(ev));
-        
         switch (ev.pointerType) {
             case "mouse":
                 switch (ev.button) {
                     case MouseButtons.Main:
-                        c.mouse.main.state = ButtonState.Up;
-
-                        this.app.canvasMainMouseUp(absolutePointerPosition);
+                        MOUSE.main.state = ButtonState.Up;
+                        this.canvasMainMouseUp(absolutePointerPosition);
                         break;
-                
                     case MouseButtons.Wheel:
-                        c.mouse.wheel.state = ButtonState.Up;
+                        MOUSE.wheel.state = ButtonState.Up;
                         
                         // prevent scroll-symbol
                         ev.preventDefault();
                         break;
-                
                     case MouseButtons.Secondary:
-                        c.mouse.secondary.state = ButtonState.Up;
-                        
-                        // prevent context menu
-                        ev.preventDefault();
+                        MOUSE.secondary.state = ButtonState.Up;
                         break;
-                
                     default:
                         break;
                 }
                 break;
         
             case "touch":
-                if (!this.activePointers.has(ev.pointerId)) {
-                    return;
-                }
+                if (!this.activeTouches.has(ev.pointerId)) { return; }
                 
+                switch (this.touchAction) {
+                    case TouchAction.AddBody:
+                        
+                        this.touchAction = TouchAction.None;
+                        break;
+                
+                    case TouchAction.ManipulateView:
+                        
 
-                this.activePointers.delete(ev.pointerId);
+
+
+                        this.touchAction = TouchAction.None;
+                        break;
+                
+                    case TouchAction.None:
+                        
+                        break;
+
+                    default:
+                        break;
+                }
+
+                this.activeTouches.delete(ev.pointerId);
                 break;
         
             case "pen":
@@ -185,20 +179,45 @@ export class GravityAnimationController {
     }
     private canvasPointerMoving(ev: PointerEvent) {
         
+        const currentMovement = new Vector2D(ev.movementX, ev.movementY);
         switch (ev.pointerType) {
             case "mouse":
-                if (c.mouse.wheel.state === ButtonState.Down) {
-                    const currentMovement = new Vector2D(ev.movementX, ev.movementY);
-                    this.app.scrollCanvas(currentMovement);
+                if (MOUSE.wheel.state === ButtonState.Down) {
+                    this.scrollCanvasUnits(currentMovement);
                 }
                 break;
         
             case "touch":
-                // if 1 activePointer -> add object
+                switch (this.touchAction) {
+                    case TouchAction.AddBody:
+                        // ToDo: Draw body and vector from cursor to cursorDownInSimSpace (on its own layer)
+                        
+                        break;
+                
+                    case TouchAction.ManipulateView:
+                        if (this.activeTouches.size === 1) {
+                            this.scrollCanvasUnits(currentMovement);
+                        } else {
+                            // this.
+                        }
 
-                // if 2 activePointers -> cancel adding and start to scroll and/or zoom
 
-                // if >=3 activePointers -> ??? ignore all or 3+
+                        break;
+                
+                    case TouchAction.None:
+                        
+                        break;
+                
+                    default:
+                        break;
+                }
+
+
+                // if 2 or more activePointers -> scroll and/or zoom
+                    // around primary pointers position
+                    // zoom changing depending on distance change to secondary pointer
+
+                    // ignore remaining 3+ pointers
 
                 break;
         
@@ -212,23 +231,88 @@ export class GravityAnimationController {
         }
     }
     private cancelPointer(ev: PointerEvent) {
-        this.activePointers.delete(ev.pointerId);
+        this.activeTouches.delete(ev.pointerId);
         
         // cancel the current pointers' action
     }
 
-    private canvasMouseWheel(ev: WheelEvent) {
+    private canvasScrollMouseWheel(ev: WheelEvent) {
         // don't resize the entire page
         ev.preventDefault();
         
         const cursorPos = new Vector2D(util.getAbsolutePointerPosition(ev));
-        const posInCanvasSpace = this.app.absoluteToCanvasPosition(cursorPos);
+        const posInCanvasSpace = this.absoluteToCanvasPosition(cursorPos);
 
         if (ev.deltaY < 0) {
             this.zoomIn(posInCanvasSpace);
         } else if (ev.deltaY > 0) {
             this.zoomOut(posInCanvasSpace);
         }
+    }    
+    private canvasTouchStart(ev: PointerEvent) {
+        this.activeTouches.set(ev.pointerId, ev);
+
+        if (this.activeTouches.size === 1) {
+            this.touchAction = TouchAction.AddBody;
+            this.primaryTouchId = ev.pointerId;
+            //const absPos = new Vector2D(util.getAbsolutePointerPosition(primaryPointer));
+            //this.app.canvasMainMouseDown(absPos);
+        } else if (this.activeTouches.size === 2) {
+            this.touchAction = TouchAction.ManipulateView;
+            this.secondaryTouchId = ev.pointerId;
+        }
+        
+    }
+    private canvasMouseDown(ev: PointerEvent) {
+        const absolutePointerPosition: Vector2D = new Vector2D(util.getAbsolutePointerPosition(ev));
+        switch (ev.button) {
+            case MouseButtons.Main:
+                MOUSE.main.state = ButtonState.Down;
+                this.canvasMainMouseDown(absolutePointerPosition);
+                break;
+            case MouseButtons.Wheel:
+                MOUSE.wheel.state = ButtonState.Down;
+                ev.preventDefault(); // prevent scroll-symbol
+                break;
+            case MouseButtons.Secondary:
+                MOUSE.secondary.state = ButtonState.Down;
+                break;
+            default:
+                break;
+        }
+
+    }
+    private canvasMainMouseDown(absoluteMousePosition: {x: number, y: number}) {
+        switch (MouseAction[this.app.selectedClickAction as keyof typeof MouseAction]) {
+            case MouseAction.None:
+                break;
+            case MouseAction.AddBody:
+                const positionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
+                const positionInSimSpace: Vector2D = this.pointFromCanvasSpaceToSimulationSpace(positionVector);
+                MOUSE.main.downCoordinatesInSimSpace = positionInSimSpace;
+                break;
+            default:
+                break;
+        }
+    }
+    private canvasMainMouseUp(absoluteMousePosition: Vector2D) {
+        switch (MouseAction[this.app.selectedClickAction as keyof typeof MouseAction]) {
+            case MouseAction.None:
+                break;
+            case MouseAction.AddBody:
+                const bodyBeingAdded: Body2d = this.app.ui.body2dFromInputs();
+                if (bodyBeingAdded.mass <= 0) { break; }
+                const mousePositionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
+                const mousePositionOnCanvas: Vector2D = this.absoluteToCanvasPosition(mousePositionVector);
+                const mousePositionInSimSpace: Vector2D = this.pointFromCanvasSpaceToSimulationSpace(mousePositionOnCanvas);
+                const vel: Vector2D = this.simulation.calculateVelocityBetweenPoints(MOUSE.main.downCoordinatesInSimSpace!, mousePositionInSimSpace);
+                this.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
+                this.app.updateStatusBarBodyCount();
+                break;
+            default:
+                break;
+        }
+        this.redrawIfPaused();
     }
 //#endregion
 //#region control methods
@@ -249,7 +333,7 @@ export class GravityAnimationController {
     }
     public reset() {
         this.simulation.reset();
-        this.redrawSimulation();
+        this.redrawIfPaused();
     }
     private runSimulation() {
         if (!this.running) {
@@ -264,8 +348,8 @@ export class GravityAnimationController {
         const loop = () => {
             if (this.running) {
                 setTimeout(loop, this.animationSettings.frameLength);
-                this.redrawSimulation();
-                this.app.updateSimulationStatusMessages();
+                this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
+                this.app.updateStatusBarSimulationMessages();
             }
         };   
         loop();
@@ -275,30 +359,30 @@ export class GravityAnimationController {
             return;
         }
         this.simulation.advanceTick();
-        this.redrawSimulation();
+        this.redrawIfPaused();
     }
-    public redrawSimulation() {
-        this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
+    public redrawIfPaused() {
+        if (!this.running) {
+            this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
+        }
     }
 //#endregion
 
 //#region interaction 2
     public addBody(body: Body2d, position: Vector2D, velocity: Vector2D = new Vector2D(0, 0)) {
         this.simulation.addObject(body, position, velocity);
-        this.redrawSimulation();
+        this.redrawIfPaused();
     }
     public setG(g: number) {
         this.simulation.g = g;
     }
     public setDisplayVectors(display: boolean) {
         this.animationSettings.displayVectors = display;
-        if (!this.running) {
-            this.redrawSimulation();
-        }
+        this.redrawIfPaused();
     }
     public resizeCanvas(width: number, height: number) {
         this.canvas.resize(width, height);
-        this.redrawSimulation();
+        this.redrawIfPaused();
     }
     public zoomOut(zoomCenter?: Vector2D, zoomStep?: number): number {
         if (zoomCenter === undefined) {
@@ -308,8 +392,8 @@ export class GravityAnimationController {
             zoomStep = this.animationSettings.defaultZoomStep;
         }
         const newZoom = this.canvas.zoomOut(zoomCenter, zoomStep);
-        this.redrawSimulation();
-        this.app.updateZoomStatusMessage();
+        this.redrawIfPaused();
+        this.app.updateStatusBarZoom();
 
         return newZoom;
     }
@@ -321,66 +405,77 @@ export class GravityAnimationController {
             zoomStep = this.animationSettings.defaultZoomStep;
         }
         const newZoom = this.canvas.zoomIn(zoomCenter, zoomStep);
-        this.redrawSimulation();
-        this.app.updateZoomStatusMessage();
+        this.redrawIfPaused();
+        this.app.updateStatusBarZoom();
 
         return newZoom;
     }
     public setCanvasView(origin: Vector2D, zoom: number) { 
-        // toDo
+        this.canvas.setOrigin(origin);
+        this.canvas.setZoom(zoom);
+        this.redrawIfPaused();
     }
-
-    public scrollView(displacement: { x: number; y: number }) {
+    private moveCanvas(displacement: { x: number; y: number }) {
         this.canvas.moveOrigin(displacement);
-        this.redrawSimulation();
+        this.redrawIfPaused();
+    }
+    public scrollCanvasUnits(movementOnCanvas: Vector2D){
+        const movementInSimulationUnits = movementOnCanvas.scale(this.zoom);
+        this.moveCanvas({ x: -(movementInSimulationUnits.x), y: movementInSimulationUnits.y });
     }
     public canvasScrollRight(distance?: number) {
         if (distance === undefined) {
-            distance = this.defaultScrollDistance("horizontal"); // in simulationUnits
+            distance = this.scrollDistance("horizontal"); // in simulationUnits
         }
         this.canvas.scrollRight(distance);
-        this.redrawSimulation();
+        this.redrawIfPaused();
     }
     public canvasScrollLeft(distance?: number) {
         if (distance === undefined) {
-            distance = this.defaultScrollDistance("horizontal"); // in simulationUnits
+            distance = this.scrollDistance("horizontal"); // in simulationUnits
         }
         this.canvas.scrollLeft(distance);
-        this.redrawSimulation();
+        this.redrawIfPaused();
     }
     public canvasScrollUp(distance?: number) {
         if (distance === undefined) {
-            distance = this.defaultScrollDistance("vertical"); // in simulationUnits
+            distance = this.scrollDistance("vertical"); // in simulationUnits
         }
         this.canvas.scrollUp(distance);
-        this.redrawSimulation();
+        this.redrawIfPaused();
     }
     public canvasScrollDown(distance?: number) {
         if (distance === undefined) {
-            distance = this.defaultScrollDistance("vertical"); // in simulationUnits
+            distance = this.scrollDistance("vertical"); // in simulationUnits
         }
         this.canvas.scrollDown(distance);
-        this.redrawSimulation();
+        this.redrawIfPaused();
     } 
 //#endregion
 
 //#region transformations and various calculations
+    private absoluteToCanvasPosition(absolutePosition: Vector2D): Vector2D {
+        const canvasRect = this.canvas.visibleCanvas.getBoundingClientRect();
+        const x = absolutePosition.x - canvasRect.left;
+        const y = absolutePosition.y - canvasRect.top;
+        return new Vector2D(x, y);
+    }
     /**
      * Calculates the distance of the screen dimension (h/v) that one scroll step will move (ie. 0.1 will scroll 10% of the width/height in a horizontal/vertical direction)
      * @param orientation "horizontal" | "vertical"
      * @param rate a number *0 < rate < 1* - defaults to animationSettings.defaultScrollRate 
      * @returns the distance in simulationUnits
      */
-    private defaultScrollDistance(orientation: "horizontal" | "vertical", rate?: number): number {
+    private scrollDistance(orientation: "horizontal" | "vertical", rate?: number): number {
         if (rate === undefined) { rate = this.animationSettings.defaultScrollRate; }
         switch (orientation) {
             case "horizontal":
-                return this.canvas.visibleCanvas.width * rate * this.zoom;
+                return this.width * rate * this.zoom;
             case "vertical":
-                return this.canvas.visibleCanvas.height * rate * this.zoom;
+                return this.height * rate * this.zoom;
         }
     }
-    public pointFromCanvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
+    private pointFromCanvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
         // transformation:
         // 1. scale (canvasVector * zoom in simulationUnits/canvasUnit)
         // 2. flip (y axis are in opposite directions)
@@ -390,5 +485,6 @@ export class GravityAnimationController {
         const shifted = flipped.add(this.canvas.canvasSpace.origin);
         return shifted;
     }
+
 //#endregion
 }
