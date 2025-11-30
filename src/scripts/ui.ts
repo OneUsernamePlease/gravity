@@ -90,7 +90,7 @@ export class UI implements IUI {
         this.collisionDetectionCheckbox.addEventListener("change", () => this.cbxCollisionsChanged());
         this.elasticCollisionsCheckbox.addEventListener("change", () => this.cbxElasticCollisionsChanged());
         this.gravitationalConstantInput.addEventListener("change", () => this.numberInputGChanged());
-        this.gravitationalConstantRangeInput.addEventListener("change", () => this.rangeInputGChanged());
+        this.gravitationalConstantRangeInput.addEventListener("input", () => this.rangeInputGChanged());
         this.massInput.addEventListener("change", () => this.updateSelectedMass());
     }
     public cbxDisplayVectorsChanged() {
@@ -119,9 +119,11 @@ export class UI implements IUI {
         this.app.setG(Number(newG));
     }
     public rangeInputGChanged() {
-            const newG: string = this.gravitationalConstantRangeInput.value;
+        const newG: string = this.gravitationalConstantRangeInput.value;
+        if (this.gravitationalConstantInput.value !== newG) {
             this.gravitationalConstantInput.value = newG;
             this.app.setG(Number(newG));
+        }
     }
     public simulationStopped() {
         this.playPauseButton.innerHTML = "&#9654;"; // play symbol
@@ -147,7 +149,9 @@ export class UI implements IUI {
     }
     public body2dFromInputs(): Body2d {
         const movable = this.addBodyMovable.checked;
-        return new Body2d(util.getInputNumber(this.massInput), movable);
+        const mass = util.getInputNumber(this.massInput);
+
+        return new Body2d(util.numberInRange(mass, 1, Number.MAX_SAFE_INTEGER), movable);
     }
     public updateSelectedMass() {
         this.massInput.step = this.calculateMassInputStep();
