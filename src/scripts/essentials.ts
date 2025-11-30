@@ -115,7 +115,7 @@ export function getInputNumber(input: string | HTMLInputElement): number {
     const inputValue = getInputValue(input);
     return isNumeric(inputValue) ? +inputValue : 0;
 }
-export function getAbsolutePointerPosition(ev: PointerEvent | WheelEvent): { x: number, y: number } {
+export function getAbsolutePointerPosition(ev: PointerEvent | WheelEvent | MouseEvent): { x: number, y: number } {
     return { x: ev.clientX, y: ev.clientY };
 }
 

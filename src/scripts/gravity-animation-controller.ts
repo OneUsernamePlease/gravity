@@ -67,6 +67,8 @@ export class GravityAnimationController {
         
         this.canvas.visibleCanvas.addEventListener("pointerdown", (ev) => this.canvasPointerDown(ev as PointerEvent));
         this.canvas.visibleCanvas.addEventListener("pointerup", (ev) => this.canvasPointerUp(ev as PointerEvent));
+        this.canvas.visibleCanvas.addEventListener("mousedown", (ev) => this.canvasMouseDown(ev as MouseEvent));    // pointerEvents only fire when the first button is pressed, and the last button is released
+        this.canvas.visibleCanvas.addEventListener("mouseup", (ev) => this.canvasMouseUp(ev as MouseEvent));        // so we need mouse events to catch all button presses
         this.canvas.visibleCanvas.addEventListener("pointermove", (ev) => this.canvasPointerMoving(ev as PointerEvent));
         this.canvas.visibleCanvas.addEventListener("pointercancel", (ev) => this.cancelPointer(ev as PointerEvent));
 
@@ -95,12 +97,12 @@ export class GravityAnimationController {
 //#endregion
 //#region interaction
     private canvasPointerDown(ev: PointerEvent) {
-        
+        if (ev.pointerType === "mouse") {
+            // handled in its own eventListener. PointerDown only fires for presses while no other button is down.
+            return;
+        }
+        this.canvas.visibleCanvas.setPointerCapture(ev.pointerId);
         switch (ev.pointerType) {
-            case "mouse":
-                this.canvasMouseDown(ev);
-                break;
-        
             case "touch":
                 this.canvasTouchStart(ev);
                 break;
@@ -117,54 +119,14 @@ export class GravityAnimationController {
        
     }
     private canvasPointerUp(ev: PointerEvent) {
+        if (ev.pointerType === "mouse") {
+            // handled in its own eventListener. PointerUp only fires when the last button is released.
+            return;
+        }
         const absolutePointerPosition: Vector2D = new Vector2D(util.getAbsolutePointerPosition(ev));
         switch (ev.pointerType) {
-            case "mouse":
-                switch (ev.button) {
-                    case MouseButtons.Main:
-                        MOUSE.main.state = ButtonState.Up;
-                        this.canvasMainMouseUp(absolutePointerPosition);
-                        break;
-                    case MouseButtons.Wheel:
-                        MOUSE.wheel.state = ButtonState.Up;
-                        
-                        // prevent scroll-symbol
-                        ev.preventDefault();
-                        break;
-                    case MouseButtons.Secondary:
-                        MOUSE.secondary.state = ButtonState.Up;
-                        break;
-                    default:
-                        break;
-                }
-                break;
-        
             case "touch":
-                if (!this.activeTouches.has(ev.pointerId)) { return; }
-                
-                switch (this.touchAction) {
-                    case TouchAction.AddBody:
-                        
-                        this.touchAction = TouchAction.None;
-                        break;
-                
-                    case TouchAction.ManipulateView:
-                        
-
-
-
-                        this.touchAction = TouchAction.None;
-                        break;
-                
-                    case TouchAction.None:
-                        
-                        break;
-
-                    default:
-                        break;
-                }
-
-                this.activeTouches.delete(ev.pointerId);
+                this.canvasTouchEnd(ev);
                 break;
         
             case "pen":
@@ -178,11 +140,15 @@ export class GravityAnimationController {
         
     }
     private canvasPointerMoving(ev: PointerEvent) {
-        
         const currentMovement = new Vector2D(ev.movementX, ev.movementY);
+        
         switch (ev.pointerType) {
             case "mouse":
-                if (MOUSE.wheel.state === ButtonState.Down) {
+                // Check buttons property (bitmask) to detect wheel button press
+                // buttons bit 2 (value 4) = middle/wheel button
+                const wheelButtonPressed = (ev.buttons & 4) !== 0;
+                if (wheelButtonPressed) {
+                    ev.preventDefault(); // prevent scroll-symbol
                     this.scrollCanvasUnits(currentMovement);
                 }
                 break;
@@ -198,7 +164,9 @@ export class GravityAnimationController {
                         if (this.activeTouches.size === 1) {
                             this.scrollCanvasUnits(currentMovement);
                         } else {
-                            // this.
+                            // with two (or more) touches, the zoom center is the middle of the distance between the touches
+                            // this point also determines how much the canvas moves.
+                            // since all points (on the canvas) move the same, the origin moves with the center of this distance AKA call moveOrigin with that value
                         }
 
 
@@ -235,7 +203,6 @@ export class GravityAnimationController {
         
         // cancel the current pointers' action
     }
-
     private canvasScrollMouseWheel(ev: WheelEvent) {
         // don't resize the entire page
         ev.preventDefault();
@@ -263,8 +230,57 @@ export class GravityAnimationController {
         }
         
     }
-    private canvasMouseDown(ev: PointerEvent) {
-        const absolutePointerPosition: Vector2D = new Vector2D(util.getAbsolutePointerPosition(ev));
+    private canvasTouchEnd(ev: PointerEvent) {
+        if (!this.activeTouches.has(ev.pointerId)) { return; }
+        
+        switch (this.touchAction) {
+            case TouchAction.AddBody:
+                const absoluteTouchPosition = util.getAbsolutePointerPosition(ev);
+                this.addBodyFromUiAtPointer(this.absoluteToCanvasPosition(absoluteTouchPosition));
+                this.touchAction = TouchAction.None;
+                break;
+        
+            case TouchAction.ManipulateView:
+
+
+
+
+                this.touchAction = TouchAction.None;
+                break;
+        
+            case TouchAction.None:
+                
+                break;
+
+            default:
+                break;
+        }
+
+        this.activeTouches.delete(ev.pointerId);
+    }
+    private canvasMouseUp(ev: MouseEvent) {
+        const absolutePointerPosition = new Vector2D(util.getAbsolutePointerPosition(ev));
+        switch (ev.button) {
+            case MouseButtons.Main:
+                MOUSE.main.state = ButtonState.Up;
+                this.canvasMainMouseUp(absolutePointerPosition);
+                break;
+            case MouseButtons.Wheel:
+                MOUSE.wheel.state = ButtonState.Up;
+                
+                // prevent scroll-symbol
+                ev.preventDefault();
+                break;
+            case MouseButtons.Secondary:
+                MOUSE.secondary.state = ButtonState.Up;
+                break;
+            default:
+                break;
+        }
+                
+    }
+    private canvasMouseDown(ev: MouseEvent) {
+        const absolutePointerPosition: Vector2D = new Vector2D(ev.clientX, ev.clientY);
         switch (ev.button) {
             case MouseButtons.Main:
                 MOUSE.main.state = ButtonState.Down;
@@ -280,7 +296,6 @@ export class GravityAnimationController {
             default:
                 break;
         }
-
     }
     private canvasMainMouseDown(absoluteMousePosition: {x: number, y: number}) {
         switch (MouseAction[this.app.selectedClickAction as keyof typeof MouseAction]) {
@@ -300,14 +315,7 @@ export class GravityAnimationController {
             case MouseAction.None:
                 break;
             case MouseAction.AddBody:
-                const bodyBeingAdded: Body2d = this.app.ui.body2dFromInputs();
-                if (bodyBeingAdded.mass <= 0) { break; }
-                const mousePositionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
-                const mousePositionOnCanvas: Vector2D = this.absoluteToCanvasPosition(mousePositionVector);
-                const mousePositionInSimSpace: Vector2D = this.pointFromCanvasSpaceToSimulationSpace(mousePositionOnCanvas);
-                const vel: Vector2D = this.simulation.calculateVelocityBetweenPoints(MOUSE.main.downCoordinatesInSimSpace!, mousePositionInSimSpace);
-                this.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
-                this.app.updateStatusBarBodyCount();
+                this.addBodyFromUiAtPointer(this.absoluteToCanvasPosition(absoluteMousePosition));
                 break;
             default:
                 break;
@@ -348,7 +356,7 @@ export class GravityAnimationController {
         const loop = () => {
             if (this.running) {
                 setTimeout(loop, this.animationSettings.frameLength);
-                this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
+                this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings);
                 this.app.updateStatusBarSimulationMessages();
             }
         };   
@@ -363,12 +371,20 @@ export class GravityAnimationController {
     }
     public redrawIfPaused() {
         if (!this.running) {
-            this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings.displayVectors);
+            this.canvas.redrawSimulationState(this.simulation.simulationState, this.animationSettings);
         }
     }
 //#endregion
 
 //#region interaction 2
+    public addBodyFromUiAtPointer(pointerPositionOnCanvas: {x: number, y: number} | Vector2D) {
+        const pointerPositionVector = pointerPositionOnCanvas instanceof Vector2D ? pointerPositionOnCanvas : new Vector2D(pointerPositionOnCanvas.x, pointerPositionOnCanvas.y);
+        const bodyBeingAdded: Body2d = this.app.ui.body2dFromInputs();
+        const mousePositionInSimSpace: Vector2D = this.pointFromCanvasSpaceToSimulationSpace(pointerPositionVector);
+        const vel: Vector2D = this.simulation.calculateVelocityBetweenPoints(MOUSE.main.downCoordinatesInSimSpace!, mousePositionInSimSpace);
+        this.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
+        this.app.updateStatusBarBodyCount();
+    }
     public addBody(body: Body2d, position: Vector2D, velocity: Vector2D = new Vector2D(0, 0)) {
         this.simulation.addObject(body, position, velocity);
         this.redrawIfPaused();
@@ -454,7 +470,7 @@ export class GravityAnimationController {
 //#endregion
 
 //#region transformations and various calculations
-    private absoluteToCanvasPosition(absolutePosition: Vector2D): Vector2D {
+    private absoluteToCanvasPosition(absolutePosition: {x: number, y: number}): Vector2D {
         const canvasRect = this.canvas.visibleCanvas.getBoundingClientRect();
         const x = absolutePosition.x - canvasRect.left;
         const y = absolutePosition.y - canvasRect.top;
