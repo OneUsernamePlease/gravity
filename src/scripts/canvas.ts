@@ -1,8 +1,8 @@
 import { Body2d } from "./gravity";
-import { CanvasSpace, ObjectState } from "./types";
+import { AnimationSettings, CanvasSpace, ObjectState } from "./types";
 import { Vector2D } from "./vector2d";
 import * as essentials from "./essentials";
-import { MAX_ZOOM, MIN_ZOOM } from "../const";
+import { MAX_ZOOM, MIN_ZOOM, VECTOR_THICKNESS } from "../const";
 
 export class Canvas {
     // let offscreenCanvas: OffscreenCanvas; // use this in a worker thread to render or draw on, then transfer content to the visible html-canvas
@@ -67,7 +67,7 @@ export class Canvas {
             return;
         }
         this.visibleCanvasContext.beginPath();
-        this.visibleCanvasContext.lineWidth = 3;
+        this.visibleCanvasContext.lineWidth = VECTOR_THICKNESS;
         this.visibleCanvasContext.strokeStyle = color;
         this.visibleCanvasContext.moveTo(position.x, position.y);
         this.visibleCanvasContext.lineTo(endPosition.x, endPosition.y);
@@ -101,10 +101,10 @@ export class Canvas {
             this.drawBody(object.body, this.pointFromSimulationSpaceToCanvasSpace(object.position));
         });
     }
-    public redrawSimulationState(objectStates: ObjectState[], displayVectors: boolean) {
+    public redrawSimulationState(objectStates: ObjectState[], animationSettings: AnimationSettings) {
         this.visibleCanvasContext.clearRect(0, 0, this.visibleCanvas.width, this.visibleCanvas.height);
         this.drawBodies(objectStates);
-        if (displayVectors) {
+        if (animationSettings.displayVectors) {
             this.drawVectors(objectStates);
         }
     }
