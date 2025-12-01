@@ -136,8 +136,8 @@ export class UI implements IUI {
         this.app.updateStatusBarSimulationMessages();
     }
     public updateStatusBarZoom() {
-        const currentZoom = this.app.gravityAnimationController.zoom;
-        this.setStatusMessage(`Zoom: ${currentZoom} (m per pixel)`, 4);
+        const currentZoom = this.app.gravityAnimationController.currentZoom;
+        this.setStatusMessage(`Zoom: ${currentZoom.toFixed(2)} (m per pixel)`, 4);
     }
     public getSelectedClickAction() {
         return this.getSelectedValue(this.clickAction) ?? this.clickAction.buttons[0].value;
