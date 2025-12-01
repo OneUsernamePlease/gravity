@@ -1,10 +1,10 @@
 import { Canvas } from "./canvas";
 import { Body2d, Simulation } from "./gravity";
 import * as util from "./essentials";
-import { AnimationSettings, ButtonState, MouseButtons, MouseAction, TouchAction } from "./types";
-import { MOUSE } from "../const";
-import { Vector2D } from "./vector2d";
+import { AnimationSettings, ButtonState, MouseButtons, MouseAction, TouchAction, Mouse as Pointer } from "./types";
+import { Coordinate, Vector2D } from "./vector2d";
 import { App } from "./app";
+
 
 export class GravityAnimationController {
     private _canvas: Canvas;
@@ -12,10 +12,14 @@ export class GravityAnimationController {
     private _animationSettings: AnimationSettings;
     private _running: boolean;
     // ---
-    private activeTouches = new Map<number, PointerEvent>();
+    private pointer: Pointer = { main: { state: ButtonState.Up, downCoordinatesInSimSpace: undefined }, 
+                     secondary: { state: ButtonState.Up }, 
+                     wheel: { state: ButtonState.Up} };
     private touchAction: TouchAction = TouchAction.None;
-    private primaryTouchId: number | null = null;
-    private secondaryTouchId: number | null = null;
+    private activeTouches = new Map<number, Coordinate>();
+    private previousTouchesMid: Vector2D | null = null;
+    private previousTouchesDist: number | null = null;
+    private lastSingleTouchPos: Coordinate | null = null;
 //#region get, set
     get canvas(): Canvas {
         return this._canvas;
@@ -54,7 +58,7 @@ export class GravityAnimationController {
     get height(): number {
         return this.canvas.visibleCanvas.height;
     }
-    get zoom(): number {
+    get currentZoom(): number {
         return this.canvas.currentZoom;
     }
 //#endregion
@@ -62,18 +66,17 @@ export class GravityAnimationController {
     constructor(private app: App, elementId: string = "theCanvas") {
         this._canvas = new Canvas(document.getElementById(elementId) as HTMLCanvasElement);
         this._simulation = new Simulation;
-        this._animationSettings = { defaultScrollRate: 0.1, defaultZoomStep: 1, frameLength: 25, displayVectors: true, tracePaths: true };
+        this._animationSettings = { defaultScrollRate: 0.1, defaultZoomStep: 1, defaultZoomFactor: 0.1, frameLength: 25, displayVectors: true, tracePaths: true };
         this._running = false;
         
-        this.canvas.visibleCanvas.addEventListener("pointerdown", (ev) => this.canvasPointerDown(ev as PointerEvent));
-        this.canvas.visibleCanvas.addEventListener("pointerup", (ev) => this.canvasPointerUp(ev as PointerEvent));
-        this.canvas.visibleCanvas.addEventListener("mousedown", (ev) => this.canvasMouseDown(ev as MouseEvent));    // pointerEvents only fire when the first button is pressed, and the last button is released
-        this.canvas.visibleCanvas.addEventListener("mouseup", (ev) => this.canvasMouseUp(ev as MouseEvent));        // so we need mouse events to catch all button presses
-        this.canvas.visibleCanvas.addEventListener("pointermove", (ev) => this.canvasPointerMoving(ev as PointerEvent));
+        this.canvas.visibleCanvas.addEventListener("pointerdown",   (ev) => this.canvasPointerDown(ev as PointerEvent));
+        this.canvas.visibleCanvas.addEventListener("pointerup",     (ev) => this.canvasPointerUp(ev as PointerEvent));
+        this.canvas.visibleCanvas.addEventListener("pointermove",   (ev) => this.canvasPointerMoving(ev as PointerEvent));
         this.canvas.visibleCanvas.addEventListener("pointercancel", (ev) => this.cancelPointer(ev as PointerEvent));
-
-        this.canvas.visibleCanvas.addEventListener("wheel", (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
-        this.canvas.visibleCanvas.addEventListener("contextmenu", (ev) => {ev.preventDefault()});
+        this.canvas.visibleCanvas.addEventListener("mousedown",     (ev) => this.canvasMouseDown(ev as MouseEvent));    // pointerEvents only fire when the first button is pressed, and the last button is released
+        this.canvas.visibleCanvas.addEventListener("mouseup",       (ev) => this.canvasMouseUp(ev as MouseEvent));      // so we need mouse events to catch all button presses
+        this.canvas.visibleCanvas.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
+        this.canvas.visibleCanvas.addEventListener("contextmenu",   (ev) => {ev.preventDefault()});
     }
 
     public initialize(width: number, height: number) {
@@ -123,7 +126,7 @@ export class GravityAnimationController {
             // handled in its own eventListener. PointerUp only fires when the last button is released.
             return;
         }
-        const absolutePointerPosition: Vector2D = new Vector2D(util.getAbsolutePointerPosition(ev));
+        this.canvas.visibleCanvas.releasePointerCapture(ev.pointerId);
         switch (ev.pointerType) {
             case "touch":
                 this.canvasTouchEnd(ev);
@@ -144,48 +147,78 @@ export class GravityAnimationController {
         
         switch (ev.pointerType) {
             case "mouse":
-                // Check buttons property (bitmask) to detect wheel button press
-                // buttons bit 2 (value 4) = middle/wheel button
+                // check .buttons (bitmask) to detect wheel press
+                // buttons bit 2 (value 4) = wheel button
                 const wheelButtonPressed = (ev.buttons & 4) !== 0;
                 if (wheelButtonPressed) {
                     ev.preventDefault(); // prevent scroll-symbol
-                    this.scrollCanvasUnits(currentMovement);
+                    this.scrollInCanvasUnits(currentMovement);
                 }
                 break;
         
             case "touch":
+                const currentTouchPosition = this.activeTouches.get(ev.pointerId)!;
+                if (!currentTouchPosition) return;
+
+                currentTouchPosition.x = ev.clientX;
+                currentTouchPosition.y = ev.clientY;
+
                 switch (this.touchAction) {
+
                     case TouchAction.AddBody:
-                        // ToDo: Draw body and vector from cursor to cursorDownInSimSpace (on its own layer)
-                        
+                        // TODO: draw (half transparent) body and vector while dragging
                         break;
-                
+
                     case TouchAction.ManipulateView:
                         if (this.activeTouches.size === 1) {
-                            this.scrollCanvasUnits(currentMovement);
-                        } else {
-                            // with two (or more) touches, the zoom center is the middle of the distance between the touches
-                            // this point also determines how much the canvas moves.
-                            // since all points (on the canvas) move the same, the origin moves with the center of this distance AKA call moveOrigin with that value
+                            // --------------------
+                            //      SINGLE TOUCH
+                            // --------------------
+
+                            if (this.lastSingleTouchPos) {
+                                const dx = currentTouchPosition.x - this.lastSingleTouchPos.x;
+                                const dy = currentTouchPosition.y - this.lastSingleTouchPos.y;
+
+                                // RefactorMe(maybe?) use movement.x / y, mostly works but not technically part of PointerEvents
+                                this.scrollInCanvasUnits(new Vector2D(dx, dy));
+                            }
+
+                            this.lastSingleTouchPos = currentTouchPosition;
+                            return;
                         }
 
+                        // --------------------
+                        //      MULTI TOUCH IS WHAT'S LEFT
+                        // --------------------
+                        const touches = [...this.activeTouches.values()];
+                        const p1 = touches[0];
+                        const p2 = touches[1];
+
+                        const touchesMidpoint = new Vector2D(
+                            (p1.x + p2.x) / 2,
+                            (p1.y + p2.y) / 2
+                        );
+
+                        const touchesDistance = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+
+                        // no previous gesture -> initialize
+                        if (this.previousTouchesMid === null || this.previousTouchesDist === null) {
+                            this.previousTouchesMid = touchesMidpoint;
+                            this.previousTouchesDist = touchesDistance;
+                            return;
+                        }
+
+                        const zoomFactor = touchesDistance / this.previousTouchesDist;
+                        const zoomCenterCanvas = this.absoluteToCanvasPosition(touchesMidpoint);
+                        const scroll = touchesMidpoint.subtract(this.previousTouchesMid);
+                        this.zoomToFactor(zoomFactor, zoomCenterCanvas);
+                        this.scrollInCanvasUnits(scroll);
+
+                        this.previousTouchesMid = touchesMidpoint;
+                        this.previousTouchesDist = touchesDistance;
 
                         break;
-                
-                    case TouchAction.None:
-                        
-                        break;
-                
-                    default:
-                        break;
-                }
-
-
-                // if 2 or more activePointers -> scroll and/or zoom
-                    // around primary pointers position
-                    // zoom changing depending on distance change to secondary pointer
-
-                    // ignore remaining 3+ pointers
+                    }
 
                 break;
         
@@ -200,11 +233,9 @@ export class GravityAnimationController {
     }
     private cancelPointer(ev: PointerEvent) {
         this.activeTouches.delete(ev.pointerId);
-        
-        // cancel the current pointers' action
     }
     private canvasScrollMouseWheel(ev: WheelEvent) {
-        // don't resize the entire page
+        // don't scroll the entire page
         ev.preventDefault();
         
         const cursorPos = new Vector2D(util.getAbsolutePointerPosition(ev));
@@ -217,62 +248,73 @@ export class GravityAnimationController {
         }
     }    
     private canvasTouchStart(ev: PointerEvent) {
-        this.activeTouches.set(ev.pointerId, ev);
+        this.activeTouches.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
 
         if (this.activeTouches.size === 1) {
             this.touchAction = TouchAction.AddBody;
-            this.primaryTouchId = ev.pointerId;
-            //const absPos = new Vector2D(util.getAbsolutePointerPosition(primaryPointer));
-            //this.app.canvasMainMouseDown(absPos);
+            this.lastSingleTouchPos = { x: ev.clientX, y: ev.clientY };
+            
+            
+            const positionVector = new Vector2D(ev.clientX, ev.clientY);
+            const positionInSimSpace: Vector2D = this.pointFromCanvasSpaceToSimulationSpace(positionVector);
+            this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
+
         } else if (this.activeTouches.size === 2) {
             this.touchAction = TouchAction.ManipulateView;
-            this.secondaryTouchId = ev.pointerId;
+
+            // reset pinch-gesture
+            this.previousTouchesMid = null;
+            this.previousTouchesDist = null;
+            
+            // stop scrolling
+            this.lastSingleTouchPos = null;
         }
-        
     }
     private canvasTouchEnd(ev: PointerEvent) {
-        if (!this.activeTouches.has(ev.pointerId)) { return; }
-        
-        switch (this.touchAction) {
-            case TouchAction.AddBody:
-                const absoluteTouchPosition = util.getAbsolutePointerPosition(ev);
-                this.addBodyFromUiAtPointer(this.absoluteToCanvasPosition(absoluteTouchPosition));
-                this.touchAction = TouchAction.None;
-                break;
-        
-            case TouchAction.ManipulateView:
-
-
-
-
-                this.touchAction = TouchAction.None;
-                break;
-        
-            case TouchAction.None:
-                
-                break;
-
-            default:
-                break;
-        }
+        if (!this.activeTouches.has(ev.pointerId)) return;
 
         this.activeTouches.delete(ev.pointerId);
+
+        switch (this.touchAction) {
+            case TouchAction.AddBody:
+                const absPos = util.getAbsolutePointerPosition(ev);
+                this.addBodyAtPointer(this.absoluteToCanvasPosition(absPos));
+                this.touchAction = TouchAction.None;
+                break;
+
+            case TouchAction.ManipulateView:
+                // reset pinch-gesture
+                this.previousTouchesMid = null;
+                this.previousTouchesDist = null;
+
+                if (this.activeTouches.size === 1) {
+                    // one touch remaining -> use it to scroll
+                    const remaining = this.activeTouches.values().next().value!;
+                    this.lastSingleTouchPos = { x: remaining.x, y: remaining.y }
+                } else if (this.activeTouches.size === 0) {
+                    this.touchAction = TouchAction.None;
+                    this.lastSingleTouchPos = null;
+                    this.previousTouchesMid = null;
+                    this.previousTouchesDist = null;
+                }
+                break;
+        }
     }
     private canvasMouseUp(ev: MouseEvent) {
         const absolutePointerPosition = new Vector2D(util.getAbsolutePointerPosition(ev));
         switch (ev.button) {
             case MouseButtons.Main:
-                MOUSE.main.state = ButtonState.Up;
+                this.pointer.main.state = ButtonState.Up;
                 this.canvasMainMouseUp(absolutePointerPosition);
                 break;
             case MouseButtons.Wheel:
-                MOUSE.wheel.state = ButtonState.Up;
+                this.pointer.wheel.state = ButtonState.Up;
                 
                 // prevent scroll-symbol
                 ev.preventDefault();
                 break;
             case MouseButtons.Secondary:
-                MOUSE.secondary.state = ButtonState.Up;
+                this.pointer.secondary.state = ButtonState.Up;
                 break;
             default:
                 break;
@@ -283,28 +325,28 @@ export class GravityAnimationController {
         const absolutePointerPosition: Vector2D = new Vector2D(ev.clientX, ev.clientY);
         switch (ev.button) {
             case MouseButtons.Main:
-                MOUSE.main.state = ButtonState.Down;
+                this.pointer.main.state = ButtonState.Down;
                 this.canvasMainMouseDown(absolutePointerPosition);
                 break;
             case MouseButtons.Wheel:
-                MOUSE.wheel.state = ButtonState.Down;
+                this.pointer.wheel.state = ButtonState.Down;
                 ev.preventDefault(); // prevent scroll-symbol
                 break;
             case MouseButtons.Secondary:
-                MOUSE.secondary.state = ButtonState.Down;
+                this.pointer.secondary.state = ButtonState.Down;
                 break;
             default:
                 break;
         }
     }
-    private canvasMainMouseDown(absoluteMousePosition: {x: number, y: number}) {
+    private canvasMainMouseDown(absoluteMousePosition: Coordinate) {
         switch (MouseAction[this.app.selectedClickAction as keyof typeof MouseAction]) {
             case MouseAction.None:
                 break;
             case MouseAction.AddBody:
                 const positionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
                 const positionInSimSpace: Vector2D = this.pointFromCanvasSpaceToSimulationSpace(positionVector);
-                MOUSE.main.downCoordinatesInSimSpace = positionInSimSpace;
+                this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
                 break;
             default:
                 break;
@@ -315,7 +357,7 @@ export class GravityAnimationController {
             case MouseAction.None:
                 break;
             case MouseAction.AddBody:
-                this.addBodyFromUiAtPointer(this.absoluteToCanvasPosition(absoluteMousePosition));
+                this.addBodyAtPointer(this.absoluteToCanvasPosition(absoluteMousePosition));
                 break;
             default:
                 break;
@@ -377,16 +419,16 @@ export class GravityAnimationController {
 //#endregion
 
 //#region interaction 2
-    public addBodyFromUiAtPointer(pointerPositionOnCanvas: {x: number, y: number} | Vector2D) {
+    public addBodyAtPointer(pointerPositionOnCanvas: Coordinate | Vector2D) {
         const pointerPositionVector = pointerPositionOnCanvas instanceof Vector2D ? pointerPositionOnCanvas : new Vector2D(pointerPositionOnCanvas.x, pointerPositionOnCanvas.y);
         const bodyBeingAdded: Body2d = this.app.ui.body2dFromInputs();
         const mousePositionInSimSpace: Vector2D = this.pointFromCanvasSpaceToSimulationSpace(pointerPositionVector);
-        const vel: Vector2D = this.simulation.calculateVelocityBetweenPoints(MOUSE.main.downCoordinatesInSimSpace!, mousePositionInSimSpace);
+        const vel: Vector2D = this.simulation.calculateVelocityBetweenPoints(this.pointer.main.downCoordinatesInSimSpace!, mousePositionInSimSpace);
         this.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
         this.app.updateStatusBarBodyCount();
     }
     public addBody(body: Body2d, position: Vector2D, velocity: Vector2D = new Vector2D(0, 0)) {
-        this.simulation.addObject(body, position, velocity);
+        this.simulation.addObject(body, position, velocity);        
         this.redrawIfPaused();
     }
     public setG(g: number) {
@@ -401,10 +443,10 @@ export class GravityAnimationController {
         this.redrawIfPaused();
     }
     public zoomOut(zoomCenter?: Vector2D, zoomStep?: number): number {
-        if (zoomCenter === undefined) {
+        if (!zoomCenter) {
             zoomCenter = new Vector2D(this.canvas.visibleCanvas.width / 2, this.canvas.visibleCanvas.height / 2);
         }
-        if (zoomStep === undefined) {
+        if (!zoomStep) {
             zoomStep = this.animationSettings.defaultZoomStep;
         }
         const newZoom = this.canvas.zoomOut(zoomCenter, zoomStep);
@@ -414,10 +456,10 @@ export class GravityAnimationController {
         return newZoom;
     }
     public zoomIn(zoomCenter?: Vector2D, zoomStep?: number): number {
-        if (zoomCenter === undefined) {
+        if (!zoomCenter) {
             zoomCenter = new Vector2D(this.width / 2, this.height / 2);
         }
-        if (zoomStep === undefined) {
+        if (!zoomStep) {
             zoomStep = this.animationSettings.defaultZoomStep;
         }
         const newZoom = this.canvas.zoomIn(zoomCenter, zoomStep);
@@ -426,17 +468,61 @@ export class GravityAnimationController {
 
         return newZoom;
     }
+    public zoomToFactor(factor: number, zoomCenter?: Vector2D): number {
+        if (factor <= 0) return this.currentZoom;
+        if (!zoomCenter) {
+            zoomCenter = new Vector2D(this.width / 2, this.height / 2);
+        }
+
+        const oldZoom = this.currentZoom;
+        const newZoom = oldZoom * factor;
+        const zoomDelta = newZoom - oldZoom;
+
+        this.app.updateStatusBarZoom();
+
+        if (zoomDelta > 0) {
+            return this.canvas.zoomIn(zoomCenter, zoomDelta);
+        } else if (zoomDelta < 0) {
+            return this.canvas.zoomOut(zoomCenter, -zoomDelta);
+        } else {
+            return oldZoom;
+        }
+
+    }
+    public zoomInByFactor(factor: number = this.animationSettings.defaultZoomFactor, zoomCenter?: Vector2D): number {
+        if (zoomCenter === undefined) {
+            zoomCenter = new Vector2D(this.width / 2, this.height / 2);
+        }
+        const zoomStep = this.currentZoom * factor;
+        const newZoom = this.canvas.zoomIn(zoomCenter, zoomStep);
+        this.redrawIfPaused();
+        this.app.updateStatusBarZoom();
+
+        return newZoom;
+    }
+    public zoomOutByFactor(factor: number = this.animationSettings.defaultZoomFactor, zoomCenter?: Vector2D): number {
+        if (zoomCenter === undefined) {
+            zoomCenter = new Vector2D(this.width / 2, this.height / 2);
+        }
+        const zoomStep = this.currentZoom * factor;
+        const newZoom = this.canvas.zoomOut(zoomCenter, zoomStep);
+        this.redrawIfPaused();
+        this.app.updateStatusBarZoom();
+
+        return newZoom;
+    }
     public setCanvasView(origin: Vector2D, zoom: number) { 
         this.canvas.setOrigin(origin);
         this.canvas.setZoom(zoom);
+        this.app.updateStatusBarZoom();
         this.redrawIfPaused();
     }
     private moveCanvas(displacement: { x: number; y: number }) {
         this.canvas.moveOrigin(displacement);
         this.redrawIfPaused();
     }
-    public scrollCanvasUnits(movementOnCanvas: Vector2D){
-        const movementInSimulationUnits = movementOnCanvas.scale(this.zoom);
+    public scrollInCanvasUnits(movementOnCanvas: Vector2D){
+        const movementInSimulationUnits = movementOnCanvas.scale(this.currentZoom);
         this.moveCanvas({ x: -(movementInSimulationUnits.x), y: movementInSimulationUnits.y });
     }
     public canvasScrollRight(distance?: number) {
@@ -470,7 +556,7 @@ export class GravityAnimationController {
 //#endregion
 
 //#region transformations and various calculations
-    private absoluteToCanvasPosition(absolutePosition: {x: number, y: number}): Vector2D {
+    private absoluteToCanvasPosition(absolutePosition: Coordinate): Vector2D {
         const canvasRect = this.canvas.visibleCanvas.getBoundingClientRect();
         const x = absolutePosition.x - canvasRect.left;
         const y = absolutePosition.y - canvasRect.top;
@@ -486,9 +572,9 @@ export class GravityAnimationController {
         if (rate === undefined) { rate = this.animationSettings.defaultScrollRate; }
         switch (orientation) {
             case "horizontal":
-                return this.width * rate * this.zoom;
+                return this.width * rate * this.currentZoom;
             case "vertical":
-                return this.height * rate * this.zoom;
+                return this.height * rate * this.currentZoom;
         }
     }
     private pointFromCanvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {

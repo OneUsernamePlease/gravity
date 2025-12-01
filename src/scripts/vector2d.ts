@@ -1,10 +1,14 @@
+export interface Coordinate {
+    x: number,
+    y: number,
+}
 export class Vector2D {
     public x: number;
     public y: number;
     constructor()
-    constructor(pos: {x: number, y: number})
+    constructor(pos: Coordinate)
     constructor(x: number, y: number)
-    constructor(a?: number | {x: number, y: number}, b?: number) {
+    constructor(a?: number | Coordinate, b?: number) {
         if (typeof a === "object") {
             this.x = a.x;
             this.y = a.y;
@@ -16,7 +20,7 @@ export class Vector2D {
     public toString() {
         return `x: ${this.x}, y: ${this.y}`;
     }
-    public add(...vectors: {x: number, y: number}[]): Vector2D {
+    public add(...vectors: Coordinate[]): Vector2D {
         const result = vectors.reduce((previous, current) => {
             return { x: (previous.x + current.x), y: (previous.y + current.y) };
         }, {x: this.x, y: this.y});
@@ -25,13 +29,13 @@ export class Vector2D {
     /**
      * @returns this - v
      */
-    public subtract(v: {x: number, y: number}): Vector2D {
+    public subtract(v: Coordinate): Vector2D {
         return new Vector2D(this.x - v.x, this.y - v.y);
     }
     public scale(scalar: number): Vector2D {
         return new Vector2D(this.x * scalar, this.y * scalar);
     }
-    public dotProduct(v: {x: number, y: number}): number {
+    public dotProduct(v: Coordinate): number {
         return this.x * v.x + this.y * v.y;
     }
     public magnitude(): number {
@@ -49,17 +53,17 @@ export class Vector2D {
      * @param v Vector2D
      * @returns Distance to v
      */
-    public distance(v: {x: number, y: number}): number {
+    public distance(v: Coordinate): number {
         return Math.sqrt((v.x - this.x)**2 + (v.y - this.y)**2);
     }
     /**
      * returns a vector pointing from this to v
      */
-    public displacementVector(v: {x: number, y: number}) {
+    public displacementVector(v: Coordinate) {
         const vector = new Vector2D(v.x, v.y);
         return vector.subtract(this);
     }
-    public hadamardProduct(v: {x: number, y: number}) {
+    public hadamardProduct(v: Coordinate) {
         return new Vector2D(this.x * v.x, this.y * v.y);
     }
     /**
@@ -148,6 +152,9 @@ export class Vector2D {
 
         const intersection = p1.add(r.scale(t));
         return intersection;
+    }
+    public static midpoint(v1: Vector2D, v2: Vector2D): Vector2D {
+        return new Vector2D((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
     }
     public static simpleLineIntersection(line1: [p1: Vector2D, p2: Vector2D], line2: [q1: Vector2D, q2: Vector2D]): Vector2D | null {
         // make sure lines are strictly defined (p1 != p2, same for line2)

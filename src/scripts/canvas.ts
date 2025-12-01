@@ -2,7 +2,7 @@ import { Body2d } from "./gravity";
 import { AnimationSettings, CanvasSpace, ObjectState } from "./types";
 import { Vector2D } from "./vector2d";
 import * as essentials from "./essentials";
-import { MAX_ZOOM, MIN_ZOOM, VECTOR_THICKNESS } from "../const";
+import { MAX_ZOOM, MIN_ZOOM, VECTOR_THICKNESS, MIN_DISPLAYED_RADIUS } from "../const";
 
 export class Canvas {
     // let offscreenCanvas: OffscreenCanvas; // use this in a worker thread to render or draw on, then transfer content to the visible html-canvas
@@ -47,20 +47,17 @@ export class Canvas {
     }
     //#endregion
 
-    //#region settings
     public resize(width: number, height: number) {
         this.visibleCanvas.width = width;
         this.visibleCanvas.height = height;
     }   
-
-    //#endregion
 
     //#region drawing stuff
     /**
      * @param position in canvas space
      * @param direction in canvas space
      */
-    public drawVector(position: Vector2D, direction: Vector2D, color: string = "white") {
+    private drawVector(position: Vector2D, direction: Vector2D, color: string = "white") {
         // optionally normalize the direction and scale later
         let endPosition: Vector2D = position.add(direction);
         if (!this.isLineVisible(position, endPosition)) {
@@ -82,11 +79,11 @@ export class Canvas {
     /**
      * draws a circular body at specified position, in specified color
      * @param body 
-     * @param position 
+     * @param position on canvas
      * @param color default white
      */
-    public drawBody(body: Body2d, position: Vector2D) {
-        let visibleRadius = Math.max(body.radius / this.currentZoom, 1); // Minimum Radius of displayed body is 1
+    private drawBody(body: Body2d, position: Vector2D) {
+        let visibleRadius = Math.max(body.radius / this.currentZoom, MIN_DISPLAYED_RADIUS);
         if (!this.isCircleVisible(position, visibleRadius)) {
             return;
         }
@@ -195,7 +192,7 @@ export class Canvas {
         newZoom = essentials.numberInRange(newZoom, MIN_ZOOM, MAX_ZOOM);
         this.canvasSpace.currentZoom = newZoom;
     }
-    private pointFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
+    public pointFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
     // transformation:
     // 1. shift (point in SimSpace - Origin of C in SimSpace)
     // 2. flip (y axis point in opposite directions)
@@ -205,7 +202,7 @@ export class Canvas {
     const scaled: Vector2D = flipped.scale(1 / this.currentZoom);
     return scaled;
     }
-    private directionFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
+    public directionFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
         // transformation:
         // 1. flip (y axis are in opposite directions)
         // 2. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
@@ -213,21 +210,6 @@ export class Canvas {
         const scaled: Vector2D = flipped.scale(1 / this.currentZoom);
         return scaled;
     }
-    /* 
 
-    ELIMINATED - absolute positions are evaluated in main.ts
-    relative positions in app.ts
-
-
-    public getCanvasTouchPosition(event: TouchEvent): Vector2D {
-        const rect = this.visibleCanvas.getBoundingClientRect();
-        const touch = event.touches[0];
-        return new Vector2D(touch.clientX - rect.left, touch.clientY - rect.top)
-    }
-    public getCanvasTouchEndPosition(event: TouchEvent): Vector2D {
-        const rect = this.visibleCanvas.getBoundingClientRect();
-        const touch = event.changedTouches[0];
-        return new Vector2D(touch.clientX - rect.left, touch.clientY - rect.top)
-    }
-        */
+    
 }

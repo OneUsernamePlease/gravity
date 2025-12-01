@@ -7,13 +7,8 @@ export const MAX_G = 100;
 //#endregion
 
 //#region animation
-export const MIN_ZOOM = 1;
+export const MIN_ZOOM = 0.01;
 export const MAX_ZOOM = 10000;
 export const VECTOR_THICKNESS = 1.5;
-//#endregion
-
-//#region other global stuff
-export const MOUSE: Mouse = { main: { state: ButtonState.Up, downCoordinatesInSimSpace: undefined }, 
-                     secondary: { state: ButtonState.Up }, 
-                     wheel: { state: ButtonState.Up} };
+export const MIN_DISPLAYED_RADIUS = 0.5;
 //#endregion
