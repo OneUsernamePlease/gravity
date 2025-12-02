@@ -76,7 +76,8 @@ export class GravityAnimationController {
         this.canvas.visibleCanvas.addEventListener("mousedown",     (ev) => this.canvasMouseDown(ev as MouseEvent));    // pointerEvents only fire when the first button is pressed, and the last button is released
         this.canvas.visibleCanvas.addEventListener("mouseup",       (ev) => this.canvasMouseUp(ev as MouseEvent));      // so we need mouse events to catch all button presses
         this.canvas.visibleCanvas.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
-        this.canvas.visibleCanvas.addEventListener("contextmenu",   (ev) => {ev.preventDefault()});
+        this.canvas.visibleCanvas.addEventListener("contextmenu",   (ev) => { ev.preventDefault() });
+        this.canvas.visibleCanvas.addEventListener("touchend",      (ev) => { ev.preventDefault() }, { passive: false });   // prevent touch-triggered MouseUp
     }
 
     public initialize(width: number, height: number) {
