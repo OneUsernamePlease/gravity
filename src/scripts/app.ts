@@ -1,6 +1,7 @@
 import { Vector2D } from "./vector2d";
 import { UI } from "./ui";
 import { GravityAnimationController } from "./gravity-animation-controller";
+import * as c from "../const";
 
 export class App {
     private _ui: UI;
@@ -92,12 +93,12 @@ export class App {
     public setG(g: number) {
         this.gravityAnimationController.setG(g);
     }
-    public zoomOut(zoomCenter?: Vector2D, zoomStep?: number): number {
-        const newZoom = this.gravityAnimationController.zoomOut(zoomCenter, zoomStep);
+    public zoomOut(zoomCenter?: Vector2D, zoomFactor: number = c.DEFAULT_ZOOM_FACTOR): number {
+        const newZoom = this.gravityAnimationController.zoomOutByFactor(zoomCenter, zoomFactor);
         return newZoom;
     }
-    public zoomIn(zoomCenter?: Vector2D, zoomStep?: number) {
-        const newZoom = this.gravityAnimationController.zoomIn(zoomCenter, zoomStep);
+    public zoomIn(zoomCenter?: Vector2D, zoomFactor: number = c.DEFAULT_ZOOM_FACTOR) {
+        const newZoom = this.gravityAnimationController.zoomInByFactor(zoomCenter, zoomFactor);
         return newZoom;
     }
     public resizeCanvas(width: number, height: number) {

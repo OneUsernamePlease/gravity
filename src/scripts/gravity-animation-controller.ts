@@ -4,6 +4,7 @@ import * as util from "./essentials";
 import { AnimationSettings, ButtonState, MouseButtons, MouseAction, TouchAction, Mouse as Pointer } from "./types";
 import { Coordinate, Vector2D } from "./vector2d";
 import { App } from "./app";
+import { DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR } from "../const";
 
 
 export class GravityAnimationController {
@@ -66,7 +67,7 @@ export class GravityAnimationController {
     constructor(private app: App, elementId: string = "theCanvas") {
         this._canvas = new Canvas(document.getElementById(elementId) as HTMLCanvasElement);
         this._simulation = new Simulation;
-        this._animationSettings = { defaultScrollRate: 0.1, defaultZoomStep: 1, defaultZoomFactor: 0.1, frameLength: 25, displayVectors: true, tracePaths: true };
+        this._animationSettings = { frameLength: 25, displayVectors: true, tracePaths: true };
         this._running = false;
         
         this.canvas.visibleCanvas.addEventListener("pointerdown",   (ev) => this.canvasPointerDown(ev as PointerEvent));
@@ -74,7 +75,7 @@ export class GravityAnimationController {
         this.canvas.visibleCanvas.addEventListener("pointermove",   (ev) => this.canvasPointerMoving(ev as PointerEvent));
         this.canvas.visibleCanvas.addEventListener("pointercancel", (ev) => this.cancelPointer(ev as PointerEvent));
         this.canvas.visibleCanvas.addEventListener("mousedown",     (ev) => this.canvasMouseDown(ev as MouseEvent));    // pointerEvents only fire when the first button is pressed, and the last button is released
-        this.canvas.visibleCanvas.addEventListener("mouseup",       (ev) => this.canvasMouseUp(ev as MouseEvent));      // so we need mouse events to catch all button presses
+        this.canvas.visibleCanvas.addEventListener("mouseup",       (ev) => this.canvasMouseUp(ev as MouseEvent));      // so we need mouse events to catch all button interactions
         this.canvas.visibleCanvas.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
         this.canvas.visibleCanvas.addEventListener("contextmenu",   (ev) => { ev.preventDefault() });
         this.canvas.visibleCanvas.addEventListener("touchend",      (ev) => { ev.preventDefault() }, { passive: false });   // prevent touch-triggered MouseUp
@@ -243,9 +244,9 @@ export class GravityAnimationController {
         const posInCanvasSpace = this.absoluteToCanvasPosition(cursorPos);
 
         if (ev.deltaY < 0) {
-            this.zoomIn(posInCanvasSpace);
+            this.zoomInByFactor(posInCanvasSpace);
         } else if (ev.deltaY > 0) {
-            this.zoomOut(posInCanvasSpace);
+            this.zoomOutByFactor(posInCanvasSpace);
         }
     }    
     private canvasTouchStart(ev: PointerEvent) {
@@ -443,32 +444,6 @@ export class GravityAnimationController {
         this.canvas.resize(width, height);
         this.redrawIfPaused();
     }
-    public zoomOut(zoomCenter?: Vector2D, zoomStep?: number): number {
-        if (!zoomCenter) {
-            zoomCenter = new Vector2D(this.canvas.visibleCanvas.width / 2, this.canvas.visibleCanvas.height / 2);
-        }
-        if (!zoomStep) {
-            zoomStep = this.animationSettings.defaultZoomStep;
-        }
-        const newZoom = this.canvas.zoomOut(zoomCenter, zoomStep);
-        this.redrawIfPaused();
-        this.app.updateStatusBarZoom();
-
-        return newZoom;
-    }
-    public zoomIn(zoomCenter?: Vector2D, zoomStep?: number): number {
-        if (!zoomCenter) {
-            zoomCenter = new Vector2D(this.width / 2, this.height / 2);
-        }
-        if (!zoomStep) {
-            zoomStep = this.animationSettings.defaultZoomStep;
-        }
-        const newZoom = this.canvas.zoomIn(zoomCenter, zoomStep);
-        this.redrawIfPaused();
-        this.app.updateStatusBarZoom();
-
-        return newZoom;
-    }
     public zoomToFactor(factor: number, zoomCenter?: Vector2D): number {
         if (factor <= 0) return this.currentZoom;
         if (!zoomCenter) {
@@ -490,10 +465,10 @@ export class GravityAnimationController {
         }
 
     }
-    public zoomInByFactor(factor: number = this.animationSettings.defaultZoomFactor, zoomCenter?: Vector2D): number {
-        if (zoomCenter === undefined) {
-            zoomCenter = new Vector2D(this.width / 2, this.height / 2);
-        }
+    public zoomInByFactor(
+        zoomCenter: Vector2D = new Vector2D(this.width / 2, this.height / 2),
+        factor: number = DEFAULT_ZOOM_FACTOR, 
+    ): number {
         const zoomStep = this.currentZoom * factor;
         const newZoom = this.canvas.zoomIn(zoomCenter, zoomStep);
         this.redrawIfPaused();
@@ -501,10 +476,10 @@ export class GravityAnimationController {
 
         return newZoom;
     }
-    public zoomOutByFactor(factor: number = this.animationSettings.defaultZoomFactor, zoomCenter?: Vector2D): number {
-        if (zoomCenter === undefined) {
-            zoomCenter = new Vector2D(this.width / 2, this.height / 2);
-        }
+    public zoomOutByFactor(
+        zoomCenter: Vector2D = new Vector2D(this.width / 2, this.height / 2),
+        factor: number = DEFAULT_ZOOM_FACTOR, 
+    ): number {
         const zoomStep = this.currentZoom * factor;
         const newZoom = this.canvas.zoomOut(zoomCenter, zoomStep);
         this.redrawIfPaused();
@@ -569,8 +544,7 @@ export class GravityAnimationController {
      * @param rate a number *0 < rate < 1* - defaults to animationSettings.defaultScrollRate 
      * @returns the distance in simulationUnits
      */
-    private scrollDistance(orientation: "horizontal" | "vertical", rate?: number): number {
-        if (rate === undefined) { rate = this.animationSettings.defaultScrollRate; }
+    private scrollDistance(orientation: "horizontal" | "vertical", rate: number = DEFAULT_SCROLL_RATE): number {
         switch (orientation) {
             case "horizontal":
                 return this.width * rate * this.currentZoom;

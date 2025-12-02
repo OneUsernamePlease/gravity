@@ -154,6 +154,12 @@ export class Canvas {
     public scrollDown(distance: number) {
         this.moveOrigin(new Vector2D(0, -distance));
     }
+    /**
+     * Zoom is measured in simulationUnits (meter) per canvasUnit (pixel)
+     * @param zoomCenter this point stays fixed while zooming
+     * @param zoomStep the change of meter per pixel
+     * @returns the new zoom level
+     */
     public zoomOut(zoomCenter: Vector2D, zoomStep: number): number {
         if (this.currentZoom >= MAX_ZOOM) { 
             return this.currentZoom; 
@@ -171,6 +177,12 @@ export class Canvas {
 
         return newZoom;
     }
+    /**
+     * Zoom is measured in simulationUnits (meter) per canvasUnit (pixel)
+     * @param zoomCenter this point stays fixed while zooming
+     * @param zoomStep the change of meter per pixel
+     * @returns the new zoom level
+     */
     public zoomIn(zoomCenter: Vector2D, zoomStep: number): number {
         if (this.currentZoom <= MIN_ZOOM) { 
             return this.currentZoom; 
