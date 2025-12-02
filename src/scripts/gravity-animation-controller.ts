@@ -183,7 +183,7 @@ export class GravityAnimationController {
                                 this.scrollInCanvasUnits(new Vector2D(dx, dy));
                             }
 
-                            this.lastSingleTouchPos = currentTouchPosition;
+                            this.lastSingleTouchPos = { x: currentTouchPosition.x, y: currentTouchPosition.y };
                             return;
                         }
 
