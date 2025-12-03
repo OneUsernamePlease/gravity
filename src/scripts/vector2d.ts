@@ -54,7 +54,7 @@ export class Vector2D {
      * @returns Distance to v
      */
     public distance(v: Coordinate): number {
-        return Math.sqrt((v.x - this.x)**2 + (v.y - this.y)**2);
+        return Math.hypot(v.x - this.x, v.y - this.y);
     }
     /**
      * returns a vector pointing from this to v
@@ -75,6 +75,9 @@ export class Vector2D {
         array.push(new Vector2D(-v.y, v.x));
         array.push(new Vector2D(v.y, -v.x));
         return array;
+    }
+    public midpoint(p2: Vector2D): Vector2D {
+        return new Vector2D((this.x + p2.x) / 2, (this.y + p2.y) / 2);
     }
     /**
      * Reflects this vector on reflectionSurface.
@@ -153,7 +156,7 @@ export class Vector2D {
         const intersection = p1.add(r.scale(t));
         return intersection;
     }
-    public static midpoint(v1: Vector2D, v2: Vector2D): Vector2D {
+    public static midpoint(v1: Coordinate, v2: Coordinate): Vector2D {
         return new Vector2D((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
     }
     public static simpleLineIntersection(line1: [p1: Vector2D, p2: Vector2D], line2: [q1: Vector2D, q2: Vector2D]): Vector2D | null {
