@@ -5,6 +5,7 @@ import { AnimationSettings, ButtonState, MouseButtons, MouseAction, TouchAction,
 import { Coordinate, Vector2D } from "./vector2d";
 import { App } from "./app";
 import { DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR } from "../const";
+import * as tfm from "./transformations";
 
 
 export class GravityAnimationController {
@@ -211,7 +212,7 @@ export class GravityAnimationController {
                         }
 
                         const zoomFactor = touchesDistance / this.previousTouchesDist;
-                        const zoomCenterCanvas = this.absoluteToCanvasPosition(touchesMidpoint);
+                        const zoomCenterCanvas = tfm.relativePosition(touchesMidpoint, this.canvas.visibleCanvas);
                         const scroll = touchesMidpoint.subtract(this.previousTouchesMid);
                         this.zoomToFactor(zoomFactor, zoomCenterCanvas);
                         this.scrollInCanvasUnits(scroll);
@@ -241,7 +242,7 @@ export class GravityAnimationController {
         ev.preventDefault();
         
         const cursorPos = new Vector2D(util.getAbsolutePointerPosition(ev));
-        const posInCanvasSpace = this.absoluteToCanvasPosition(cursorPos);
+        const posInCanvasSpace = tfm.absoluteToCanvasPosition(cursorPos, this.canvas.visibleCanvas);
 
         if (ev.deltaY < 0) {
             this.zoomInByFactor(posInCanvasSpace);
@@ -258,7 +259,7 @@ export class GravityAnimationController {
             
             
             const positionVector = new Vector2D(ev.clientX, ev.clientY);
-            const positionInSimSpace: Vector2D = this.pointFromCanvasSpaceToSimulationSpace(positionVector);
+            const positionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(positionVector, this.canvas.canvasSpace);
             this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
 
         } else if (this.activeTouches.size === 2) {
@@ -280,7 +281,7 @@ export class GravityAnimationController {
         switch (this.touchAction) {
             case TouchAction.AddBody:
                 const absPos = util.getAbsolutePointerPosition(ev);
-                this.addBodyAtPointer(this.absoluteToCanvasPosition(absPos));
+                this.addBodyAtPointer(tfm.absoluteToCanvasPosition(absPos, this.canvas.visibleCanvas));
                 this.touchAction = TouchAction.None;
                 break;
 
@@ -347,7 +348,7 @@ export class GravityAnimationController {
                 break;
             case MouseAction.AddBody:
                 const positionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
-                const positionInSimSpace: Vector2D = this.pointFromCanvasSpaceToSimulationSpace(positionVector);
+                const positionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(positionVector, this.canvas.canvasSpace);
                 this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
                 break;
             default:
@@ -359,7 +360,7 @@ export class GravityAnimationController {
             case MouseAction.None:
                 break;
             case MouseAction.AddBody:
-                this.addBodyAtPointer(this.absoluteToCanvasPosition(absoluteMousePosition));
+                this.addBodyAtPointer(tfm.absoluteToCanvasPosition(absoluteMousePosition, this.canvas.visibleCanvas));
                 break;
             default:
                 break;
@@ -424,7 +425,7 @@ export class GravityAnimationController {
     public addBodyAtPointer(pointerPositionOnCanvas: Coordinate | Vector2D) {
         const pointerPositionVector = pointerPositionOnCanvas instanceof Vector2D ? pointerPositionOnCanvas : new Vector2D(pointerPositionOnCanvas.x, pointerPositionOnCanvas.y);
         const bodyBeingAdded: Body2d = this.app.ui.body2dFromInputs();
-        const mousePositionInSimSpace: Vector2D = this.pointFromCanvasSpaceToSimulationSpace(pointerPositionVector);
+        const mousePositionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(pointerPositionVector, this.canvas.canvasSpace);
         const vel: Vector2D = this.simulation.calculateVelocityBetweenPoints(this.pointer.main.downCoordinatesInSimSpace!, mousePositionInSimSpace);
         this.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
         this.app.updateStatusBarBodyCount();
@@ -528,22 +529,7 @@ export class GravityAnimationController {
         }
         this.canvas.scrollDown(distance);
         this.redrawIfPaused();
-    } 
-//#endregion
-
-//#region transformations and various calculations
-    private absoluteToCanvasPosition(absolutePosition: Coordinate): Vector2D {
-        const canvasRect = this.canvas.visibleCanvas.getBoundingClientRect();
-        const x = absolutePosition.x - canvasRect.left;
-        const y = absolutePosition.y - canvasRect.top;
-        return new Vector2D(x, y);
     }
-    /**
-     * Calculates the distance of the screen dimension (h/v) that one scroll step will move (ie. 0.1 will scroll 10% of the width/height in a horizontal/vertical direction)
-     * @param orientation "horizontal" | "vertical"
-     * @param rate a number *0 < rate < 1* - defaults to animationSettings.defaultScrollRate 
-     * @returns the distance in simulationUnits
-     */
     private scrollDistance(orientation: "horizontal" | "vertical", rate: number = DEFAULT_SCROLL_RATE): number {
         switch (orientation) {
             case "horizontal":
@@ -552,16 +538,5 @@ export class GravityAnimationController {
                 return this.height * rate * this.currentZoom;
         }
     }
-    private pointFromCanvasSpaceToSimulationSpace(canvasVector: Vector2D): Vector2D {
-        // transformation:
-        // 1. scale (canvasVector * zoom in simulationUnits/canvasUnit)
-        // 2. flip (y axis are in opposite directions)
-        // 3. shift (scaledAndFlippedPoint + Origin of C in SimSpace)
-        const scaled = canvasVector.scale(this.canvas.currentZoom);
-        const flipped = scaled.hadamardProduct(new Vector2D(1, this.canvas.canvasSpace.orientationY));
-        const shifted = flipped.add(this.canvas.canvasSpace.origin);
-        return shifted;
-    }
-
 //#endregion
 }

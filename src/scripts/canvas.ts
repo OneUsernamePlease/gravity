@@ -3,6 +3,9 @@ import { AnimationSettings, CanvasSpace, ObjectState } from "./types";
 import { Vector2D } from "./vector2d";
 import * as essentials from "./essentials";
 import { MAX_ZOOM, MIN_ZOOM, VECTOR_THICKNESS, MIN_DISPLAYED_RADIUS } from "../const";
+import * as tfm from "./transformations";
+
+// Here I want only methods that draw in canvas space. they know nothing about ObjectStates[] and do no transformations.
 
 export class Canvas {
     // let offscreenCanvas: OffscreenCanvas; // use this in a worker thread to render or draw on, then transfer content to the visible html-canvas
@@ -72,8 +75,12 @@ export class Canvas {
     }
     public drawVectors(objectStates: ObjectState[]) {
         objectStates.forEach(objectState => {
-            this.drawVector(this.pointFromSimulationSpaceToCanvasSpace(objectState.position), this.directionFromSimulationSpaceToCanvasSpace(objectState.acceleration), "green");
-            this.drawVector(this.pointFromSimulationSpaceToCanvasSpace(objectState.position), this.directionFromSimulationSpaceToCanvasSpace(objectState.velocity), "red");
+            const positionOnCanvas = tfm.pointFromSimulationSpaceToCanvasSpace(objectState.position, this.canvasSpace);
+            const accelerationOnCanvas = tfm.directionFromSimulationSpaceToCanvasSpace(objectState.acceleration, this.canvasSpace);
+            const velocityOnCanvas = tfm.directionFromSimulationSpaceToCanvasSpace(objectState.velocity, this.canvasSpace);
+            
+            this.drawVector(positionOnCanvas, accelerationOnCanvas, "green");
+            this.drawVector(positionOnCanvas, velocityOnCanvas, "red");
         });
     }
     /**
@@ -95,7 +102,7 @@ export class Canvas {
     }
     public drawBodies(objectStates: ObjectState[]) {
         objectStates.forEach(object => {
-            this.drawBody(object.body, this.pointFromSimulationSpaceToCanvasSpace(object.position));
+            this.drawBody(object.body, tfm.pointFromSimulationSpaceToCanvasSpace(object.position, this.canvasSpace));
         });
     }
     public redrawSimulationState(objectStates: ObjectState[], animationSettings: AnimationSettings) {
@@ -203,24 +210,6 @@ export class Canvas {
     public setZoom(newZoom: number) {
         newZoom = essentials.numberInRange(newZoom, MIN_ZOOM, MAX_ZOOM);
         this.canvasSpace.currentZoom = newZoom;
-    }
-    public pointFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
-    // transformation:
-    // 1. shift (point in SimSpace - Origin of C in SimSpace)
-    // 2. flip (y axis point in opposite directions)
-    // 3. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
-    const shifted: Vector2D = simVector.subtract(this.canvasSpace.origin);
-    const flipped: Vector2D = new Vector2D(shifted.x, shifted.y * -1);
-    const scaled: Vector2D = flipped.scale(1 / this.currentZoom);
-    return scaled;
-    }
-    public directionFromSimulationSpaceToCanvasSpace(simVector: Vector2D): Vector2D {
-        // transformation:
-        // 1. flip (y axis are in opposite directions)
-        // 2. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)
-        const flipped: Vector2D = new Vector2D(simVector.x, simVector.y * -1);
-        const scaled: Vector2D = flipped.scale(1 / this.currentZoom);
-        return scaled;
     }
 
     
