@@ -160,18 +160,6 @@ export class Simulation {
         this.clearObjects();
         this.tickCount = 0;
     }
-    /**
-     * Calculates and returns the velocity vector needed to get from *fromCoordinate* to *toCoordinate* in *timeFrameInSeconds* seconds
-     * @param toCoordinate value in simulation space
-     * @param fromCoordinate value in simulation space
-     * @param timeFrameInSeconds *optional* defaults to 1
-     */
-    public calculateVelocityBetweenPoints(toCoordinate: Vector2D | {x: number, y: number}, fromCoordinate: Vector2D, timeFrameInSeconds: number = 1): Vector2D {
-        if (timeFrameInSeconds <= 0) { timeFrameInSeconds = 1; }
-        const toVector = toCoordinate instanceof Vector2D ? toCoordinate : new Vector2D(toCoordinate)
-        const distance: Vector2D = toVector.subtract(fromCoordinate);
-        return distance.scale(1 / timeFrameInSeconds);
-    }
     public advanceTick() {
         this.updateAccelerationVectors();
         this.updateVelocitiesAndPositions();

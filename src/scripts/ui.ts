@@ -1,9 +1,9 @@
 import { Body2d } from "./gravity";
 import * as util from "./essentials";
-import { IUI, RadioButtonGroup, StatusBar } from "./types";
+import { UIElements, RadioButtonGroup, StatusBar, UIAnimationSettings } from "./types";
 import { App } from "./app";
 
-export class UI implements IUI {
+export class UI implements UIElements {
 // All UI Elements
     statusBar: StatusBar;
     resetButton: HTMLInputElement;
@@ -25,10 +25,18 @@ export class UI implements IUI {
     massInput: HTMLInputElement;
     addBodyMovable: HTMLInputElement;
 
-    
     //#region get, set
-
-
+    public get selectedClickAction() {
+        return this.getSelectedValue(this.clickAction) ?? this.clickAction.buttons[0].value;
+    }
+    public get displayVectors() {
+        return this.displayVectorsCheckbox.checked;
+    }
+    public get animationSettings(): UIAnimationSettings {
+        return {
+            displayVectors: this.displayVectorsCheckbox.checked,
+        };
+    }
     //#endregion
     constructor(private app: App) {
         this.resetButton                        = document.getElementById("btnResetSim")! as HTMLInputElement;
@@ -62,7 +70,7 @@ export class UI implements IUI {
 
         this.registerEvents();
     }
-    public initialize() {
+    public initialize(width: number, height: number) {
         this.elasticCollisionsCheckbox.disabled = !this.collisionDetectionCheckbox.checked;
         this.massInput.step = this.calculateMassInputStep();
         
@@ -72,7 +80,7 @@ export class UI implements IUI {
             this.setStatusMessage("", 3);
         }
         
-        this.setStatusMessage(`Canvas dimension: ${this.app.gravityAnimationController.width} * ${this.app.gravityAnimationController.height}`, 5);
+        this.updateStatusBarCanvasDimensions(width, height);
 
         this.app.setG(Number(this.gravitationalConstantRangeInput.value));
     }
@@ -133,16 +141,8 @@ export class UI implements IUI {
         this.playPauseButton.innerHTML = "&#10074;&#10074;"; // pause symbol
         
         (this.stepButton as HTMLInputElement)!.disabled = true;
-        this.app.updateStatusBarSimulationMessages();
+        this.app.updateStatusBarSimulationInfo();
     }
-    public updateStatusBarZoom() {
-        const currentZoom = this.app.gravityAnimationController.currentZoom;
-        this.setStatusMessage(`Zoom: ${currentZoom.toFixed(2)} (m per pixel)`, 4);
-    }
-    public getSelectedClickAction() {
-        return this.getSelectedValue(this.clickAction) ?? this.clickAction.buttons[0].value;
-    }
-
     public getSelectedValue(group: RadioButtonGroup): string | null {
         const selected = group.buttons.find(btn => btn.checked);
         return selected?.value ?? null;
@@ -164,10 +164,22 @@ export class UI implements IUI {
         let step = (10 ** (Math.floor(Math.log10(util.getInputNumber(this.massInput))) - 1));
         return step < 1 ? "1" : step.toString();
     }
+    public updateStatusBarBodyCount(bodyCount: number, statusBarFieldIndex: number = 1) {
+        this.setStatusMessage(`Number of Bodies: ${bodyCount}`, statusBarFieldIndex);
+    }
+    public updateStatusBarTickCount(tickCount: number, statusBarFieldIndex: number = 2) {
+        this.setStatusMessage(`Simulation Tick: ${tickCount}`, statusBarFieldIndex);
+    }
+    public updateStatusBarZoom(currentZoom: number, statusBarFieldIndex: number = 4) {
+        this.setStatusMessage(`Zoom: ${currentZoom.toFixed(2)} (m per pixel)`, statusBarFieldIndex);
+    }
+    public updateStatusBarCanvasDimensions(width: number, height: number, statusBarFieldIndex: number = 5) {
+        this.setStatusMessage(`Canvas dimension: ${width} * ${height}`, statusBarFieldIndex);
+    }
     /**
      * @param fieldIndexOrId number of field (starting at one) OR id of the field
      */
-    public setStatusMessage(message: string, fieldIndexOrId?: number | string, append: boolean = false) {
+    private setStatusMessage(message: string, fieldIndexOrId?: number | string, append: boolean = false) {
         let element: HTMLElement;
         if (typeof fieldIndexOrId === "number") {
             element = this.statusBar.fields[fieldIndexOrId - 1];

@@ -1,4 +1,3 @@
-import { DEFAULT_SCROLL_RATE } from "../const";
 import { CanvasSpace } from "./types";
 import { Coordinate, Vector2D } from "./vector2d";
 

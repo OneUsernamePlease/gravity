@@ -1,8 +1,27 @@
 import { Body2d } from "./gravity";
-import { Vector2D } from "./vector2d";
+import { Coordinate, Vector2D } from "./vector2d";
+export interface Pointer {
+    main: {
+        state: ButtonState;
+        downCoordinatesInSimSpace: Vector2D | undefined;
+    };
+    secondary: {
+        state: ButtonState;
+    };
+    wheel: {
+        state: ButtonState;
+    };
+}
+export interface TouchInfo {
+    pointerId: number;
+    position: Coordinate;
+}
+export interface TouchGesture {
+    touches: TouchInfo[];
+    midpoint: Vector2D;
+    distance: number;
+}
 export interface AnimationSettings {
-    //defaultScrollRate: number;
-    //defaultZoomFactor: number;
     frameLength: number; // ms
     displayVectors: boolean;
     tracePaths: boolean;
@@ -62,7 +81,7 @@ export interface RadioButtonGroup {
     name: string;
     buttons: HTMLInputElement[];
 }
-export interface IUI {
+export interface UIElements {
     statusBar: StatusBar;
     // top menu
     resetButton: HTMLElement;
@@ -87,4 +106,8 @@ export interface IUI {
     clickAction: HTMLSelectElement | RadioButtonGroup;
     massInput: HTMLInputElement;
     addBodyMovable: HTMLInputElement;
+}
+export interface UIAnimationSettings {
+    displayVectors: boolean;
+    //tracePaths: boolean;
 }

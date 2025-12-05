@@ -4,12 +4,13 @@ The most recent build can be played with on github pages [here](https://oneusern
 Here is a hopefully complete list of what it can do:
  - Play/Pause/Reset the simulation
  - When the simulation is paused, advance to the next tick via the "Next Step" button.
- - Add bodies to the simulation by clicking on the canvas (make sure "Add" is selected under "Click Action"). Click, drag and release to give the body an initial velocity.
+ - Add bodies to the simulation by clicking on the canvas. Drag to give the body an initial velocity.
  A body's mass is set in the "Mass" input.
  A body can be set to be either movable or immovable.
- - You can scroll and zoom the view of the simulation, but you have to use the controls in the sidebar.
+ - You can scroll and zoom the simulation, using mouse or touch-gestures.
  - Toggle the display of acceleration and velocity-vectors.
- - Collisions: By default, bodies do not collide. Collisions can be activated in the sidebar. If collisions are activated bodies will merge once the center of one body is inside the other. Furthermore elastic collisions can be activated, this means bodies will bounce off of each other when they touch, though they will still merge once the center of one body is inside the other.
+ - Collisions: Collisions can be activated in the sidebar. If collisions are activated, bodies will merge once the center of one body is inside the other. Furthermore elastic collisions can be activated, this means bodies will bounce off of each other when they collide, though they will still merge according to the rule I just specified.
+ If collisions are turned off, bodies will not merge, which leads to weird behavior if bodies overlap as forces grow very big at low distances.
 
 # Setup Development Environment
 (i have not yet tried this, so it might not work the way i think)
@@ -18,28 +19,41 @@ Here is a hopefully complete list of what it can do:
 3. that should do it
 
 HINT:
-run: "npm run dev" to start the vite dev-server
+run: "npm run dev" to start the vite dev-server.
 
 # Code
 - main.ts
-This script mostly handles the site, it contains the event listeners and functions.
+Entry point. Contains app.ts, which is basically the project.
+
+- app.ts
+Combines the UI with the simulation and animation.
 
 - gravity.ts
-This contains the Body2d class and the Simulation class. Body2d is pretty self explanatory. Simulation is the nonvisual gravity-simulation (ie. calculate states of all the bodies, add remove bodies).
+This contains the Body2d class and the Simulation class. Body2d is pretty self explanatory. Simulation runs the simulation-loop and contains the math and basic interactions for the gravity-simulation (ie. calculate acceleration, velocity, positions, add/remove bodies).
 
 - canvas.ts
-This contains the canvas and its context, functions for drawing and manipulating the view of the simulation (zoom, scroll).
+This contains the canvas and its context, functions here are just for drawing on the canvas (it knows nothing about the simulation).
 
-- sandbox.ts
-Combines gravity and canvas, provides functions for running and animating the simulation, interacting with the simulation on the canvas and writing other outputs.
+- gravity-animation-controller.ts
+Combines and coordinates simulation and animation.
 
-- inputs.ts
+- animation-controller.ts
+This runs the animation loop. 
+
+- interaction-manager.ts
+Has a reference to the canvas-element and contains its EventListeners for mouse- and touch-interactions.
+
+- ui.ts
+Contains all UI-controls (but not the canvas).
 
 - types.ts
 A collection of interfaces and enums.
 
 - vector2d.ts
 A simple vector library.
+
+- transformations.ts
+Mainly conversions between Canvas and Simulation.
 
 - essentials.ts
 Some generally useful functions.

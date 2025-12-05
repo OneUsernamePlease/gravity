@@ -21,7 +21,7 @@ export class App {
     }
     // additional getters
     get selectedClickAction() {
-        return this.ui.getSelectedValue(this.ui.clickAction) ?? this.ui.clickAction.buttons[0].value;
+        return this.ui.selectedClickAction;
     }
     //#endregion
     constructor() {
@@ -31,8 +31,10 @@ export class App {
         this.initialize();
     }
     private initialize() {
-        this.gravityAnimationController.initialize(window.innerWidth, window.innerHeight);
-        this.ui.initialize();
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        this.gravityAnimationController.initialize(width, height);
+        this.ui.initialize(width, height);
     }
     //#region control
     public run() {
@@ -52,43 +54,36 @@ export class App {
     }
     public advanceOneTick() {
         this.gravityAnimationController.advanceOneTick();
-        this.updateStatusBarSimulationMessages();
+        this.updateStatusBarSimulationInfo();
     }
     public reset() {
         this.gravityAnimationController.reset();
-        this.updateStatusBarSimulationMessages();
-    }
-    public updateStatusBarBodyCount() {
-        this.ui.setStatusMessage(`Number of Bodies: ${this.gravityAnimationController.bodyCount}`, 1);
-    }
-    public updateStatusBarTickCount() {
-        this.ui.setStatusMessage(`Simulation Tick: ${this.gravityAnimationController.tickCount}`, 2);
+        this.updateStatusBarSimulationInfo();
     }
     /**
-     * Updates the status fields for tick count and number of bodies
+     * Updates the status fields for tick count, number of bodies
      */
-    public updateStatusBarSimulationMessages() {
-        this.updateStatusBarTickCount();
-        this.updateStatusBarBodyCount();
+    public updateStatusBarSimulationInfo() {
+        this.ui.updateStatusBarTickCount(this.gravityAnimationController.tickCount);
+        this.ui.updateStatusBarBodyCount(this.gravityAnimationController.bodyCount);
     }
-    public updateStatusBarZoom() {
-        this.ui.updateStatusBarZoom();
+    public updateStatusBarAnimationInfo() {
+        this.ui.updateStatusBarZoom(this.gravityAnimationController.currentZoom);
     }
     //#endregion
     
-
     //#region interaction
     public scrollViewRight(distance?: number) {
-        this.gravityAnimationController.canvasScrollRight(distance);
+        this.gravityAnimationController.scrollRight(distance);
     }
     public scrollViewLeft(distance?: number) {
-        this.gravityAnimationController.canvasScrollLeft(distance);
+        this.gravityAnimationController.scrollLeft(distance);
     }
     public scrollViewUp(distance?: number) {
-        this.gravityAnimationController.canvasScrollUp(distance);
+        this.gravityAnimationController.scrollUp(distance);
     }
     public scrollViewDown(distance?: number) {
-        this.gravityAnimationController.canvasScrollDown(distance);
+        this.gravityAnimationController.scrollDown(distance);
     }
     public setG(g: number) {
         this.gravityAnimationController.setG(g);
@@ -103,7 +98,7 @@ export class App {
     }
     public resizeCanvas(width: number, height: number) {
         this.gravityAnimationController.resizeCanvas(width, height);
-        this.ui.setStatusMessage(`Canvas dimension: ${width} * ${height}`, 5);
+        this.ui.updateStatusBarCanvasDimensions(width, height);
     }
     public setCollisionDetection(collisionDetection: boolean, elasticCollisions = false) {
         this.gravityAnimationController.simulation.collisionDetection = collisionDetection;
