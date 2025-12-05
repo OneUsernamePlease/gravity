@@ -78,6 +78,7 @@ export class GravityAnimationController {
 //#region control methods
     public run() {
         if (!this.running) {
+            this.running = true;
             this.simulation.run();
             this.animation.run();
         }
@@ -107,13 +108,13 @@ export class GravityAnimationController {
 //#endregion
 
 //#region interaction
-    setDisplayVectors(displayVectors: boolean) {
+    public setDisplayVectors(displayVectors: boolean) {
         this.animation.setDisplayVectors(displayVectors);
     }
-    updateStatusBarSimulationMessages() {
+    public updateStatusBarSimulationMessages() {
         this.app.updateStatusBarSimulationInfo();
     }
-    updateStatusBarAnimationInfo() {
+    public updateStatusBarAnimationInfo() {
         this.app.updateStatusBarAnimationInfo();
     }
     public addBody(body: Body2d, position: Vector2D, velocity: Vector2D = new Vector2D(0, 0)) {

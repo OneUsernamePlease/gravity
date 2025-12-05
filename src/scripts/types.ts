@@ -12,15 +12,6 @@ export interface Pointer {
         state: ButtonState;
     };
 }
-export interface TouchInfo {
-    pointerId: number;
-    position: Coordinate;
-}
-export interface TouchGesture {
-    touches: TouchInfo[];
-    midpoint: Vector2D;
-    distance: number;
-}
 export interface AnimationSettings {
     frameLength: number; // ms
     displayVectors: boolean;
@@ -36,6 +27,12 @@ export enum MouseAction {
     AddBody = 1,
     Scroll = 2,
     Zoom = 3
+}
+export interface MultiTouchGesture {
+    first: Vector2D;
+    second: Vector2D;
+    midpoint: Vector2D; 
+    distance: number;
 }
 export interface Mouse {
    main: MouseButton;
@@ -105,9 +102,14 @@ export interface UIElements {
 
     clickAction: HTMLSelectElement | RadioButtonGroup;
     massInput: HTMLInputElement;
-    addBodyMovable: HTMLInputElement;
+    movableCheckbox: HTMLInputElement;
 }
 export interface UIAnimationSettings {
     displayVectors: boolean;
     //tracePaths: boolean;
+}
+export interface UISimulationSettings {
+    collisionDetection: boolean;
+    elasticCollisions: boolean;
+    gravitationalConstant: number;
 }

@@ -1,5 +1,5 @@
-import { Vector2D, Coordinate } from "./vector2d";
-import { TouchAction, ButtonState, MouseButtons, Pointer, MouseAction } from "./types";
+import { Vector2D } from "./vector2d";
+import { TouchAction, ButtonState, MouseButtons, Pointer, MouseAction, MultiTouchGesture } from "./types";
 import * as util from "./essentials";
 import { Canvas } from "./canvas";
 import { App } from "./app";
@@ -9,10 +9,10 @@ import { Body2d } from "./gravity";
 
 export class InteractionManager {
     private _touchAction: TouchAction = TouchAction.None;
-    private _activeTouches = new Map<number, Coordinate>();
+    private _activeTouches = new Map<number, Vector2D>();
     private _previousTouchesMid: Vector2D | null = null;
     private _previousTouchesDist: number | null = null;
-    private _lastSingleTouchPos: Coordinate | null = null;
+    private _lastSingleTouchPos: Vector2D | null = null;
     private pointer: Pointer = {
         main: { state: ButtonState.Up, downCoordinatesInSimSpace: undefined },
         secondary: { state: ButtonState.Up },
@@ -24,7 +24,7 @@ export class InteractionManager {
         visibleCanvas.addEventListener("pointerdown",   (ev) => this.canvasPointerDown(ev as PointerEvent));
         visibleCanvas.addEventListener("pointerup",     (ev) => this.canvasPointerUp(ev as PointerEvent));
         visibleCanvas.addEventListener("pointermove",   (ev) => this.canvasPointerMoving(ev as PointerEvent));
-        visibleCanvas.addEventListener("pointercancel", (ev) => this.cancelPointer(ev as PointerEvent));
+        visibleCanvas.addEventListener("pointercancel", (ev) => this.deletePointer(ev as PointerEvent));
         visibleCanvas.addEventListener("mousedown",     (ev) => this.canvasMouseDown(ev as MouseEvent));    // pointerEvents only fire when the first button is pressed, and the last button is released
         visibleCanvas.addEventListener("mouseup",       (ev) => this.canvasMouseUp(ev as MouseEvent));      // so we need mouse events to catch all button interactions
         visibleCanvas.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
@@ -39,18 +39,18 @@ export class InteractionManager {
         this._touchAction = action;
     }
 
-    get activeTouches(): Map<number, Coordinate> {
+    get activeTouches(): Map<number, Vector2D> {
         return this._activeTouches;
     }
-    set activeTouches(touches: Map<number, Coordinate>) {
+    set activeTouches(touches: Map<number, Vector2D>) {
         this._activeTouches = touches;
     }
 
-    get lastSingleTouchPos(): Coordinate | null {
+    get lastSingleTouchPos(): Vector2D | null {
         return this._lastSingleTouchPos;
     }
 
-    set lastSingleTouchPos(pos: Coordinate | null) {
+    set lastSingleTouchPos(pos: Vector2D | null) {
         this._lastSingleTouchPos = pos;
     }
     
@@ -90,8 +90,6 @@ export class InteractionManager {
                 console.log("unknown pointerType: " + ev.pointerType);
                 break;
         }
-        
-       
     }
     private canvasPointerUp(ev: PointerEvent) {
         if (ev.pointerType === "mouse") {
@@ -119,10 +117,7 @@ export class InteractionManager {
         
         switch (ev.pointerType) {
             case "mouse":
-                // check .buttons (bitmask) to detect wheel press
-                // buttons bit 2 (value 4) = wheel button
-                const wheelButtonPressed = (ev.buttons & 4) !== 0;
-                if (wheelButtonPressed) {
+                if (this.pointer.wheel.state === ButtonState.Down) {
                     ev.preventDefault(); // prevent scroll-symbol
                     this.gravityAnimationController.scrollInCanvasUnits(currentMovement);
                 }
@@ -155,7 +150,7 @@ export class InteractionManager {
                                 this.gravityAnimationController.scrollInCanvasUnits(new Vector2D(dx, dy));
                             }
 
-                            this.lastSingleTouchPos = { x: currentTouchPosition.x, y: currentTouchPosition.y };
+                            this.lastSingleTouchPos = new Vector2D(currentTouchPosition.x, currentTouchPosition.y);
                             return;
                         }
 
@@ -203,7 +198,7 @@ export class InteractionManager {
                 break;
         }
     }
-    private cancelPointer(ev: PointerEvent) {
+    private deletePointer(ev: PointerEvent) {
         this.activeTouches.delete(ev.pointerId);
     }
     private canvasScrollMouseWheel(ev: WheelEvent) {
@@ -220,11 +215,12 @@ export class InteractionManager {
         }
     }    
     private canvasTouchStart(ev: PointerEvent) {
-        this.activeTouches.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+        const touch = new Vector2D(ev.clientX, ev.clientY);
+        this.activeTouches.set(ev.pointerId, touch);
 
         if (this.activeTouches.size === 1) {
             this.touchAction = TouchAction.AddBody;
-            this.lastSingleTouchPos = { x: ev.clientX, y: ev.clientY };
+            this.lastSingleTouchPos = touch;
             
             
             const positionVector = new Vector2D(ev.clientX, ev.clientY);
@@ -262,7 +258,7 @@ export class InteractionManager {
                 if (this.activeTouches.size === 1) {
                     // one touch remaining -> use it to scroll
                     const remaining = this.activeTouches.values().next().value!;
-                    this.lastSingleTouchPos = { x: remaining.x, y: remaining.y }
+                    this.lastSingleTouchPos = new Vector2D(remaining.x, remaining.y);
                 } else if (this.activeTouches.size === 0) {
                     this.touchAction = TouchAction.None;
                     this.lastSingleTouchPos = null;
@@ -311,7 +307,7 @@ export class InteractionManager {
                 break;
         }
     }
-    private canvasMainMouseDown(absoluteMousePosition: Coordinate) {
+    private canvasMainMouseDown(absoluteMousePosition: Vector2D) {
         switch (MouseAction[this.app.selectedClickAction as keyof typeof MouseAction]) {
             case MouseAction.None:
                 break;
@@ -334,19 +330,45 @@ export class InteractionManager {
             default:
                 break;
         }
-
     }
 //#endregion
+//#region manage interactions
+    private updateTouchPosition(pointerId: number, x: number, y: number): void {
+        const touch = this.activeTouches.get(pointerId);
+        if (touch) {
+            touch.x = x;
+            touch.y = y;
+        }
+    }
+    private multiTouchGesture(): MultiTouchGesture | null {
+        if (this.activeTouches.size < 2) return null;
 
+        const touches = this.activeTouches.values();
+        const first = new Vector2D (touches.next().value!);
+        const second = new Vector2D (touches.next().value!);
+
+        const midpoint = Vector2D.midpoint(first, second);
+        const distance = (new Vector2D(first)).distance(second);
+        Math.hypot(second.x - first.x, second.y - first.y);
+
+        return { first, second, midpoint, distance };
+    }
+    public reset(): void {
+        this.touchAction = TouchAction.None;
+        this.activeTouches.clear();
+        this.previousTouchesMid = null;
+        this.previousTouchesDist = null;
+        this.lastSingleTouchPos = null;
+    }
+//#endregion
 //#region do stuff
-    public addBodyAtPointer(pointerPositionOnCanvas: Coordinate | Vector2D) {
-        const pointerPositionVector = pointerPositionOnCanvas instanceof Vector2D ? pointerPositionOnCanvas : new Vector2D(pointerPositionOnCanvas.x, pointerPositionOnCanvas.y);
+    private addBodyAtPointer(pointerPositionOnCanvas: Vector2D) {
         const bodyBeingAdded: Body2d = this.app.ui.body2dFromInputs();
-        const mousePositionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(pointerPositionVector, this.gravityAnimationController.canvasSpace);
+        const mousePositionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(pointerPositionOnCanvas, this.gravityAnimationController.canvasSpace);
         const vel: Vector2D = util.calculateVelocityBetweenPoints(this.pointer.main.downCoordinatesInSimSpace!, mousePositionInSimSpace);
         this.gravityAnimationController.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
         this.app.updateStatusBarSimulationInfo();
-    }  
+    }
 
 //#endregion
 }

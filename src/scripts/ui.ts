@@ -23,18 +23,41 @@ export class UI implements UIElements {
     gravitationalConstantRangeInput: HTMLInputElement;
     clickAction: RadioButtonGroup;
     massInput: HTMLInputElement;
-    addBodyMovable: HTMLInputElement;
+    movableCheckbox: HTMLInputElement;
 
     //#region get, set
     public get selectedClickAction() {
         return this.getSelectedValue(this.clickAction) ?? this.clickAction.buttons[0].value;
     }
-    public get displayVectors() {
+    // get all the values
+    get collisionDetection() {
+        return this.collisionDetectionCheckbox.checked;
+    }
+    get elasticCollisions() {
+        return this.elasticCollisionsCheckbox.checked;
+    }
+    get gravitationalConstant() {
+        return util.getInputNumber(this.gravitationalConstantInput);
+    }
+    get displayVectors() {
         return this.displayVectorsCheckbox.checked;
     }
-    public get animationSettings(): UIAnimationSettings {
+    get mass() {
+        return util.getInputNumber(this.massInput);
+    }
+    get movable() {
+        return this.movableCheckbox;
+    }
+    get animationSettings(): UIAnimationSettings {
         return {
             displayVectors: this.displayVectorsCheckbox.checked,
+        };
+    }
+    get simulationSettings() {
+        return {
+            collisionDetection: this.collisionDetection,
+            elasticCollisions: this.elasticCollisions,
+            gravitationalConstant: this.gravitationalConstant,
         };
     }
     //#endregion
@@ -55,7 +78,7 @@ export class UI implements UIElements {
         this.gravitationalConstantInput         = document.getElementById("numberG")! as HTMLInputElement;
         this.gravitationalConstantRangeInput    = document.getElementById("rangeG")! as HTMLInputElement;
         this.massInput                          = document.getElementById("massInput")! as HTMLInputElement;
-        this.addBodyMovable                     = document.getElementById("cbxBodyMovable")! as HTMLInputElement;
+        this.movableCheckbox                     = document.getElementById("cbxBodyMovable")! as HTMLInputElement;
         this.clickAction = {
             name: "radioBtnMouseAction",
             buttons: Array.from(document.querySelectorAll('input[name="radioBtnMouseAction"]')) as HTMLInputElement[]
@@ -148,7 +171,7 @@ export class UI implements UIElements {
         return selected?.value ?? null;
     }
     public body2dFromInputs(): Body2d {
-        const movable = this.addBodyMovable.checked;
+        const movable = this.movableCheckbox.checked;
         const mass = util.getInputNumber(this.massInput);
 
         return new Body2d(util.numberInRange(mass, 1, Number.MAX_SAFE_INTEGER), movable);
@@ -161,7 +184,7 @@ export class UI implements UIElements {
      * @returns Step as a string. Step is always at least 1 or larger.
      */
     private calculateMassInputStep(): string {
-        let step = (10 ** (Math.floor(Math.log10(util.getInputNumber(this.massInput))) - 1));
+        let step = 10 ** (Math.floor(Math.log10(this.mass)) - 1);
         return step < 1 ? "1" : step.toString();
     }
     public updateStatusBarBodyCount(bodyCount: number, statusBarFieldIndex: number = 1) {

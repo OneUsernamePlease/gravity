@@ -39,7 +39,7 @@ export class Vector2D {
         return this.x * v.x + this.y * v.y;
     }
     public magnitude(): number {
-        return Math.sqrt(this.x * this.x + this.y * this.y);
+        return Math.hypot(this.x, this.y);
     }
     public normalize(): Vector2D {
         const magnitude = this.magnitude();
