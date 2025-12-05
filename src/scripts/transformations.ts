@@ -8,9 +8,9 @@ export function absoluteToCanvasPosition(absolutePosition: Coordinate, canvas: H
     return new Vector2D(x, y);
 }
 export function relativePosition(absolutePosition: Coordinate, element: HTMLElement): Vector2D {
-    const canvasRect = element.getBoundingClientRect();
-    const x = absolutePosition.x - canvasRect.left;
-    const y = absolutePosition.y - canvasRect.top;
+    const elementRect = element.getBoundingClientRect();
+    const x = absolutePosition.x - elementRect.left;
+    const y = absolutePosition.y - elementRect.top;
     return new Vector2D(x, y);
 }
 export function pointFromCanvasSpaceToSimulationSpace(point: Vector2D, canvasSpace: CanvasSpace): Vector2D {
