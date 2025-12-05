@@ -1,5 +1,5 @@
 import { Body2d } from "./gravity";
-import { Coordinate, Vector2D } from "./vector2d";
+import { Vector2D } from "./vector2d";
 export interface Pointer {
     main: {
         state: ButtonState;

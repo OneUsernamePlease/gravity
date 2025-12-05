@@ -1,19 +1,16 @@
 import { Canvas } from "./canvas";
 import { Body2d, Simulation } from "./gravity";
-import * as util from "./essentials";
-import { ButtonState, Mouse as Pointer, ObjectState } from "./types";
-import { Coordinate, Vector2D } from "./vector2d";
+import { ObjectState } from "./types";
+import { Vector2D } from "./vector2d";
 import { App } from "./app";
 import { DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR } from "../const";
-import * as tfm from "./transformations";
 import { InteractionManager } from "./interaction-manager";
 import { AnimationController } from "./animation-controller";
 
 export class GravityAnimationController {
-
     private _simulation: Simulation;
     private _running: boolean;
-    private interaction: InteractionManager;
+    private _interaction: InteractionManager;
     private animation: AnimationController;
     // ---
 //#region get, set
@@ -61,7 +58,7 @@ export class GravityAnimationController {
         const canvas = new Canvas(canvasElement);
         this._simulation = new Simulation;
         this.animation = new AnimationController(canvas, this);
-        this.interaction = new InteractionManager(canvas, this.app, this);
+        this._interaction = new InteractionManager(canvas, this.app, this);
         this._running = false;
     }
 
@@ -160,8 +157,8 @@ export class GravityAnimationController {
                 return this.height * rate * this.currentZoom;
         }
     }
-    public zoomToFactor(factor: number, zoomCenter: Coordinate): number {
-        return this.animation.zoomToFactor(factor, new Vector2D(zoomCenter));
+    public zoomToFactor(factor: number, zoomCenter: Vector2D): number {
+        return this.animation.zoomToFactor(factor, zoomCenter);
     }
     public zoomInByFactor(
         zoomCenter: Vector2D = new Vector2D(this.width / 2, this.height / 2),
