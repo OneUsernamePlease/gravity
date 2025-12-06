@@ -1,6 +1,7 @@
 import { ObjectState } from "./types";
 import { Vector2D } from "./vector2d";
 import * as c from "../const";
+import { mixColorsWeighted, randomHexColor } from "./essentials";
 
 export class Body2d {
 //#region properties
@@ -34,7 +35,7 @@ export class Body2d {
     }
     public set color(c: string) {
         if (!(CSS.supports("color", c))) {
-            c = "white";
+            c = "#818181ff";
         }
         this._color = c;
     } 
@@ -43,7 +44,7 @@ export class Body2d {
         this._mass = mass;
         if (radius === undefined) { radius = this.defaultRadius(mass); }
         this._radius = radius;
-        if (color === undefined) { color = "white"; }
+        if (color === undefined) { color = randomHexColor(); }
         this._color = color;
         if (movable === undefined) { movable = true; }
         this._movable = movable;     
@@ -99,9 +100,9 @@ export class Simulation {
     public get tickLength() {
         return this._tickLength;
     }
-    //public set tickLength(t: number) {
-    //    this._tickLength = t;
-    //}
+    public set tickLength(t: number) {
+        this._tickLength = t;
+    }
     public get collisionDetection() {
         return this._collisionDetection;
     }
@@ -266,6 +267,7 @@ export class Simulation {
         changeObject.velocity = resultingVelocity;
         changeObject.body.mass = totalMass;
         changeObject.body.radius = changeObject.body.defaultRadius();
+        changeObject.body.color = mixColorsWeighted(state1.body.color, state1.body.mass, state2.body.color, state2.body.mass);
         changeObject.body.movable = (state1.body.movable && state2.body.movable);
         if (!changeObject.body.movable) {
             changeObject.velocity = new Vector2D(0, 0);

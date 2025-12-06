@@ -7,8 +7,10 @@
     - canvas layers
     - mobile / responsive
     - workers and offscreen canvas
-    - vitest in **watch mode** creates ./src/node_modules instead of using ./node_modules
-    - remove the *zoom by step* thing and fully switch to zoom by factor
+    - color for bodies
+        - let user choose
+        - randomize
+        - mass-dependant 
 
 # bugs
     - adding body with velocity, while zooming: when adding a body, at mouseDown store the pointer's simulation position, currently the positions will be wrong when zooming while dragging for adding a body

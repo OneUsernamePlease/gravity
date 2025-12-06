@@ -10,7 +10,7 @@ export class Canvas {
     private _visibleCanvasContext: CanvasRenderingContext2D;
     constructor(visibleCanvas: HTMLCanvasElement) {
         this._visibleCanvas = visibleCanvas;
-        this._visibleCanvasContext = visibleCanvas.getContext("2d")!;
+        this._visibleCanvasContext = visibleCanvas.getContext("2d", { alpha: false })!;
     }
 //#endregion
 //#region get, set
@@ -41,6 +41,10 @@ export class Canvas {
 //#region drawing stuff
     public clear() {
         this.visibleCanvasContext.clearRect(0, 0, this.width, this.height);
+    }
+    public fillCanvas(color: string = "#000000") {
+        this.visibleCanvasContext.fillStyle = color;
+        this.visibleCanvasContext.fillRect(0, 0, this.width, this.height);
     }
     /**
      * @param position in canvas space

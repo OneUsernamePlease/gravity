@@ -1,4 +1,4 @@
-import { MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM } from "../const";
+import { BACKGROUND_COLOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM } from "../const";
 import { Canvas } from "./canvas";
 import { Body2d } from "./gravity";
 import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "./types";
@@ -105,6 +105,7 @@ export class AnimationController {
     }
     private redrawSimulationState(objectStates: ObjectState[], animationSettings: AnimationSettings) {
         this.canvas.clear();
+        this.canvas.fillCanvas(BACKGROUND_COLOR);
         this.drawBodies(objectStates);
         if (animationSettings.displayVectors) {
             this.drawVectors(objectStates);
