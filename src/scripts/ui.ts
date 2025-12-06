@@ -1,7 +1,7 @@
 import { Body2d } from "./gravity";
 import * as util from "./essentials";
 import { UIElements, RadioButtonGroup, StatusBar, UIAnimationSettings } from "./types";
-import { App } from "./app";
+import { GravityAnimationController } from "./gravity-animation-controller";
 
 export class UI implements UIElements {
 // All UI Elements
@@ -61,7 +61,7 @@ export class UI implements UIElements {
         };
     }
     //#endregion
-    constructor(private app: App) {
+    constructor(private gravityAnimationController: GravityAnimationController) {
         this.resetButton                        = document.getElementById("btnResetSim")! as HTMLInputElement;
         this.playPauseButton                    = document.getElementById("btnToggleSim")! as HTMLInputElement;
         this.stepButton                         = document.getElementById("btnNextStep")! as HTMLInputElement;
@@ -78,7 +78,7 @@ export class UI implements UIElements {
         this.gravitationalConstantInput         = document.getElementById("numberG")! as HTMLInputElement;
         this.gravitationalConstantRangeInput    = document.getElementById("rangeG")! as HTMLInputElement;
         this.massInput                          = document.getElementById("massInput")! as HTMLInputElement;
-        this.movableCheckbox                     = document.getElementById("cbxBodyMovable")! as HTMLInputElement;
+        this.movableCheckbox                    = document.getElementById("cbxBodyMovable")! as HTMLInputElement;
         this.clickAction = {
             name: "radioBtnMouseAction",
             buttons: Array.from(document.querySelectorAll('input[name="radioBtnMouseAction"]')) as HTMLInputElement[]
@@ -93,6 +93,23 @@ export class UI implements UIElements {
 
         this.registerEvents();
     }
+    private registerEvents() {
+        this.resetButton.addEventListener("click", () => this.resetButtonClicked());
+        this.playPauseButton.addEventListener("click", () => this.playPauseClicked());
+        this.stepButton.addEventListener("click", () => this.stepButtonClicked());
+        this.zoomInButton.addEventListener("click", () => this.zoomInClicked());
+        this.zoomOutButton.addEventListener("click", () => this.zoomOutClicked());
+        this.scrollUpButton.addEventListener("click", () => this.scrollUpClicked());
+        this.scrollDownButton.addEventListener("click", () => this.scrollDownClicked());
+        this.scrollLeftButton.addEventListener("click", () => this.scrollLeftClicked());
+        this.scrollRightButton.addEventListener("click", () => this.scrollRightClicked());
+        this.displayVectorsCheckbox.addEventListener("change", () => this.cbxDisplayVectorsChanged());
+        this.collisionDetectionCheckbox.addEventListener("change", () => this.cbxCollisionsChanged());
+        this.elasticCollisionsCheckbox.addEventListener("change", () => this.cbxElasticCollisionsChanged());
+        this.gravitationalConstantInput.addEventListener("change", () => this.numberInputGChanged());
+        this.gravitationalConstantRangeInput.addEventListener("input", () => this.rangeInputGChanged());
+        this.massInput.addEventListener("change", () => this.updateSelectedMass());
+    }
     public initialize(width: number, height: number) {
         this.elasticCollisionsCheckbox.disabled = !this.collisionDetectionCheckbox.checked;
         this.massInput.step = this.calculateMassInputStep();
@@ -105,28 +122,48 @@ export class UI implements UIElements {
         
         this.updateStatusBarCanvasDimensions(width, height);
 
-        this.app.setG(Number(this.gravitationalConstantRangeInput.value));
+        this.gravityAnimationController.setG(Number(this.gravitationalConstantRangeInput.value));
     }
-    private registerEvents() {
-        this.resetButton.addEventListener("click", () => this.app.reset());
-        this.playPauseButton.addEventListener("click", () => this.app.toggleSimulation());
-        this.stepButton.addEventListener("click", () => this.app.advanceOneTick());
-        this.zoomInButton.addEventListener("click", () => this.app.zoomIn());
-        this.zoomOutButton.addEventListener("click", () => this.app.zoomOut());
-        this.scrollUpButton.addEventListener("click", () => this.app.scrollViewUp());
-        this.scrollDownButton.addEventListener("click", () => this.app.scrollViewDown());
-        this.scrollLeftButton.addEventListener("click", () => this.app.scrollViewLeft());
-        this.scrollRightButton.addEventListener("click", () => this.app.scrollViewRight());
-        this.displayVectorsCheckbox.addEventListener("change", () => this.cbxDisplayVectorsChanged());
-        this.collisionDetectionCheckbox.addEventListener("change", () => this.cbxCollisionsChanged());
-        this.elasticCollisionsCheckbox.addEventListener("change", () => this.cbxElasticCollisionsChanged());
-        this.gravitationalConstantInput.addEventListener("change", () => this.numberInputGChanged());
-        this.gravitationalConstantRangeInput.addEventListener("input", () => this.rangeInputGChanged());
-        this.massInput.addEventListener("change", () => this.updateSelectedMass());
+    public resetButtonClicked() {
+        this.gravityAnimationController.reset()
+        this.updateStatusBarSimulationInfo();
+    }
+    public playPauseClicked() {
+        if (this.gravityAnimationController.running) {
+            this.gravityAnimationController.stop();
+            this.simulationStopped();
+        } else {
+            this.gravityAnimationController.run();
+            this.simulationResumed();
+        }
+    }
+    public stepButtonClicked() {
+        this.gravityAnimationController.advanceOneTick();
+        this.updateStatusBarSimulationInfo();
+    }
+    public zoomInClicked() {
+        this.gravityAnimationController.zoomIn();
+        this.updateStatusBarAnimationInfo();
+    }
+    public zoomOutClicked() {
+        this.gravityAnimationController.zoomOut();
+        this.updateStatusBarAnimationInfo();
+    }
+    public scrollUpClicked() {
+        this.gravityAnimationController.scrollUp();
+    }
+    public scrollDownClicked() {
+        this.gravityAnimationController.scrollDown();
+    }
+    public scrollLeftClicked() {
+        this.gravityAnimationController.scrollLeft();
+    }
+    public scrollRightClicked() {
+        this.gravityAnimationController.scrollRight();
     }
     public cbxDisplayVectorsChanged() {
         const displayVectors = this.displayVectorsCheckbox.checked;
-        this.app.setDisplayVectors(displayVectors)
+        this.gravityAnimationController.setDisplayVectors(displayVectors)
         if (displayVectors) {
             this.setStatusMessage("Green: acceleration - Red: velocity", 3);
         } else {
@@ -139,21 +176,21 @@ export class UI implements UIElements {
         
         this.elasticCollisionsCheckbox.disabled = !checked;
         
-        this.app.setCollisionDetection(checked, elasticChecked);
+        this.gravityAnimationController.setCollisionDetection(checked, elasticChecked);
     }
     public cbxElasticCollisionsChanged() {
-        this.app.setElasticCollisions(this.elasticCollisionsCheckbox.checked);
+        this.gravityAnimationController.setElasticCollisions(this.elasticCollisionsCheckbox.checked);
     }
     public numberInputGChanged() {
         const newG: string = this.gravitationalConstantInput.value;
         this.gravitationalConstantRangeInput.value = newG;
-        this.app.setG(Number(newG));
+        this.gravityAnimationController.setG(Number(newG));
     }
     public rangeInputGChanged() {
         const newG: string = this.gravitationalConstantRangeInput.value;
         if (this.gravitationalConstantInput.value !== newG) {
             this.gravitationalConstantInput.value = newG;
-            this.app.setG(Number(newG));
+            this.gravityAnimationController.setG(Number(newG));
         }
     }
     public simulationStopped() {
@@ -163,8 +200,8 @@ export class UI implements UIElements {
     public simulationResumed() {
         this.playPauseButton.innerHTML = "&#10074;&#10074;"; // pause symbol
         
-        (this.stepButton as HTMLInputElement)!.disabled = true;
-        this.app.updateStatusBarSimulationInfo();
+        this.stepButton.disabled = true;
+        this.updateStatusBarSimulationInfo();
     }
     public getSelectedValue(group: RadioButtonGroup): string | null {
         const selected = group.buttons.find(btn => btn.checked);
@@ -187,6 +224,13 @@ export class UI implements UIElements {
         let step = 10 ** (Math.floor(Math.log10(this.mass)) - 1);
         return step < 1 ? "1" : step.toString();
     }
+    public updateStatusBarSimulationInfo() {
+        this.updateStatusBarTickCount(this.gravityAnimationController.tickCount);
+        this.updateStatusBarBodyCount(this.gravityAnimationController.bodyCount);
+    }
+    public updateStatusBarAnimationInfo() {
+        this.updateStatusBarZoom(this.gravityAnimationController.currentZoom);
+    }
     public updateStatusBarBodyCount(bodyCount: number, statusBarFieldIndex: number = 1) {
         this.setStatusMessage(`Number of Bodies: ${bodyCount}`, statusBarFieldIndex);
     }
@@ -199,6 +243,7 @@ export class UI implements UIElements {
     public updateStatusBarCanvasDimensions(width: number, height: number, statusBarFieldIndex: number = 5) {
         this.setStatusMessage(`Canvas dimension: ${width} * ${height}`, statusBarFieldIndex);
     }
+    
     /**
      * @param fieldIndexOrId number of field (starting at one) OR id of the field
      */
