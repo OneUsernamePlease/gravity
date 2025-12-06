@@ -7,6 +7,7 @@ function initialize() {
     app = new App();
     registerEvents();
 
+    app.initialize();
     app.run();
 }
 

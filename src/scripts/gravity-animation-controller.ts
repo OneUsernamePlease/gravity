@@ -11,7 +11,7 @@ export class GravityAnimationController {
     private _simulation: Simulation;
     private _running: boolean;
     private _interaction: InteractionManager;
-    private animation: AnimationController;
+    private _animation: AnimationController;
     // ---
 //#region get, set
     get simulation(): Simulation {
@@ -25,6 +25,12 @@ export class GravityAnimationController {
     }
     private set running(running: boolean) {
         this._running = running;
+    }
+    get animation(): AnimationController {
+        return this._animation;
+    }
+    set animation(animation: AnimationController) {
+        this._animation = animation;
     }
     // additional getters
     get tickCount(): number {
@@ -50,6 +56,8 @@ export class GravityAnimationController {
     }
 //#endregion
 //#region initialization
+
+    // REPLACE PROPERTY APP WITH UI
     constructor(private app: App, elementId: string = "theCanvas") {
         const canvasElement: HTMLCanvasElement = document.getElementById(elementId) as HTMLCanvasElement;
         if (!canvasElement) {
@@ -57,8 +65,8 @@ export class GravityAnimationController {
         }
         const canvas = new Canvas(canvasElement);
         this._simulation = new Simulation;
-        this.animation = new AnimationController(canvas, this);
-        this._interaction = new InteractionManager(canvas, this.app, this);
+        this._animation = new AnimationController(canvas, this);
+        this._interaction = new InteractionManager(canvas, this, this.app);
         this._running = false;
     }
 
@@ -108,6 +116,13 @@ export class GravityAnimationController {
 //#region interaction
     public setDisplayVectors(displayVectors: boolean) {
         this.animation.setDisplayVectors(displayVectors);
+    }
+    public setCollisionDetection(collisionDetection: boolean, elasticCollisions = false) {
+        this.simulation.collisionDetection = collisionDetection;
+        this.simulation.elasticCollisions = elasticCollisions;
+    }
+    public setElasticCollisions(elasticCollisions: boolean) {
+        this.simulation.elasticCollisions = elasticCollisions;
     }
     public updateStatusBarSimulationMessages() {
         this.app.updateStatusBarSimulationInfo();
@@ -161,18 +176,19 @@ export class GravityAnimationController {
     public zoomToFactor(factor: number, zoomCenter: Vector2D): number {
         return this.animation.zoomToFactor(factor, zoomCenter);
     }
-    public zoomInByFactor(
+    public zoomIn(
         zoomCenter: Vector2D = new Vector2D(this.width / 2, this.height / 2),
         factor: number = DEFAULT_ZOOM_FACTOR, 
     ): number {
         const zoomStep = this.currentZoom * factor;
         const newZoom = this.animation.zoomIn(zoomCenter, zoomStep);
 
+        // Refactor me. this calls app, which should be removed
         this.updateStatusBarAnimationInfo();
 
         return newZoom;
     }
-    public zoomOutByFactor(
+    public zoomOut(
         zoomCenter: Vector2D = new Vector2D(this.width / 2, this.height / 2),
         factor: number = DEFAULT_ZOOM_FACTOR, 
     ): number {

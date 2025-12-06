@@ -19,7 +19,7 @@ export class InteractionManager {
         wheel: { state: ButtonState.Up }
     };
     
-    constructor(private canvas: Canvas, private app: App, private gravityAnimationController: GravityAnimationController) {
+    constructor(private canvas: Canvas, private gravityAnimationController: GravityAnimationController, private app: App) {
         const visibleCanvas = canvas.visibleCanvas;
         visibleCanvas.addEventListener("pointerdown",   (ev) => this.canvasPointerDown(ev as PointerEvent));
         visibleCanvas.addEventListener("pointerup",     (ev) => this.canvasPointerUp(ev as PointerEvent));
@@ -209,9 +209,9 @@ export class InteractionManager {
         const posInCanvasSpace = tfm.absoluteToCanvasPosition(cursorPos, this.canvas.visibleCanvas);
 
         if (ev.deltaY < 0) {
-            this.gravityAnimationController.zoomInByFactor(posInCanvasSpace);
+            this.gravityAnimationController.zoomIn(posInCanvasSpace);
         } else if (ev.deltaY > 0) {
-            this.gravityAnimationController.zoomOutByFactor(posInCanvasSpace);
+            this.gravityAnimationController.zoomOut(posInCanvasSpace);
         }
     }    
     private canvasTouchStart(ev: PointerEvent) {
@@ -308,7 +308,7 @@ export class InteractionManager {
         }
     }
     private canvasMainMouseDown(absoluteMousePosition: Vector2D) {
-        switch (MouseAction[this.app.selectedClickAction as keyof typeof MouseAction]) {
+        switch (MouseAction[this.app.ui.selectedClickAction as keyof typeof MouseAction]) {
             case MouseAction.None:
                 break;
             case MouseAction.AddBody:
@@ -321,7 +321,7 @@ export class InteractionManager {
         }
     }
     private canvasMainMouseUp(absoluteMousePosition: Vector2D) {
-        switch (MouseAction[this.app.selectedClickAction as keyof typeof MouseAction]) {
+        switch (MouseAction[this.app.ui.selectedClickAction as keyof typeof MouseAction]) {
             case MouseAction.None:
                 break;
             case MouseAction.AddBody:
@@ -367,7 +367,7 @@ export class InteractionManager {
         const mousePositionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(pointerPositionOnCanvas, this.gravityAnimationController.canvasSpace);
         const vel: Vector2D = util.calculateVelocityBetweenPoints(this.pointer.main.downCoordinatesInSimSpace!, mousePositionInSimSpace);
         this.gravityAnimationController.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
-        this.app.updateStatusBarSimulationInfo();
+        this.app.ui.updateStatusBarSimulationInfo();
     }
 
 //#endregion
