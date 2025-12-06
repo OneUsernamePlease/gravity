@@ -83,6 +83,7 @@ export class GravityAnimationController {
     public stop() {
         this.running = false;
         this.simulation.pause();
+        this.animation.stop();
     }
     public toggle() {
         if (this.running) {

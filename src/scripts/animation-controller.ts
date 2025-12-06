@@ -85,6 +85,9 @@ export class AnimationController {
         };
         loop();
     }
+    public stop() {
+        this.running = false;
+    }
     public redrawIfPaused() {
         if (!this.running) {
             this.redrawSimulationState(this.simulationState, this.animationSettings);
