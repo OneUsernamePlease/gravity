@@ -10,30 +10,26 @@ import { AnimationController } from "./animation-controller";
 export class GravityAnimationController {
 //#region properties
     private _simulation: Simulation;
-    private _running: boolean;
     private _interaction: InteractionManager;
     private _animation: AnimationController;
+    private _running: boolean;
 //#endregion
 //#region get, set
     get simulation(): Simulation {
         return this._simulation;
     }
-    set simulation(simulation: Simulation) {
-        this._simulation = simulation;
+    
+    get animation(): AnimationController {
+        return this._animation;
     }
+    
     get running(): boolean {
         return this._running;
     }
     private set running(running: boolean) {
         this._running = running;
     }
-    get animation(): AnimationController {
-        return this._animation;
-    }
-    set animation(animation: AnimationController) {
-        this._animation = animation;
-    }
-    // additional getters
+// additional getters
     get tickCount(): number {
         return this.simulation.tickCount;
     }

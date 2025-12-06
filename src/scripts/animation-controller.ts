@@ -94,23 +94,23 @@ export class AnimationController {
             this.redrawSimulationState(this.simulationState, this.animationSettings);
         }
     }
-    public drawBodies(objectStates: ObjectState[]) {
+    private drawBodies(objectStates: ObjectState[]) {
         objectStates.forEach(object => {
             this.drawBody(object.body, tfm.pointFromSimulationSpaceToCanvasSpace(object.position, this.canvasSpace));
         });
     }
-    public drawBody(body: Body2d, position: Vector2D) {
+    private drawBody(body: Body2d, position: Vector2D) {
         let visibleRadius = Math.max(body.radius / this.currentZoom, MIN_DISPLAYED_RADIUS);
         this.canvas.drawCircle(position, visibleRadius, body.color);
     }
-    public redrawSimulationState(objectStates: ObjectState[], animationSettings: AnimationSettings) {
+    private redrawSimulationState(objectStates: ObjectState[], animationSettings: AnimationSettings) {
         this.canvas.clear();
         this.drawBodies(objectStates);
         if (animationSettings.displayVectors) {
             this.drawVectors(objectStates);
         }
     }
-    public drawVectors(objectStates: ObjectState[]) {
+    private drawVectors(objectStates: ObjectState[]) {
         objectStates.forEach(objectState => {
             const positionOnCanvas = tfm.pointFromSimulationSpaceToCanvasSpace(objectState.position, this.canvasSpace);
             const accelerationOnCanvas = tfm.directionFromSimulationSpaceToCanvasSpace(objectState.acceleration, this.canvasSpace);
@@ -144,10 +144,10 @@ export class AnimationController {
     /**
      * Origin {x:0,y:0} is at the top-left
      */
-    public setOrigin(newOrigin: Vector2D) {
+    private setOrigin(newOrigin: Vector2D) {
         this.canvasSpace.origin = newOrigin;
     }
-    public moveOrigin(displacement: { x: number, y: number}) {
+    private moveOrigin(displacement: { x: number, y: number}) {
         const originPosition = this.canvasSpace.origin;
         const newOrigin = originPosition.add(displacement);
         this.setOrigin(newOrigin);
@@ -202,7 +202,7 @@ export class AnimationController {
 
         return newZoom;
     }
-    public setZoom(newZoom: number) {
+    private setZoom(newZoom: number) {
         newZoom = util.numberInRange(newZoom, MIN_ZOOM, MAX_ZOOM);
         this.canvasSpace.currentZoom = newZoom;
         
@@ -210,6 +210,7 @@ export class AnimationController {
     }
     public zoomToFactor(factor: number, zoomCenter?: Vector2D): number {
         if (factor <= 0) return this.currentZoom;
+        
         if (!zoomCenter) {
             zoomCenter = new Vector2D(this.width / 2, this.height / 2);
         }

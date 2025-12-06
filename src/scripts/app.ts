@@ -41,21 +41,11 @@ export class App {
     }
     public advanceOneTick() {
         this.gravityAnimationController.advanceOneTick();
-        this.updateStatusBarSimulationInfo();
+        this.ui.updateStatusBarSimulationInfo();
     }
     public reset() {
         this.gravityAnimationController.reset();
-        this.updateStatusBarSimulationInfo();
-    }
-    /**
-     * Updates the status fields for tick count, number of bodies
-     */
-    public updateStatusBarSimulationInfo() {
-        this.ui.updateStatusBarTickCount(this.gravityAnimationController.tickCount);
-        this.ui.updateStatusBarBodyCount(this.gravityAnimationController.bodyCount);
-    }
-    public updateStatusBarAnimationInfo() {
-        this.ui.updateStatusBarZoom(this.gravityAnimationController.currentZoom);
+        this.ui.updateStatusBarSimulationInfo();
     }
     public resizeCanvas(windowWidth: number, windowHeight: number) {
         this.gravityAnimationController.resizeCanvas(windowWidth, windowHeight);
