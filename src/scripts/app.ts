@@ -2,9 +2,11 @@ import { UI } from "./ui";
 import { GravityAnimationController } from "./gravity-animation-controller";
 
 export class App {
+//#region properties
     private _ui: UI;
     private _gravityAnimationController: GravityAnimationController;
-    //#region get, set
+//#endregion
+//#region get, set
     get gravityAnimationController() {
         return this._gravityAnimationController;
     }
@@ -14,7 +16,8 @@ export class App {
     get ui() {
         return this._ui;
     }
-    //#endregion
+//#endregion
+//#region initialize
     constructor() {
         this._gravityAnimationController = new GravityAnimationController(this);        
         this._ui = new UI(this);
@@ -26,7 +29,8 @@ export class App {
         this.gravityAnimationController.initialize(width, height);
         this.ui.initialize(width, height);
     }
-    //#region control
+//#endregion
+//#region control
     public run() {
         this.gravityAnimationController.run();
         this.ui.simulationResumed();
@@ -53,7 +57,6 @@ export class App {
     public updateStatusBarAnimationInfo() {
         this.ui.updateStatusBarZoom(this.gravityAnimationController.currentZoom);
     }
-    //#endregion
     public resizeCanvas(windowWidth: number, windowHeight: number) {
         this.gravityAnimationController.resizeCanvas(windowWidth, windowHeight);
         this.ui.updateStatusBarCanvasDimensions(windowWidth, windowHeight);

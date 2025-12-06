@@ -8,11 +8,12 @@ import { InteractionManager } from "./interaction-manager";
 import { AnimationController } from "./animation-controller";
 
 export class GravityAnimationController {
+//#region properties
     private _simulation: Simulation;
     private _running: boolean;
     private _interaction: InteractionManager;
     private _animation: AnimationController;
-
+//#endregion
 //#region get, set
     get simulation(): Simulation {
         return this._simulation;
@@ -59,7 +60,6 @@ export class GravityAnimationController {
     }
 //#endregion
 //#region initialization
-
     constructor(private app: App, elementId: string = "theCanvas") {
         const canvasElement: HTMLCanvasElement = document.getElementById(elementId) as HTMLCanvasElement;
         if (!canvasElement) {
@@ -71,7 +71,6 @@ export class GravityAnimationController {
         this._interaction = new InteractionManager(canvas, this.app);
         this._running = false;
     }
-
     public initialize(width: number, height: number) {
         this.animation.initialize(width, height, this.ui.animationSettings);
         this.initSimulation();

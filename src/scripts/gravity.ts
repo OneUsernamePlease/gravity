@@ -3,22 +3,14 @@ import { Vector2D } from "./vector2d";
 import * as c from "../const";
 
 export class Body2d {
+//#region properties
     private _mass: number;
     private _radius: number;
     private _color: string;
     private _movable: boolean;
     static defaultDensity = 1;
-
-    // #region constructor, get, set
-    constructor(mass: number, movable?: boolean, color?: string, radius?: number)  {
-        this._mass = mass;
-        if (radius === undefined) { radius = this.defaultRadius(mass); }
-        this._radius = radius;
-        if (color === undefined) { color = "white"; }
-        this._color = color;
-        if (movable === undefined) { movable = true; }
-        this._movable = movable;     
-    }
+//#endregion
+// #region get, set
     public get mass() {
         return this._mass;
     }
@@ -46,7 +38,17 @@ export class Body2d {
         }
         this._color = c;
     } 
-    // #endregion
+// #endregion
+    constructor(mass: number, movable?: boolean, color?: string, radius?: number)  {
+        this._mass = mass;
+        if (radius === undefined) { radius = this.defaultRadius(mass); }
+        this._radius = radius;
+        if (color === undefined) { color = "white"; }
+        this._color = color;
+        if (movable === undefined) { movable = true; }
+        this._movable = movable;     
+    }
+
     /**
      * returns the radius of a sphere based on mass and density
      */

@@ -4,7 +4,8 @@ import { UIElements, RadioButtonGroup, StatusBar, UIAnimationSettings } from "./
 import { App } from "./app";
 
 export class UI implements UIElements {
-// All UI Elements
+//#region properties
+    // All UI Elements
     statusBar: StatusBar;
     resetButton: HTMLInputElement;
     playPauseButton: HTMLInputElement;
@@ -24,12 +25,12 @@ export class UI implements UIElements {
     clickAction: RadioButtonGroup;
     massInput: HTMLInputElement;
     movableCheckbox: HTMLInputElement;
-
-    //#region get, set
+//#endregion
+//#region get, set
+    // get all the values
     public get selectedClickAction() {
         return this.getSelectedValue(this.clickAction) ?? this.clickAction.buttons[0].value;
     }
-    // get all the values
     get collisionDetection() {
         return this.collisionDetectionCheckbox.checked;
     }
@@ -63,7 +64,8 @@ export class UI implements UIElements {
     get gravityAnimationController() {
         return this.app.gravityAnimationController;
     }
-    //#endregion
+//#endregion
+//#region initialize
     constructor(private app: App) {
         this.resetButton                        = document.getElementById("btnResetSim")! as HTMLInputElement;
         this.playPauseButton                    = document.getElementById("btnToggleSim")! as HTMLInputElement;
@@ -127,6 +129,7 @@ export class UI implements UIElements {
 
         this.gravityAnimationController.setG(Number(this.gravitationalConstantRangeInput.value));
     }
+//#endregion
     public resetButtonClicked() {
         this.gravityAnimationController.reset()
         this.updateStatusBarSimulationInfo();

@@ -7,6 +7,7 @@ import * as tfm from "./transformations";
 import { Body2d } from "./gravity";
 
 export class InteractionManager {
+//#region properties
     private _touchAction: TouchAction = TouchAction.None;
     private _activeTouches = new Map<number, Vector2D>();
     private _previousTouchesMid: Vector2D | null = null;
@@ -17,19 +18,7 @@ export class InteractionManager {
         secondary: { state: ButtonState.Up },
         wheel: { state: ButtonState.Up }
     };
-    
-    constructor(private canvas: Canvas, private app: App) {
-        const visibleCanvas = canvas.visibleCanvas;
-        visibleCanvas.addEventListener("pointerdown",   (ev) => this.canvasPointerDown(ev as PointerEvent));
-        visibleCanvas.addEventListener("pointerup",     (ev) => this.canvasPointerUp(ev as PointerEvent));
-        visibleCanvas.addEventListener("pointermove",   (ev) => this.canvasPointerMoving(ev as PointerEvent));
-        visibleCanvas.addEventListener("pointercancel", (ev) => this.deletePointer(ev as PointerEvent));
-        visibleCanvas.addEventListener("mousedown",     (ev) => this.canvasMouseDown(ev as MouseEvent));    // pointerEvents only fire when the first button is pressed, and the last button is released
-        visibleCanvas.addEventListener("mouseup",       (ev) => this.canvasMouseUp(ev as MouseEvent));      // so we need mouse events to catch all button interactions
-        visibleCanvas.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
-        visibleCanvas.addEventListener("contextmenu",   (ev) => { ev.preventDefault() });
-        visibleCanvas.addEventListener("touchend",      (ev) => { ev.preventDefault() }, { passive: false });   // prevent touch-triggered MouseUp
-    }
+//#endregion
 //#region get, set
     get touchAction(): TouchAction {
         return this._touchAction;
@@ -74,6 +63,18 @@ export class InteractionManager {
         return this.app.ui;
     }
 //#endregion
+    constructor(private canvas: Canvas, private app: App) {
+        const visibleCanvas = canvas.visibleCanvas;
+        visibleCanvas.addEventListener("pointerdown",   (ev) => this.canvasPointerDown(ev as PointerEvent));
+        visibleCanvas.addEventListener("pointerup",     (ev) => this.canvasPointerUp(ev as PointerEvent));
+        visibleCanvas.addEventListener("pointermove",   (ev) => this.canvasPointerMoving(ev as PointerEvent));
+        visibleCanvas.addEventListener("pointercancel", (ev) => this.deletePointer(ev as PointerEvent));
+        visibleCanvas.addEventListener("mousedown",     (ev) => this.canvasMouseDown(ev as MouseEvent));    // pointerEvents only fire when the first button is pressed, and the last button is released
+        visibleCanvas.addEventListener("mouseup",       (ev) => this.canvasMouseUp(ev as MouseEvent));      // so we need mouse events to catch all button interactions
+        visibleCanvas.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
+        visibleCanvas.addEventListener("contextmenu",   (ev) => { ev.preventDefault() });
+        visibleCanvas.addEventListener("touchend",      (ev) => { ev.preventDefault() }, { passive: false });   // prevent touch-triggered MouseUp
+    }
 //#region primary interaction
     private canvasPointerDown(ev: PointerEvent) {
         if (ev.pointerType === "mouse") {

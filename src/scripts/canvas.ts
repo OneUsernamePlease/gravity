@@ -3,6 +3,7 @@ import * as essentials from "./essentials";
 import { VECTOR_THICKNESS } from "../const";
 
 export class Canvas {
+//#region properties
     // let offscreenCanvas: OffscreenCanvas; // use this in a worker thread to render or draw on, then transfer content to the visible html-canvas
     // let offscreenCanvasCtx: OffscreenCanvasRenderingContext2D;
     private _visibleCanvas: HTMLCanvasElement;
@@ -11,7 +12,8 @@ export class Canvas {
         this._visibleCanvas = visibleCanvas;
         this._visibleCanvasContext = visibleCanvas.getContext("2d")!;
     }
-    //#region get, set
+//#endregion
+//#region get, set
     get visibleCanvas() {
         return this._visibleCanvas;
     }
@@ -31,16 +33,15 @@ export class Canvas {
     get height(): number {
         return this.visibleCanvas.height;
     }
-    //#endregion
-
+//#endregion
     public resize(width: number, height: number) {
         this.visibleCanvas.width = width;
         this.visibleCanvas.height = height;
     }   
+//#region drawing stuff
     public clear() {
         this.visibleCanvasContext.clearRect(0, 0, this.width, this.height);
     }
-    //#region drawing stuff
     /**
      * @param position in canvas space
      * @param direction in canvas space
@@ -97,6 +98,5 @@ export class Canvas {
         }
         return false;
     }
-    //#endregion
-    
+//#endregion
 }

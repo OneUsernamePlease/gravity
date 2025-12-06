@@ -7,11 +7,12 @@ import * as tfm from "./transformations";
 import { GravityAnimationController } from "./gravity-animation-controller";
 import * as util from "./essentials";
 export class AnimationController {
+//#region properties
     private _canvas: Canvas;
     private _canvasSpace: CanvasSpace;
     private _animationSettings: AnimationSettings;
     private _running: boolean;
-
+//#endregion
 //#region get, set
     get canvas(): Canvas {
         return this._canvas;
