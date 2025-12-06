@@ -12,7 +12,7 @@ export class GravityAnimationController {
     private _running: boolean;
     private _interaction: InteractionManager;
     private _animation: AnimationController;
-    // ---
+
 //#region get, set
     get simulation(): Simulation {
         return this._simulation;
@@ -54,10 +54,12 @@ export class GravityAnimationController {
     get canvasSpace() {
         return this.animation.canvasSpace;
     }
+    get ui() {
+        return this.app.ui;
+    }
 //#endregion
 //#region initialization
 
-    // REPLACE PROPERTY APP WITH UI
     constructor(private app: App, elementId: string = "theCanvas") {
         const canvasElement: HTMLCanvasElement = document.getElementById(elementId) as HTMLCanvasElement;
         if (!canvasElement) {
@@ -66,17 +68,17 @@ export class GravityAnimationController {
         const canvas = new Canvas(canvasElement);
         this._simulation = new Simulation;
         this._animation = new AnimationController(canvas, this);
-        this._interaction = new InteractionManager(canvas, this, this.app);
+        this._interaction = new InteractionManager(canvas, this.app);
         this._running = false;
     }
 
     public initialize(width: number, height: number) {
-        this.animation.initialize(width, height, this.app.ui.animationSettings);
+        this.animation.initialize(width, height, this.ui.animationSettings);
         this.initSimulation();
     }
     private initSimulation() {
-        this.simulation.collisionDetection = this.app.ui.collisionDetectionCheckbox.checked;
-        this.simulation.elasticCollisions = this.app.ui.elasticCollisionsCheckbox.checked;
+        this.simulation.collisionDetection = this.ui.collisionDetection;
+        this.simulation.elasticCollisions = this.ui.elasticCollisions;
     }
 //#endregion
 
@@ -125,10 +127,10 @@ export class GravityAnimationController {
         this.simulation.elasticCollisions = elasticCollisions;
     }
     public updateStatusBarSimulationMessages() {
-        this.app.updateStatusBarSimulationInfo();
+        this.ui.updateStatusBarSimulationInfo();
     }
     public updateStatusBarAnimationInfo() {
-        this.app.updateStatusBarAnimationInfo();
+        this.ui.updateStatusBarAnimationInfo();
     }
     public addBody(body: Body2d, position: Vector2D, velocity: Vector2D = new Vector2D(0, 0)) {
         this.simulation.addObject(body, position, velocity);        
@@ -183,9 +185,6 @@ export class GravityAnimationController {
         const zoomStep = this.currentZoom * factor;
         const newZoom = this.animation.zoomIn(zoomCenter, zoomStep);
 
-        // Refactor me. this calls app, which should be removed
-        this.updateStatusBarAnimationInfo();
-
         return newZoom;
     }
     public zoomOut(
@@ -194,8 +193,6 @@ export class GravityAnimationController {
     ): number {
         const zoomStep = this.currentZoom * factor;
         const newZoom = this.animation.zoomOut(zoomCenter, zoomStep);
-
-        this.updateStatusBarAnimationInfo();
 
         return newZoom;
     }

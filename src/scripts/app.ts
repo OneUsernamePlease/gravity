@@ -17,9 +17,10 @@ export class App {
     //#endregion
     constructor() {
         this._gravityAnimationController = new GravityAnimationController(this);        
-        this._ui = new UI(this.gravityAnimationController);
+        this._ui = new UI(this);
+        this.initialize();
     }
-    public initialize() {
+    private initialize() {
         const width = window.innerWidth;
         const height = window.innerHeight;
         this.gravityAnimationController.initialize(width, height);

@@ -1,7 +1,7 @@
 import { Body2d } from "./gravity";
 import * as util from "./essentials";
 import { UIElements, RadioButtonGroup, StatusBar, UIAnimationSettings } from "./types";
-import { GravityAnimationController } from "./gravity-animation-controller";
+import { App } from "./app";
 
 export class UI implements UIElements {
 // All UI Elements
@@ -60,8 +60,11 @@ export class UI implements UIElements {
             gravitationalConstant: this.gravitationalConstant,
         };
     }
+    get gravityAnimationController() {
+        return this.app.gravityAnimationController;
+    }
     //#endregion
-    constructor(private gravityAnimationController: GravityAnimationController) {
+    constructor(private app: App) {
         this.resetButton                        = document.getElementById("btnResetSim")! as HTMLInputElement;
         this.playPauseButton                    = document.getElementById("btnToggleSim")! as HTMLInputElement;
         this.stepButton                         = document.getElementById("btnNextStep")! as HTMLInputElement;
