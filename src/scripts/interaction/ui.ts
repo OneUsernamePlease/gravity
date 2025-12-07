@@ -2,6 +2,7 @@ import { Body2d } from "../simulation/gravity";
 import * as util from "../util/util";
 import { UIElements, RadioButtonGroup, StatusBar, UIAnimationSettings } from "../const/types";
 import { App } from "../app/app";
+import { VECTOR_ACC_COLOR_NAME, VECTOR_VEL_COLOR_NAME } from "../const/const";
 
 export class UI implements UIElements {
 //#region properties
@@ -119,11 +120,7 @@ export class UI implements UIElements {
         this.elasticCollisionsCheckbox.disabled = !this.collisionDetectionCheckbox.checked;
         this.massInput.step = this.calculateMassInputStep();
         
-        if (this.displayVectorsCheckbox.checked) {
-            this.setStatusMessage("Green: acceleration - Red: velocity", 3);
-        } else {
-            this.setStatusMessage("", 3);
-        }
+        this.setStatusBarVectors()
         
         this.updateStatusBarCanvasDimensions(width, height);
 
@@ -170,11 +167,7 @@ export class UI implements UIElements {
     public cbxDisplayVectorsChanged() {
         const displayVectors = this.displayVectorsCheckbox.checked;
         this.gravityAnimationController.setDisplayVectors(displayVectors)
-        if (displayVectors) {
-            this.setStatusMessage("Green: acceleration - Red: velocity", 3);
-        } else {
-            this.setStatusMessage("", 3);
-        }
+        this.setStatusBarVectors();
     }
     public cbxCollisionsChanged() {
         const checked = this.collisionDetectionCheckbox.checked;
@@ -230,6 +223,14 @@ export class UI implements UIElements {
         let step = 10 ** (Math.floor(Math.log10(this.mass)) - 1);
         return step < 1 ? "1" : step.toString();
     }
+    private setStatusBarVectors() {
+        const displayVectors = this.displayVectorsCheckbox.checked;
+        if (displayVectors) {
+            this.setStatusMessage(this.statusBarVectorMessage(), 3);
+        } else {
+            this.setStatusMessage("", 3);
+        }
+    }
     public updateStatusBarSimulationInfo() {
         this.updateStatusBarTickCount(this.gravityAnimationController.tickCount);
         this.updateStatusBarBodyCount(this.gravityAnimationController.bodyCount);
@@ -249,7 +250,9 @@ export class UI implements UIElements {
     public updateStatusBarCanvasDimensions(width: number, height: number, statusBarFieldIndex: number = 5) {
         this.setStatusMessage(`Canvas dimension: ${width} * ${height}`, statusBarFieldIndex);
     }
-    
+    private statusBarVectorMessage() {
+        return `Acceleration: ${VECTOR_ACC_COLOR_NAME} - Velocity: ${VECTOR_VEL_COLOR_NAME}`;
+    }
     /**
      * @param fieldIndexOrId number of field (starting at one) OR id of the field
      */

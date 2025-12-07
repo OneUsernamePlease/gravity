@@ -1,4 +1,4 @@
-import { BACKGROUND_COLOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM } from "../const/const";
+import { BACKGROUND_COLOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM, VECTOR_ACC_COLOR, VECTOR_VEL_COLOR } from "../const/const";
 import { Canvas } from "./canvas";
 import { Body2d } from "../simulation/gravity";
 import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../const/types";
@@ -117,8 +117,8 @@ export class AnimationController {
             const accelerationOnCanvas = tfm.directionFromSimulationSpaceToCanvasSpace(objectState.acceleration, this.canvasSpace);
             const velocityOnCanvas = tfm.directionFromSimulationSpaceToCanvasSpace(objectState.velocity, this.canvasSpace);
             
-            this.canvas.drawVector(positionOnCanvas, accelerationOnCanvas, "green");
-            this.canvas.drawVector(positionOnCanvas, velocityOnCanvas, "red");
+            this.canvas.drawVector(positionOnCanvas, accelerationOnCanvas, VECTOR_ACC_COLOR);
+            this.canvas.drawVector(positionOnCanvas, velocityOnCanvas, VECTOR_VEL_COLOR);
         });
     }
     public setDisplayVectors(display: boolean) {
