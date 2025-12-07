@@ -1,7 +1,7 @@
 import { ObjectState } from "../const/types";
 import { Vector2D } from "../util/vector2d";
 import * as c from "../const/const";
-import { mixColorsWeighted, randomHexColor } from "../animation/animation-utils";
+import { massDependentColor } from "../animation/animation-utils";
 
 export class Body2d {
 //#region properties
@@ -44,7 +44,7 @@ export class Body2d {
         this._mass = mass;
         if (radius === undefined) { radius = this.defaultRadius(mass); }
         this._radius = radius;
-        if (color === undefined) { color = randomHexColor(); }
+        if (color === undefined) { color = massDependentColor(mass); }
         this._color = color;
         if (movable === undefined) { movable = true; }
         this._movable = movable;     
@@ -267,7 +267,7 @@ export class Simulation {
         changeObject.velocity = resultingVelocity;
         changeObject.body.mass = totalMass;
         changeObject.body.radius = changeObject.body.defaultRadius();
-        changeObject.body.color = mixColorsWeighted(state1.body.color, state1.body.mass, state2.body.color, state2.body.mass);
+        changeObject.body.color = massDependentColor(changeObject.body.mass);
         changeObject.body.movable = (state1.body.movable && state2.body.movable);
         if (!changeObject.body.movable) {
             changeObject.velocity = new Vector2D(0, 0);
