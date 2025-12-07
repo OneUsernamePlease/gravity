@@ -69,7 +69,7 @@ export function hexToDecimal(hex: string): number {
  * @param min the lowest allowed value for n
  * @param max the highest allowed value for n
  */
-export function numberInRange(n: number, min: number, max: number): number {
+export function clamp(n: number, min: number, max: number): number {
     if (min > max) {
         throw new Error("In ensureNumberInRange: min cannot be greater than max");
     }
@@ -133,5 +133,12 @@ export function calculateVelocityBetweenPoints(toCoordinate: Vector2D | {x: numb
     const toVector = toCoordinate instanceof Vector2D ? toCoordinate : new Vector2D(toCoordinate)
     const distance: Vector2D = toVector.subtract(fromCoordinate);
     return distance.scale(1 / timeFrameInSeconds);
+}
+/**
+ * returns n in hex formatted string, with length >= 2. 
+ * @param n number to convert
+ */
+export function twoDigitHex(n: number) {
+    return n.toString(16).padStart(2, "0");
 }
 //#endregion

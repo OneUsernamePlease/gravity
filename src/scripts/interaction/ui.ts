@@ -217,7 +217,7 @@ export class UI implements UIElements {
         const movable = this.movableCheckbox.checked;
         const mass = util.getInputNumber(this.massInput);
 
-        return new Body2d(util.numberInRange(mass, 1, Number.MAX_SAFE_INTEGER), movable);
+        return new Body2d(util.clamp(mass, 1, Number.MAX_SAFE_INTEGER), movable);
     }
     public updateSelectedMass() {
         this.massInput.step = this.calculateMassInputStep();
