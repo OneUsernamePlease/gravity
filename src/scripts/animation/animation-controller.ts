@@ -204,7 +204,7 @@ export class AnimationController {
         return newZoom;
     }
     private setZoom(newZoom: number) {
-        newZoom = util.numberInRange(newZoom, MIN_ZOOM, MAX_ZOOM);
+        newZoom = util.clamp(newZoom, MIN_ZOOM, MAX_ZOOM);
         this.canvasSpace.currentZoom = newZoom;
         
         this.redrawIfPaused();
