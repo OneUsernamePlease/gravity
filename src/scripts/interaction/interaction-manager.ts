@@ -1,10 +1,10 @@
-import { Vector2D } from "./vector2d";
-import { TouchAction, ButtonState, MouseButtons, Pointer, MouseAction, MultiTouchGesture } from "./types";
-import * as util from "./essentials";
-import { Canvas } from "./canvas";
-import { App } from "./app";
-import * as tfm from "./transformations";
-import { Body2d } from "./gravity";
+import { Vector2D } from "../util/vector2d";
+import { TouchAction, ButtonState, MouseButtons, Pointer, MouseAction, MultiTouchGesture } from "../const/types";
+import * as util from "../util/util";
+import { Canvas } from "../animation/canvas";
+import { App } from "../app/app";
+import * as tfm from "../util/transformations";
+import { Body2d } from "../simulation/gravity";
 
 export class InteractionManager {
 //#region properties

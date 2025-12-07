@@ -1,6 +1,6 @@
 import { test } from "vitest";
-import { Body2d, Simulation } from "../scripts/gravity";
-import { Vector2D } from "../scripts/vector2d";
+import { Body2d, Simulation } from "../scripts/simulation/gravity";
+import { Vector2D } from "../scripts/util/vector2d";
 
 test("elastic collision, two bodies, one moving towards other center", () => {
 

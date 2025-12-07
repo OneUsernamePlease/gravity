@@ -1,11 +1,11 @@
-import { Canvas } from "./canvas";
+import { Canvas } from "../animation/canvas";
 import { Body2d, Simulation } from "./gravity";
-import { ObjectState } from "./types";
-import { Vector2D } from "./vector2d";
-import { App } from "./app";
-import { DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR } from "../const";
-import { InteractionManager } from "./interaction-manager";
-import { AnimationController } from "./animation-controller";
+import { ObjectState } from "../const/types";
+import { Vector2D } from "../util/vector2d";
+import { App } from "../app/app";
+import { DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR } from "../const/const";
+import { InteractionManager } from "../interaction/interaction-manager";
+import { AnimationController } from "../animation/animation-controller";
 
 export class GravityAnimationController {
 //#region properties

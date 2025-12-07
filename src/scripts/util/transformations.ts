@@ -1,4 +1,4 @@
-import { CanvasSpace } from "./types";
+import { CanvasSpace } from "../const/types";
 import { Coordinate, Vector2D } from "./vector2d";
 
 export function absoluteToCanvasPosition(absolutePosition: Coordinate, canvas: HTMLCanvasElement): Vector2D {

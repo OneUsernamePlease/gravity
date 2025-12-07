@@ -1,11 +1,11 @@
-import { BACKGROUND_COLOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM } from "../const";
+import { BACKGROUND_COLOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM } from "../const/const";
 import { Canvas } from "./canvas";
-import { Body2d } from "./gravity";
-import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "./types";
-import { Vector2D } from "./vector2d";
-import * as tfm from "./transformations";
-import { GravityAnimationController } from "./gravity-animation-controller";
-import * as util from "./essentials";
+import { Body2d } from "../simulation/gravity";
+import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../const/types";
+import { Vector2D } from "../util/vector2d";
+import * as tfm from "../util/transformations";
+import { GravityAnimationController } from "../simulation/gravity-animation-controller";
+import * as util from "../util/util";
 export class AnimationController {
 //#region properties
     private _canvas: Canvas;

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { Vector2D } from '../scripts/vector2d';
+import { Vector2D } from '../scripts/util/vector2d';
 
 test('test test', () => {
   expect(true).toBe(true);

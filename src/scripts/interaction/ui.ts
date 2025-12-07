@@ -1,7 +1,7 @@
-import { Body2d } from "./gravity";
-import * as util from "./essentials";
-import { UIElements, RadioButtonGroup, StatusBar, UIAnimationSettings } from "./types";
-import { App } from "./app";
+import { Body2d } from "../simulation/gravity";
+import * as util from "../util/util";
+import { UIElements, RadioButtonGroup, StatusBar, UIAnimationSettings } from "../const/types";
+import { App } from "../app/app";
 
 export class UI implements UIElements {
 //#region properties

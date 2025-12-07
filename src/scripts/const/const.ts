@@ -1,4 +1,3 @@
-import { ButtonState, Mouse } from "./scripts/types";
 
 //#region physics
 export const DEFAULT_G = 50;
@@ -13,5 +12,5 @@ export const DEFAULT_ZOOM_FACTOR = 0.1;
 export const DEFAULT_SCROLL_RATE = 0.1;
 export const VECTOR_THICKNESS = 1;
 export const MIN_DISPLAYED_RADIUS = 0.75;
-export const BACKGROUND_COLOR = "#3f3f3fff";
+export const BACKGROUND_COLOR = "#222222ff";
 //#endregion

@@ -1,5 +1,5 @@
-import { UI } from "./ui";
-import { GravityAnimationController } from "./gravity-animation-controller";
+import { UI } from "../interaction/ui";
+import { GravityAnimationController } from "../simulation/gravity-animation-controller";
 
 export class App {
 //#region properties

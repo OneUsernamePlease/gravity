@@ -1,6 +1,6 @@
-import { Vector2D } from "./vector2d";
-import * as essentials from "./essentials";
-import { VECTOR_THICKNESS } from "../const";
+import { Vector2D } from "../util/vector2d";
+import * as essentials from "../util/util";
+import { VECTOR_THICKNESS } from "../const/const";
 
 export class Canvas {
 //#region properties

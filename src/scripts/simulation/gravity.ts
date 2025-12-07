@@ -1,7 +1,7 @@
-import { ObjectState } from "./types";
-import { Vector2D } from "./vector2d";
-import * as c from "../const";
-import { mixColorsWeighted, randomHexColor } from "./essentials";
+import { ObjectState } from "../const/types";
+import { Vector2D } from "../util/vector2d";
+import * as c from "../const/const";
+import { mixColorsWeighted, randomHexColor } from "../animation/animation-utils";
 
 export class Body2d {
 //#region properties
