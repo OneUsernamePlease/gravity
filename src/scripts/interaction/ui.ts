@@ -52,7 +52,7 @@ export class UI implements UIElements {
     }
     get animationSettings(): UIAnimationSettings {
         return {
-            displayVectors: this.displayVectorsCheckbox.checked,
+            displayVectors: this.displayVectors,
         };
     }
     get simulationSettings() {
@@ -165,8 +165,7 @@ export class UI implements UIElements {
         this.gravityAnimationController.scrollRight();
     }
     public cbxDisplayVectorsChanged() {
-        const displayVectors = this.displayVectorsCheckbox.checked;
-        this.gravityAnimationController.setDisplayVectors(displayVectors)
+        this.gravityAnimationController.setDisplayVectors(this.displayVectors)
         this.setStatusBarVectors();
     }
     public cbxCollisionsChanged() {
@@ -224,8 +223,7 @@ export class UI implements UIElements {
         return step < 1 ? "1" : step.toString();
     }
     private setStatusBarVectors() {
-        const displayVectors = this.displayVectorsCheckbox.checked;
-        if (displayVectors) {
+        if (this.displayVectors) {
             this.setStatusMessage(this.statusBarVectorMessage(), 3);
         } else {
             this.setStatusMessage("", 3);
