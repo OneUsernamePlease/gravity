@@ -1,16 +1,24 @@
 import { Vector2D } from "../util/vector2d";
 import * as essentials from "../util/util";
 import { VECTOR_THICKNESS } from "../const/const";
+import { FrameController } from "./frame-controller";
+
+/*
+ * keep the visible canvas.
+ * add offscreen-canvas.
+ * move draw methods to the offscreen-canvas class.
+ * here we ask offscreen for the current frame and draw it onto the visible canvas.
+ */
 
 export class Canvas {
 //#region properties
-    // let offscreenCanvas: OffscreenCanvas; // use this in a worker thread to render or draw on, then transfer content to the visible html-canvas
-    // let offscreenCanvasCtx: OffscreenCanvasRenderingContext2D;
+    private _frameController: FrameController;
     private _visibleCanvas: HTMLCanvasElement;
     private _visibleCanvasContext: CanvasRenderingContext2D;
     constructor(visibleCanvas: HTMLCanvasElement) {
         this._visibleCanvas = visibleCanvas;
         this._visibleCanvasContext = visibleCanvas.getContext("2d", { alpha: false })!;
+        this._frameController = new FrameController(visibleCanvas.width, visibleCanvas.height);
     }
 //#endregion
 //#region get, set
@@ -26,6 +34,9 @@ export class Canvas {
     set visibleCanvasContext(context: CanvasRenderingContext2D) {
         this._visibleCanvasContext = context;
     }
+    get frameController() {
+        return this._frameController;
+    }
     // additional getters
     get width(): number {
         return this.visibleCanvas.width;
@@ -37,11 +48,17 @@ export class Canvas {
     public resize(width: number, height: number) {
         this.visibleCanvas.width = width;
         this.visibleCanvas.height = height;
+        this.frameController.resize(width, height);
     }   
 //#region drawing stuff
     public clear() {
         this.visibleCanvasContext.clearRect(0, 0, this.width, this.height);
     }
+    public draw() {
+        const frame = this.frameController.frame(); // OffscreenCanvas with combined result
+        this.visibleCanvasContext.drawImage(frame, 0, 0);
+    }
+
     public fillCanvas(color: string = "#000000") {
         this.visibleCanvasContext.fillStyle = color;
         this.visibleCanvasContext.fillRect(0, 0, this.width, this.height);

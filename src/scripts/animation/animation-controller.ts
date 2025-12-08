@@ -4,13 +4,15 @@ import { Body2d } from "../simulation/gravity";
 import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../const/types";
 import { Vector2D } from "../util/vector2d";
 import * as tfm from "../util/transformations";
-import { GravityAnimationController } from "../simulation/gravity-animation-controller";
+import { GravityAnimationController } from "./gravity-animation-controller";
 import * as util from "../util/util";
+import { FrameController } from "./frame-controller";
 export class AnimationController {
 //#region properties
     private _canvas: Canvas;
     private _canvasSpace: CanvasSpace;
     private _animationSettings: AnimationSettings;
+    private _frameController: FrameController;
     private _running: boolean;
 //#endregion
 //#region get, set
@@ -33,6 +35,13 @@ export class AnimationController {
     }
     set canvasSpace(canvasSpace: CanvasSpace) {
         this._canvasSpace = canvasSpace;
+    }
+
+    get frameController(): FrameController {
+        return this._frameController;
+    }
+    private set frameController(frameController: FrameController) {
+        this._frameController = frameController;
     }
 
     get running() {
@@ -60,9 +69,11 @@ export class AnimationController {
         this._animationSettings = { frameLength: 25, displayVectors: true, tracePaths: true };
         this._canvas = canvas;
         this._canvasSpace = {origin: new Vector2D(0, 0), currentZoom: 1, orientationY: -1};
+        this._frameController = new FrameController(canvas.width, canvas.height)
         this._running = false;
     }
     public initialize(width: number, height: number, animationSettings: UIAnimationSettings) {
+        // this height setting should be done with window dimensions here, don't pass them around classes for no reason
         this.canvas.visibleCanvas.width = width;
         this.canvas.visibleCanvas.height = height;
 
