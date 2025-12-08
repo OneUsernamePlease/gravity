@@ -71,7 +71,7 @@ export function hexToDecimal(hex: string): number {
  */
 export function clamp(n: number, min: number, max: number): number {
     if (min > max) {
-        throw new Error("In ensureNumberInRange: min cannot be greater than max");
+        throw new Error("In function clamp: min cannot be greater than max");
     }
     return Math.max(min, Math.min(n, max))
 }
