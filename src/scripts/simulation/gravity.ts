@@ -2,6 +2,8 @@ import { ObjectState } from "../const/types";
 import { Vector2D } from "../util/vector2d";
 import * as c from "../const/const";
 import { massDependentColor } from "../animation/animation-utils";
+import { SimulationAPI } from "../const/apis";
+import { clamp } from "../util/util";
 
 export class Body2d {
 //#region properties
@@ -17,11 +19,13 @@ export class Body2d {
     }
     public set mass(newMass: number) {
         this._mass = newMass;
+        this._radius = this.defaultRadius(newMass);
+        this._color = massDependentColor(newMass);
     }
     public get radius() {
         return this._radius;
     }
-    public set radius(newRadius: number) {
+    private set radius(newRadius: number) {
         this._radius = newRadius;
     }
     public get movable() {
@@ -33,7 +37,7 @@ export class Body2d {
     public get color() : string {
         return this._color
     }
-    public set color(c: string) {
+    private set color(c: string) {
         if (!(CSS.supports("color", c))) {
             c = "#818181ff";
         }
@@ -60,7 +64,7 @@ export class Body2d {
         return ((3 * mass)/(4 * Math.PI * Body2d.defaultDensity)) ** (1/3); 
     }
 }
-export class Simulation {
+export class Simulation implements SimulationAPI {
     private _simulationState: ObjectState[];
     private _running: boolean;
     private _tickCount: number;
@@ -69,32 +73,24 @@ export class Simulation {
     private _elasticCollisions: boolean;
     private _g: number; // gravitational constant
     private readonly gravityLowerBounds: number = 1; // force calculations for distances lower than this number are skipped
-    constructor() { 
-        this._simulationState = [];
-        this._running = false;
-        this._tickCount = 0;
-        this._tickLength = 10; // ms
-        this._collisionDetection = false;
-        this._elasticCollisions = false;
-        this._g = c.DEFAULT_G;
-    }
+
     // #region get, set
     public get simulationState() {
         return this._simulationState;
     }
-    public set simulationState(objectState: ObjectState[]) {
+    private set simulationState(objectState: ObjectState[]) {
         this._simulationState = objectState;
     }
     public get running() {
         return this._running;
     }
-    public set running(running: boolean) {
+    private set running(running: boolean) {
         this._running = running;
     }
     public get tickCount() {
         return this._tickCount;
     }
-    public set tickCount(tickCount: number) {
+    private set tickCount(tickCount: number) {
         this._tickCount = tickCount;
     }
     public get tickLength() {
@@ -118,13 +114,20 @@ export class Simulation {
     public get g() {
         return this._g;
     }
-    public set g(g: number) {
-        if (isNaN(g) || g < c.MIN_G || g > c.MAX_G) {
-            g = c.DEFAULT_G;
-        }
+    private set g(g: number) {
         this._g = g;
     }
 // #endregion
+    constructor() { 
+        this._simulationState = [];
+        this._running = false;
+        this._tickCount = 0;
+        this._tickLength = 10; // ms
+        this._collisionDetection = false;
+        this._elasticCollisions = false;
+        this._g = c.DEFAULT_G;
+    }
+
     public addObject(body: Body2d, position: Vector2D, velocity: Vector2D): number 
     public addObject(objectState: ObjectState): number 
     public addObject(bodyOrObject: ObjectState | Body2d, position?: Vector2D, velocity?: Vector2D): number {
@@ -135,12 +138,6 @@ export class Simulation {
             bodyOrObject.velocity = new Vector2D(0, 0);
         }
         return this.simulationState.push(bodyOrObject);
-    }
-    private clearObjects() {
-        this.simulationState = [];
-    }
-    private removeFromObjectStates(index: number) {
-        this.simulationState.splice(index, 1);
     }
     public pause() {
         this.running = false;
@@ -170,6 +167,17 @@ export class Simulation {
             this.handleCollisions();
         }
         this.tickCount++;
+    }
+    public setG(g: number) {
+        const newG = clamp(g, c.MIN_G, c.MAX_G);
+        this.g = newG;
+        return newG;
+    }
+    private clearObjects() {
+        this.simulationState = [];
+    }
+    private removeFromObjectStates(index: number) {
+        this.simulationState.splice(index, 1);
     }
     private updateAccelerationVectors() {
         const forces: Map<number, Vector2D> = this.calculateForces();
@@ -266,8 +274,8 @@ export class Simulation {
         }
         changeObject.velocity = resultingVelocity;
         changeObject.body.mass = totalMass;
-        changeObject.body.radius = changeObject.body.defaultRadius();
-        changeObject.body.color = massDependentColor(changeObject.body.mass);
+        //changeObject.body.radius = changeObject.body.defaultRadius();
+        //changeObject.body.color = massDependentColor(changeObject.body.mass);
         changeObject.body.movable = (state1.body.movable && state2.body.movable);
         if (!changeObject.body.movable) {
             changeObject.velocity = new Vector2D(0, 0);

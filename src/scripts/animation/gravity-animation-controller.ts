@@ -1,5 +1,5 @@
 import { Canvas } from "../animation/canvas";
-import { Body2d, Simulation } from "./gravity";
+import { Body2d, Simulation } from "../simulation/gravity";
 import { ObjectState } from "../const/types";
 import { Vector2D } from "../util/vector2d";
 import { App } from "../app/app";
@@ -132,7 +132,7 @@ export class GravityAnimationController {
         this.animation.redrawIfPaused();
     }
     public setG(g: number) {
-        this.simulation.g = g;
+        this.simulation.setG(g);
     }
     public scrollInCanvasUnits(movementOnCanvas: Vector2D){
         const movementInSimulationUnits = movementOnCanvas.scale(this.currentZoom);
