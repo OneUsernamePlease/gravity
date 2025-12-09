@@ -85,7 +85,6 @@ export class GravityAnimationController {
     public stop() {
         this.running = false;
         this.simulation.stop();
-        this.animation.stop();
     }
     public toggle() {
         if (this.running) {
@@ -96,14 +95,12 @@ export class GravityAnimationController {
     }
     public reset() {
         this.simulation.reset();
-        this.animation.redrawIfPaused();
     }
     public advanceOneTick() {
         if (this.running) {
             return;
         }
         this.simulation.advanceTick();
-        this.animation.redrawIfPaused();
     }
 //#endregion
 
@@ -121,8 +118,7 @@ export class GravityAnimationController {
         this.ui.updateStatusBarAnimationInfo();
     }
     public addBody(body: Body2d, position: Vector2D, velocity: Vector2D = new Vector2D(0, 0)) {
-        this.simulation.addObject(body, position, velocity);        
-        this.animation.redrawIfPaused();
+        this.simulation.addObject(body, position, velocity);
     }
     public setG(g: number) {
         this.simulation.setG(g);

@@ -14,7 +14,7 @@ export class AnimationController {
     private _running: boolean;
 //#endregion
 //#region get, set
-    private get canvas(): Canvas {
+    public get canvas(): Canvas {
         return this._canvas;
     }
     private set canvas(canvas: Canvas) {
@@ -89,11 +89,6 @@ export class AnimationController {
     public stop() {
         this.running = false;
     }
-    public redrawIfPaused() {
-        if (!this.running) {
-            this.redrawSimulationState(this.simulationState, this.animationSettings);
-        }
-    }
     private drawBodies(objectStates: ObjectState[]) {
         objectStates.forEach(object => {
             this.drawBody(object.body, tfm.pointFromSimulationSpaceToCanvasSpace(object.position, this.canvasSpace));
@@ -123,21 +118,17 @@ export class AnimationController {
     }
     public setDisplayVectors(display: boolean) {
         this.animationSettings.displayVectors = display;
-        this.redrawIfPaused();
     }
     public resizeCanvas(width: number, height: number) {
         this.canvas.resize(width, height);
-        this.redrawIfPaused();
     }
     public setCanvasView(origin: Vector2D, zoom: number) { 
         this.setOrigin(origin);
         this.setZoom(zoom);
         this.gravityAnimationController.updateStatusBarAnimationInfo();
-        this.redrawIfPaused();
     }
     private moveCanvas(displacement: { x: number; y: number }) {
         this.moveOrigin(displacement);
-        this.redrawIfPaused();
     }
     public scroll(displacement: { x: number; y: number }) {
         this.moveCanvas(displacement);
@@ -174,8 +165,6 @@ export class AnimationController {
         this.moveOrigin(shiftOrigin.hadamardProduct({x: -1, y: 1}));
         this.canvasSpace.currentZoom = newZoom;
 
-        this.redrawIfPaused();
-
         return newZoom;
     }
     /**
@@ -199,15 +188,11 @@ export class AnimationController {
         this.moveOrigin(shiftOrigin.hadamardProduct({x: 1, y: -1}));
         this.canvasSpace.currentZoom = newZoom;
 
-        this.redrawIfPaused();
-
         return newZoom;
     }
     private setZoom(newZoom: number) {
         newZoom = util.clamp(newZoom, MIN_ZOOM, MAX_ZOOM);
         this.canvasSpace.currentZoom = newZoom;
-        
-        this.redrawIfPaused();
     }
     public zoomToFactor(factor: number, zoomCenter?: Vector2D): number {
         if (factor <= 0) return this.currentZoom;
