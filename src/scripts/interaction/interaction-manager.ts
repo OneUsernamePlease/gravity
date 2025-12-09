@@ -1,5 +1,5 @@
 import { Vector2D } from "../util/vector2d";
-import { TouchAction, ButtonState, MouseButtons, Pointer, MouseAction, MultiTouchGesture } from "../const/types";
+import { TouchAction, ButtonState, MouseButtons, Pointer, MouseAction, MultiTouchGesture } from "../types/types";
 import * as util from "../util/util";
 import { Canvas } from "../animation/canvas";
 import { App } from "../app/app";
@@ -68,7 +68,7 @@ export class InteractionManager {
         visibleCanvas.addEventListener("pointerdown",   (ev) => this.canvasPointerDown(ev as PointerEvent));
         visibleCanvas.addEventListener("pointerup",     (ev) => this.canvasPointerUp(ev as PointerEvent));
         visibleCanvas.addEventListener("pointermove",   (ev) => this.canvasPointerMoving(ev as PointerEvent));
-        visibleCanvas.addEventListener("pointercancel", (ev) => this.deletePointer(ev as PointerEvent));
+        visibleCanvas.addEventListener("pointercancel", (ev) => this.reset());
         visibleCanvas.addEventListener("mousedown",     (ev) => this.canvasMouseDown(ev as MouseEvent));    // pointerEvents only fire when the first button is pressed, and the last button is released
         visibleCanvas.addEventListener("mouseup",       (ev) => this.canvasMouseUp(ev as MouseEvent));      // so we need mouse events to catch all button interactions
         visibleCanvas.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
@@ -156,39 +156,35 @@ export class InteractionManager {
                             }
 
                             this.lastSingleTouchPos = new Vector2D(currentTouchPosition.x, currentTouchPosition.y);
+
                             return;
-                        }
+                        } else {
 
-                        // --------------------
-                        //      MULTI TOUCH IS WHAT'S LEFT
-                        // --------------------
-                        const touches = [...this.activeTouches.values()];
-                        const p1 = touches[0];
-                        const p2 = touches[1];
+                            // --------------------
+                            //      MULTI TOUCH IS WHAT'S LEFT
+                            // --------------------
+                            const gesture = this.multiTouchGesture();
+                            if (!gesture) { return; }
 
-                        const touchesMidpoint = new Vector2D(
-                            (p1.x + p2.x) / 2,
-                            (p1.y + p2.y) / 2
-                        );
+                            const touchesMidpoint = gesture.midpoint;
+                            const touchesDistance = gesture.distance;
 
-                        const touchesDistance = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+                            // no previous gesture -> initialize
+                            if (this.previousTouchesMid === null || this.previousTouchesDist === null) {
+                                this.previousTouchesMid = touchesMidpoint;
+                                this.previousTouchesDist = touchesDistance;
+                                return;
+                            }
 
-                        // no previous gesture -> initialize
-                        if (this.previousTouchesMid === null || this.previousTouchesDist === null) {
+                            const zoomFactor = touchesDistance / this.previousTouchesDist;
+                            const zoomCenterCanvas = tfm.relativePosition(touchesMidpoint, this.canvas.visibleCanvas);
+                            const scroll = touchesMidpoint.subtract(this.previousTouchesMid);
+                            this.gravityAnimationController.zoomToFactor(zoomFactor, zoomCenterCanvas);
+                            this.gravityAnimationController.scrollInCanvasUnits(scroll);
+
                             this.previousTouchesMid = touchesMidpoint;
                             this.previousTouchesDist = touchesDistance;
-                            return;
                         }
-
-                        const zoomFactor = touchesDistance / this.previousTouchesDist;
-                        const zoomCenterCanvas = tfm.relativePosition(touchesMidpoint, this.canvas.visibleCanvas);
-                        const scroll = touchesMidpoint.subtract(this.previousTouchesMid);
-                        this.gravityAnimationController.zoomToFactor(zoomFactor, zoomCenterCanvas);
-                        this.gravityAnimationController.scrollInCanvasUnits(scroll);
-
-                        this.previousTouchesMid = touchesMidpoint;
-                        this.previousTouchesDist = touchesDistance;
-
                         break;
                     }
 

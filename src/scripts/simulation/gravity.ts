@@ -1,8 +1,8 @@
-import { ObjectState } from "../const/types";
+import { ObjectState, SimulationSettings } from "../types/types";
 import { Vector2D } from "../util/vector2d";
 import * as c from "../const/const";
 import { massDependentColor } from "../animation/animation-utils";
-import { SimulationAPI } from "../const/apis";
+import { SimulationAPI } from "../types/apis";
 import { clamp } from "../util/util";
 
 export class Body2d {
@@ -64,8 +64,8 @@ export class Body2d {
         return ((3 * mass)/(4 * Math.PI * Body2d.defaultDensity)) ** (1/3); 
     }
 }
-export class Simulation implements SimulationAPI {
-    private _simulationState: ObjectState[];
+export class Gravity implements SimulationAPI {
+    private _simulationState: ObjectState[]; // Insertion Order is not preserved (bc we delete bodies using swap & pop). Switch to map at some point
     private _running: boolean;
     private _tickCount: number;
     private _tickLength: number;
@@ -73,49 +73,15 @@ export class Simulation implements SimulationAPI {
     private _elasticCollisions: boolean;
     private _g: number; // gravitational constant
     private readonly gravityLowerBounds: number = 1; // force calculations for distances lower than this number are skipped
-
-    // #region get, set
-    public get simulationState() {
+//#region get, set
+    get simulationState() {
         return this._simulationState;
     }
-    private set simulationState(objectState: ObjectState[]) {
-        this._simulationState = objectState;
-    }
-    public get running() {
-        return this._running;
-    }
-    private set running(running: boolean) {
-        this._running = running;
-    }
-    public get tickCount() {
+    get tick() {
         return this._tickCount;
     }
-    private set tickCount(tickCount: number) {
-        this._tickCount = tickCount;
-    }
-    public get tickLength() {
-        return this._tickLength;
-    }
-    public set tickLength(t: number) {
-        this._tickLength = t;
-    }
-    public get collisionDetection() {
-        return this._collisionDetection;
-    }
-    public set collisionDetection(collisionDetection: boolean) {
-        this._collisionDetection = collisionDetection;
-    }
-    public get elasticCollisions() {
-        return this._elasticCollisions;
-    }
-    public set elasticCollisions(elasticCollisions: boolean) {
-        this._elasticCollisions = elasticCollisions;
-    }
-    public get g() {
-        return this._g;
-    }
-    private set g(g: number) {
-        this._g = g;
+    get running() {
+        return this._running;
     }
 // #endregion
     constructor() { 
@@ -127,30 +93,29 @@ export class Simulation implements SimulationAPI {
         this._elasticCollisions = false;
         this._g = c.DEFAULT_G;
     }
-
-    public addObject(body: Body2d, position: Vector2D, velocity: Vector2D): number 
-    public addObject(objectState: ObjectState): number 
-    public addObject(bodyOrObject: ObjectState | Body2d, position?: Vector2D, velocity?: Vector2D): number {
-        if (bodyOrObject instanceof Body2d) {
-            bodyOrObject = {body: bodyOrObject, position: position!, velocity: velocity!, acceleration: new Vector2D(0, 0)};
-        }
-        if (!bodyOrObject.body.movable) {
-            bodyOrObject.velocity = new Vector2D(0, 0);
-        }
-        return this.simulationState.push(bodyOrObject);
+    public applySettings(settings: SimulationSettings): void {
+        this._collisionDetection = settings.collisionDetection;
+        this._elasticCollisions = settings.elasticCollisions;
+        this._g = settings.gravitationalConstant;
     }
-    public pause() {
-        this.running = false;
+    public addObject(objectState: ObjectState): number  {
+        if (!objectState.body.movable) {
+            objectState.velocity = new Vector2D(0, 0);
+        }
+        return this.simulationState.push(objectState);
+    }
+    public stop() {
+        this._running = false;
     }
     public run() {
-        if (this.running) {
+        if (this._running) {
             return;
         }
-        this.running = true;
+        this._running = true;
 
         const runSimulationStep = () => {
-            if (this.running) {
-                setTimeout(runSimulationStep, this.tickLength);
+            if (this._running) {
+                setTimeout(runSimulationStep, this._tickLength);
                 this.advanceTick();
             }
         };
@@ -158,26 +123,34 @@ export class Simulation implements SimulationAPI {
     }
     public reset() {
         this.clearObjects();
-        this.tickCount = 0;
+        this._tickCount = 0;
     }
     public advanceTick() {
         this.updateAccelerationVectors();
         this.updateVelocitiesAndPositions();
-        if (this.collisionDetection) {
+        if (this._collisionDetection) {
             this.handleCollisions();
         }
-        this.tickCount++;
+        this._tickCount++;
     }
     public setG(g: number) {
         const newG = clamp(g, c.MIN_G, c.MAX_G);
-        this.g = newG;
+        this._g = newG;
         return newG;
     }
+    public setCollisions(collisions: boolean, elastic: boolean) {
+        if (!collisions) {
+            elastic = false;
+        }
+        this._collisionDetection = collisions;
+        this._elasticCollisions = elastic;
+    }
     private clearObjects() {
-        this.simulationState = [];
+        this._simulationState = [];
     }
     private removeFromObjectStates(index: number) {
-        this.simulationState.splice(index, 1);
+        this.simulationState[index] = this.simulationState[this.simulationState.length - 1];
+        this.simulationState.pop();
     }
     private updateAccelerationVectors() {
         const forces: Map<number, Vector2D> = this.calculateForces();
@@ -207,7 +180,7 @@ export class Simulation implements SimulationAPI {
      * @param objectState *ObjectState* containing the body
      */
     private updateVelocityAndPosition(objectState: ObjectState) {
-        const dt = this.tickLength / 1000;
+        const dt = this._tickLength / 1000;
         if (!objectState.body.movable) { return; }
         objectState.velocity = objectState.velocity.add(objectState.acceleration.scale(dt));
         objectState.position = objectState.position.add(objectState.velocity.scale(dt));
@@ -228,17 +201,13 @@ export class Simulation implements SimulationAPI {
         const distance = objectStateI.position.distance(objectStateJ.position);
         if (distance < this.gravityLowerBounds || distance === 0) // if the bodies are too close, skip the calculation
             { return new Vector2D(0, 0); } 
-        const netForceBetweenBodies: number = this.g * ((objectStateI.body.mass * objectStateJ.body.mass)/(distance * distance));
+        const netForceBetweenBodies: number = this._g * ((objectStateI.body.mass * objectStateJ.body.mass)/(distance * distance));
         const unitVectorIToJ = objectStateJ.position.subtract(objectStateI.position).normalize();
         return unitVectorIToJ.scale(netForceBetweenBodies);
     }
     private handleCollisions() {
         for (let i = 0; i < this.simulationState.length; i++) {
             const objectStateI = this.simulationState[i];
-            if (objectStateI === undefined) {
-                // undefined, if objectStateI has been merged in a previous collision
-                continue;
-            }
             for (let j = i+1; j < this.simulationState.length; j++) {
                 const objectStateJ = this.simulationState[j];
                 const distanceIJ = objectStateI.position.distance(objectStateJ.position);
@@ -246,7 +215,7 @@ export class Simulation implements SimulationAPI {
                 if (collision) {
                     if (distanceIJ <= objectStateI.body.radius || distanceIJ <= objectStateJ.body.radius) { 
                         this.mergeBodies(i, j);
-                    } else if (this.elasticCollisions) {
+                    } else if (this._elasticCollisions) {
                         this.elasticCollision(objectStateI, objectStateJ);
                     }
                 }

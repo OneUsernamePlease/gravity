@@ -1,10 +1,10 @@
 import { BACKGROUND_COLOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM, VECTOR_ACC_COLOR, VECTOR_VEL_COLOR } from "../const/const";
 import { Canvas } from "./canvas";
 import { Body2d } from "../simulation/gravity";
-import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../const/types";
+import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../types/types";
 import { Vector2D } from "../util/vector2d";
 import * as tfm from "../util/transformations";
-import { GravityAnimationController } from "../simulation/gravity-animation-controller";
+import { GravityAnimationController } from "./gravity-animation-controller";
 import * as util from "../util/util";
 export class AnimationController {
 //#region properties
@@ -14,14 +14,14 @@ export class AnimationController {
     private _running: boolean;
 //#endregion
 //#region get, set
-    get canvas(): Canvas {
+    private get canvas(): Canvas {
         return this._canvas;
     }
-    set canvas(canvas: Canvas) {
+    private set canvas(canvas: Canvas) {
         this._canvas = canvas;
     }
 
-    get animationSettings(): AnimationSettings {
+    private get animationSettings(): AnimationSettings {
         return this._animationSettings;
     }
     private set animationSettings(animationSettings: AnimationSettings) {

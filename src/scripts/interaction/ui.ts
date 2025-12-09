@@ -1,6 +1,6 @@
 import { Body2d } from "../simulation/gravity";
 import * as util from "../util/util";
-import { UIElements, RadioButtonGroup, StatusBar, UIAnimationSettings } from "../const/types";
+import { UIElements, RadioButtonGroup, StatusBar, UIAnimationSettings } from "../types/types";
 import { App } from "../app/app";
 import { VECTOR_ACC_COLOR_NAME, VECTOR_VEL_COLOR_NAME } from "../const/const";
 
@@ -111,7 +111,7 @@ export class UI implements UIElements {
         this.scrollRightButton.addEventListener("click", () => this.scrollRightClicked());
         this.displayVectorsCheckbox.addEventListener("change", () => this.cbxDisplayVectorsChanged());
         this.collisionDetectionCheckbox.addEventListener("change", () => this.cbxCollisionsChanged());
-        this.elasticCollisionsCheckbox.addEventListener("change", () => this.cbxElasticCollisionsChanged());
+        this.elasticCollisionsCheckbox.addEventListener("change", () => this.cbxCollisionsChanged());
         this.gravitationalConstantInput.addEventListener("change", () => this.numberInputGChanged());
         this.gravitationalConstantRangeInput.addEventListener("input", () => this.rangeInputGChanged());
         this.massInput.addEventListener("change", () => this.updateSelectedMass());
@@ -175,9 +175,6 @@ export class UI implements UIElements {
         this.elasticCollisionsCheckbox.disabled = !checked;
         
         this.gravityAnimationController.setCollisionDetection(checked, elasticChecked);
-    }
-    public cbxElasticCollisionsChanged() {
-        this.gravityAnimationController.setElasticCollisions(this.elasticCollisionsCheckbox.checked);
     }
     public numberInputGChanged() {
         const newG: string = this.gravitationalConstantInput.value;

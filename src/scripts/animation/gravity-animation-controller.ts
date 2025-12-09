@@ -1,21 +1,22 @@
 import { Canvas } from "../animation/canvas";
-import { Body2d, Simulation } from "../simulation/gravity";
-import { ObjectState } from "../const/types";
+import { Body2d } from "../simulation/gravity";
+import { ObjectState } from "../types/types";
 import { Vector2D } from "../util/vector2d";
 import { App } from "../app/app";
 import { DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR } from "../const/const";
 import { InteractionManager } from "../interaction/interaction-manager";
 import { AnimationController } from "../animation/animation-controller";
+import { GravityController } from "../simulation/gravity-controller";
 
 export class GravityAnimationController {
 //#region properties
-    private _simulation: Simulation;
+    private _simulation: GravityController;
     private _interaction: InteractionManager;
     private _animation: AnimationController;
     private _running: boolean;
 //#endregion
 //#region get, set
-    get simulation(): Simulation {
+    get simulation(): GravityController {
         return this._simulation;
     }
     
@@ -31,7 +32,7 @@ export class GravityAnimationController {
     }
 // additional getters
     get tickCount(): number {
-        return this.simulation.tickCount;
+        return this.simulation.tick;
     }
     get bodyCount(): number {
         return this.simulation.simulationState.length;
@@ -62,18 +63,14 @@ export class GravityAnimationController {
             throw new Error(`Canvas element with id '${elementId}' not found.`);
         }
         const canvas = new Canvas(canvasElement);
-        this._simulation = new Simulation;
+        this._simulation = new GravityController;
         this._animation = new AnimationController(canvas, this);
         this._interaction = new InteractionManager(canvas, this.app);
         this._running = false;
     }
     public initialize(width: number, height: number) {
         this.animation.initialize(width, height, this.ui.animationSettings);
-        this.initSimulation();
-    }
-    private initSimulation() {
-        this.simulation.collisionDetection = this.ui.collisionDetection;
-        this.simulation.elasticCollisions = this.ui.elasticCollisions;
+        this.setCollisionDetection(this.ui.collisionDetection, this.ui.elasticCollisions);
     }
 //#endregion
 
@@ -87,7 +84,7 @@ export class GravityAnimationController {
     }
     public stop() {
         this.running = false;
-        this.simulation.pause();
+        this.simulation.stop();
         this.animation.stop();
     }
     public toggle() {
@@ -115,11 +112,7 @@ export class GravityAnimationController {
         this.animation.setDisplayVectors(displayVectors);
     }
     public setCollisionDetection(collisionDetection: boolean, elasticCollisions = false) {
-        this.simulation.collisionDetection = collisionDetection;
-        this.simulation.elasticCollisions = elasticCollisions;
-    }
-    public setElasticCollisions(elasticCollisions: boolean) {
-        this.simulation.elasticCollisions = elasticCollisions;
+        this.simulation.setCollisions(collisionDetection, elasticCollisions);
     }
     public updateStatusBarSimulationMessages() {
         this.ui.updateStatusBarSimulationInfo();
