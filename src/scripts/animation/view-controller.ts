@@ -1,4 +1,4 @@
-import { DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, MAX_ZOOM, MIN_ZOOM } from "../const/const";
+import { MAX_ZOOM, MIN_ZOOM } from "../const/const";
 import { Vector2D } from "../util/vector2d";
 import { AnimationController } from "./animation-controller";
 

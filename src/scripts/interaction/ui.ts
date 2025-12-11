@@ -121,22 +121,22 @@ export class UI implements UIElements {
         
         this.updateStatusBarCanvasDimensions(width, height);
 
-        this.app.simulation.setG(Number(this.gravitationalConstantRangeInput.value));
+        this.app.gravity.setG(Number(this.gravitationalConstantRangeInput.value));
     }
 //#endregion
     public resetButtonClicked() {
-        this.app.simulation.reset()
+        this.app.gravity.reset()
         this.updateStatusBarSimulationInfo();
     }
     public playPauseClicked() {
-        if (this.app.simulation.running) {
+        if (this.app.gravity.running) {
             this.app.stop();
         } else {
             this.app.run();
         }
     }
     public stepButtonClicked() {
-        this.app.simulation.advanceTick();
+        this.app.gravity.advanceTick();
         this.updateStatusBarSimulationInfo();
     }
     public zoomInClicked() {
@@ -169,18 +169,18 @@ export class UI implements UIElements {
         
         this.elasticCollisionsCheckbox.disabled = !checked;
         
-        this.app.simulation.setCollisions(checked, elasticChecked);
+        this.app.gravity.setCollisions(checked, elasticChecked);
     }
     public numberInputGChanged() {
         const newG: string = this.gravitationalConstantInput.value;
         this.gravitationalConstantRangeInput.value = newG;
-        this.app.simulation.setG(Number(newG));
+        this.app.gravity.setG(Number(newG));
     }
     public rangeInputGChanged() {
         const newG: string = this.gravitationalConstantRangeInput.value;
         if (this.gravitationalConstantInput.value !== newG) {
             this.gravitationalConstantInput.value = newG;
-            this.app.simulation.setG(Number(newG));
+            this.app.gravity.setG(Number(newG));
         }
     }
     public simulationStopped() {
@@ -222,8 +222,8 @@ export class UI implements UIElements {
         }
     }
     public updateStatusBarSimulationInfo() {
-        this.updateStatusBarTickCount(this.app.simulation.tick);
-        this.updateStatusBarBodyCount(this.app.simulation.simulationState.length);
+        this.updateStatusBarTickCount(this.app.gravity.tick);
+        this.updateStatusBarBodyCount(this.app.gravity.simulationState.length);
     }
     public updateStatusBarAnimationInfo() {
         this.updateStatusBarZoom(this.app.animation.currentZoom);

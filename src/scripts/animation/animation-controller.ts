@@ -1,13 +1,19 @@
 import { BACKGROUND_COLOR, DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM, VECTOR_ACC_COLOR, VECTOR_VEL_COLOR } from "../const/const";
 import { Canvas } from "./canvas";
 import { Body2d } from "../simulation/gravity";
-import { GravityController } from "../simulation/gravity-controller";
+import { Gravity } from "../simulation/gravity";
 import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../types/types";
 import { Vector2D } from "../util/vector2d";
 import * as tfm from "../util/transformations";
 import * as util from "../util/util";
 import { ViewController } from "./view-controller";
 import { App } from "../app/app";
+
+/**
+ * This class deals with everything animation.
+ * 
+ */
+
 export class AnimationController {
 //#region properties
     private _canvas: Canvas;
@@ -16,7 +22,7 @@ export class AnimationController {
     private _viewController: ViewController;
     private _running: boolean;
     
-    private gravityController: GravityController
+    private gravityController: Gravity
 //#endregion
 //#region get, set
     public get canvas(): Canvas {
@@ -57,14 +63,14 @@ export class AnimationController {
         return this.canvas.visibleCanvas.height;
     }
     get simulationState(): ObjectState[] {
-        return this.app.simulation.simulationState;
+        return this.app.gravity.simulationState;
     }
 //#endregion
     constructor(canvas: Canvas, private app: App) {
         this._animationSettings = { frameLength: 25, displayVectors: true, tracePaths: true };
         this._canvasSpace = {origin: new Vector2D(0, 0), currentZoom: 1, orientationY: -1};
         this._viewController = new ViewController(this);
-        this.gravityController = app.simulation;
+        this.gravityController = app.gravity;
         this._canvas = canvas;
         this._running = false;
     }

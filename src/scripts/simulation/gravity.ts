@@ -97,12 +97,14 @@ export class Gravity implements SimulationAPI {
         this._collisionDetection = settings.collisionDetection;
         this._elasticCollisions = settings.elasticCollisions;
         this._g = settings.gravitationalConstant;
-    }
-    public addObject(objectState: ObjectState): number  {
-        if (!objectState.body.movable) {
+    }   
+    public addBody(body: Body2d, position: Vector2D, velocity: Vector2D): number {
+
+        const objectState = { body, position, velocity,  acceleration: new Vector2D(0, 0)};
+        if (!body.movable) {
             objectState.velocity = new Vector2D(0, 0);
         }
-        return this.simulationState.push(objectState);
+        return this.addObject(objectState);
     }
     public stop() {
         this._running = false;
@@ -144,6 +146,13 @@ export class Gravity implements SimulationAPI {
         }
         this._collisionDetection = collisions;
         this._elasticCollisions = elastic;
+    }
+    
+    private addObject(objectState: ObjectState): number  {
+        if (!objectState.body.movable) {
+            objectState.velocity = new Vector2D(0, 0);
+        }
+        return this.simulationState.push(objectState);
     }
     private clearObjects() {
         this._simulationState = [];

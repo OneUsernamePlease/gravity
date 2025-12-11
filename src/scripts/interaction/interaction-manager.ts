@@ -368,7 +368,7 @@ export class InteractionManager {
         const bodyBeingAdded: Body2d = this.ui.body2dFromInputs();
         const mousePositionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(pointerPositionOnCanvas, this.animationController.canvasSpace);
         const vel: Vector2D = util.calculateVelocityBetweenPoints(this.pointer.main.downCoordinatesInSimSpace!, mousePositionInSimSpace);
-        this.app.simulation.addObject(bodyBeingAdded, mousePositionInSimSpace, vel);
+        this.app.gravity.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
         this.ui.updateStatusBarSimulationInfo();
     }
 
