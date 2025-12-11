@@ -45,7 +45,7 @@ export function mixColorsWeighted(color1: string, weight1: number, color2: strin
     return `#${twoDigitHex(r)}${twoDigitHex(g)}${twoDigitHex(b)}${twoDigitHex(a)}`;
 }
 export function massDependentColor(mass: number): string {
-    const lowestColorMass = 1000;
+    const lowestColorMass = 50;
     const biggestColorMass = 100000000;
     const alpha = "ff";
 
