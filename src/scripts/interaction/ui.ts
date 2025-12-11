@@ -62,9 +62,6 @@ export class UI implements UIElements {
             gravitationalConstant: this.gravitationalConstant,
         };
     }
-    get gravityAnimationController() {
-        return this.app.gravityAnimationController;
-    }
 //#endregion
 //#region initialize
     constructor(private app: App) {
@@ -124,48 +121,46 @@ export class UI implements UIElements {
         
         this.updateStatusBarCanvasDimensions(width, height);
 
-        this.gravityAnimationController.setG(Number(this.gravitationalConstantRangeInput.value));
+        this.app.simulation.setG(Number(this.gravitationalConstantRangeInput.value));
     }
 //#endregion
     public resetButtonClicked() {
-        this.gravityAnimationController.reset()
+        this.app.simulation.reset()
         this.updateStatusBarSimulationInfo();
     }
     public playPauseClicked() {
-        if (this.gravityAnimationController.running) {
-            this.gravityAnimationController.stop();
-            this.simulationStopped();
+        if (this.app.simulation.running) {
+            this.app.stop();
         } else {
-            this.gravityAnimationController.run();
-            this.simulationResumed();
+            this.app.run();
         }
     }
     public stepButtonClicked() {
-        this.gravityAnimationController.advanceOneTick();
+        this.app.simulation.advanceTick();
         this.updateStatusBarSimulationInfo();
     }
     public zoomInClicked() {
-        this.gravityAnimationController.zoomIn();
+        this.app.animation.zoomIn();
         this.updateStatusBarAnimationInfo();
     }
     public zoomOutClicked() {
-        this.gravityAnimationController.zoomOut();
+        this.app.animation.zoomOut();
         this.updateStatusBarAnimationInfo();
     }
     public scrollUpClicked() {
-        this.gravityAnimationController.scrollUp();
+        this.app.animation.scrollUp();
     }
     public scrollDownClicked() {
-        this.gravityAnimationController.scrollDown();
+        this.app.animation.scrollDown();
     }
     public scrollLeftClicked() {
-        this.gravityAnimationController.scrollLeft();
+        this.app.animation.scrollLeft();
     }
     public scrollRightClicked() {
-        this.gravityAnimationController.scrollRight();
+        this.app.animation.scrollRight();
     }
     public cbxDisplayVectorsChanged() {
-        this.gravityAnimationController.setDisplayVectors(this.displayVectors)
+        this.app.animation.setDisplayVectors(this.displayVectors)
         this.setStatusBarVectors();
     }
     public cbxCollisionsChanged() {
@@ -174,18 +169,18 @@ export class UI implements UIElements {
         
         this.elasticCollisionsCheckbox.disabled = !checked;
         
-        this.gravityAnimationController.setCollisionDetection(checked, elasticChecked);
+        this.app.simulation.setCollisions(checked, elasticChecked);
     }
     public numberInputGChanged() {
         const newG: string = this.gravitationalConstantInput.value;
         this.gravitationalConstantRangeInput.value = newG;
-        this.gravityAnimationController.setG(Number(newG));
+        this.app.simulation.setG(Number(newG));
     }
     public rangeInputGChanged() {
         const newG: string = this.gravitationalConstantRangeInput.value;
         if (this.gravitationalConstantInput.value !== newG) {
             this.gravitationalConstantInput.value = newG;
-            this.gravityAnimationController.setG(Number(newG));
+            this.app.simulation.setG(Number(newG));
         }
     }
     public simulationStopped() {
@@ -227,11 +222,11 @@ export class UI implements UIElements {
         }
     }
     public updateStatusBarSimulationInfo() {
-        this.updateStatusBarTickCount(this.gravityAnimationController.tickCount);
-        this.updateStatusBarBodyCount(this.gravityAnimationController.bodyCount);
+        this.updateStatusBarTickCount(this.app.simulation.tick);
+        this.updateStatusBarBodyCount(this.app.simulation.simulationState.length);
     }
     public updateStatusBarAnimationInfo() {
-        this.updateStatusBarZoom(this.gravityAnimationController.currentZoom);
+        this.updateStatusBarZoom(this.app.animation.currentZoom);
     }
     public updateStatusBarBodyCount(bodyCount: number, statusBarFieldIndex: number = 1) {
         this.setStatusMessage(`Number of Bodies: ${bodyCount}`, statusBarFieldIndex);

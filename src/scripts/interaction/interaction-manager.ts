@@ -56,8 +56,8 @@ export class InteractionManager {
         this._previousTouchesDist = dist;
     }
     // additional getters
-    get gravityAnimationController() {
-        return this.app.gravityAnimationController;
+    get animationController() {
+        return this.app.animation;
     }
     get ui() {
         return this.app.ui;
@@ -124,7 +124,7 @@ export class InteractionManager {
             case "mouse":
                 if (this.pointer.wheel.state === ButtonState.Down) {
                     ev.preventDefault(); // prevent scroll-symbol
-                    this.gravityAnimationController.scrollInCanvasUnits(currentMovement);
+                    this.animationController.scrollInCanvasUnits(currentMovement);
                 }
                 break;
         
@@ -152,7 +152,7 @@ export class InteractionManager {
                                 const dy = currentTouchPosition.y - this.lastSingleTouchPos.y;
 
                                 // RefactorMe(maybe?) use movement.x / y, mostly works but not technically part of PointerEvents
-                                this.gravityAnimationController.scrollInCanvasUnits(new Vector2D(dx, dy));
+                                this.animationController.scrollInCanvasUnits(new Vector2D(dx, dy));
                             }
 
                             this.lastSingleTouchPos = new Vector2D(currentTouchPosition.x, currentTouchPosition.y);
@@ -179,8 +179,8 @@ export class InteractionManager {
                             const zoomFactor = touchesDistance / this.previousTouchesDist;
                             const zoomCenterCanvas = tfm.relativePosition(touchesMidpoint, this.canvas.visibleCanvas);
                             const scroll = touchesMidpoint.subtract(this.previousTouchesMid);
-                            this.gravityAnimationController.zoomToFactor(zoomFactor, zoomCenterCanvas);
-                            this.gravityAnimationController.scrollInCanvasUnits(scroll);
+                            this.animationController.zoomToFactor(zoomFactor, zoomCenterCanvas);
+                            this.animationController.scrollInCanvasUnits(scroll);
 
                             this.previousTouchesMid = touchesMidpoint;
                             this.previousTouchesDist = touchesDistance;
@@ -210,9 +210,9 @@ export class InteractionManager {
         const posInCanvasSpace = tfm.absoluteToCanvasPosition(cursorPos, this.canvas.visibleCanvas);
 
         if (ev.deltaY < 0) {
-            this.gravityAnimationController.zoomIn(posInCanvasSpace);
+            this.animationController.zoomIn(posInCanvasSpace);
         } else if (ev.deltaY > 0) {
-            this.gravityAnimationController.zoomOut(posInCanvasSpace);
+            this.animationController.zoomOut(posInCanvasSpace);
         }
         this.ui.updateStatusBarAnimationInfo();
     }    
@@ -226,7 +226,7 @@ export class InteractionManager {
             
             
             const positionVector = new Vector2D(ev.clientX, ev.clientY);
-            const positionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(positionVector, this.gravityAnimationController.canvasSpace);
+            const positionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(positionVector, this.animationController.canvasSpace);
             this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
 
         } else if (this.activeTouches.size === 2) {
@@ -315,7 +315,7 @@ export class InteractionManager {
                 break;
             case MouseAction.AddBody:
                 const positionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
-                const positionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(positionVector, this.gravityAnimationController.canvasSpace);
+                const positionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(positionVector, this.animationController.canvasSpace);
                 this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
                 break;
             default:
@@ -366,9 +366,9 @@ export class InteractionManager {
 //#region do stuff
     private addBodyAtPointer(pointerPositionOnCanvas: Vector2D) {
         const bodyBeingAdded: Body2d = this.ui.body2dFromInputs();
-        const mousePositionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(pointerPositionOnCanvas, this.gravityAnimationController.canvasSpace);
+        const mousePositionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(pointerPositionOnCanvas, this.animationController.canvasSpace);
         const vel: Vector2D = util.calculateVelocityBetweenPoints(this.pointer.main.downCoordinatesInSimSpace!, mousePositionInSimSpace);
-        this.gravityAnimationController.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
+        this.app.simulation.addObject(bodyBeingAdded, mousePositionInSimSpace, vel);
         this.ui.updateStatusBarSimulationInfo();
     }
 

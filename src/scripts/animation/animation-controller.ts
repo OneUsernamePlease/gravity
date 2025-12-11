@@ -1,17 +1,22 @@
-import { BACKGROUND_COLOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM, VECTOR_ACC_COLOR, VECTOR_VEL_COLOR } from "../const/const";
+import { BACKGROUND_COLOR, DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM, VECTOR_ACC_COLOR, VECTOR_VEL_COLOR } from "../const/const";
 import { Canvas } from "./canvas";
 import { Body2d } from "../simulation/gravity";
+import { GravityController } from "../simulation/gravity-controller";
 import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../types/types";
 import { Vector2D } from "../util/vector2d";
 import * as tfm from "../util/transformations";
-import { GravityAnimationController } from "./gravity-animation-controller";
 import * as util from "../util/util";
+import { ViewController } from "./view-controller";
+import { App } from "../app/app";
 export class AnimationController {
 //#region properties
     private _canvas: Canvas;
     private _canvasSpace: CanvasSpace;
     private _animationSettings: AnimationSettings;
+    private _viewController: ViewController;
     private _running: boolean;
+    
+    private gravityController: GravityController
 //#endregion
 //#region get, set
     public get canvas(): Canvas {
@@ -42,9 +47,6 @@ export class AnimationController {
         this._running = running;
     }
     // additional getters
-    get simulationState(): ObjectState[] {
-        return this.gravityAnimationController.currentSimulationState;
-    }
     get currentZoom(): number {
         return this.canvasSpace.currentZoom;
     }
@@ -54,12 +56,16 @@ export class AnimationController {
     get height(): number {
         return this.canvas.visibleCanvas.height;
     }
-        
+    get simulationState(): ObjectState[] {
+        return this.app.simulation.simulationState;
+    }
 //#endregion
-    constructor(canvas: Canvas, private gravityAnimationController: GravityAnimationController) {
+    constructor(canvas: Canvas, private app: App) {
         this._animationSettings = { frameLength: 25, displayVectors: true, tracePaths: true };
-        this._canvas = canvas;
         this._canvasSpace = {origin: new Vector2D(0, 0), currentZoom: 1, orientationY: -1};
+        this._viewController = new ViewController(this);
+        this.gravityController = app.simulation;
+        this._canvas = canvas;
         this._running = false;
     }
     public initialize(width: number, height: number, animationSettings: UIAnimationSettings) {
@@ -81,7 +87,7 @@ export class AnimationController {
             if (this.running) {
                 setTimeout(loop, this.animationSettings.frameLength);
                 this.redrawSimulationState(this.simulationState, this.animationSettings);
-                this.gravityAnimationController.updateStatusBarSimulationMessages();
+                this.app.ui.updateStatusBarSimulationInfo();
             }
         };
         loop();
@@ -98,7 +104,7 @@ export class AnimationController {
         let visibleRadius = Math.max(body.radius / this.currentZoom, MIN_DISPLAYED_RADIUS);
         this.canvas.drawCircle(position, visibleRadius, body.color);
     }
-    private redrawSimulationState(objectStates: ObjectState[], animationSettings: AnimationSettings) {
+    public redrawSimulationState(objectStates: ObjectState[], animationSettings: AnimationSettings) {
         this.canvas.clear();
         this.canvas.fillCanvas(BACKGROUND_COLOR);
         this.drawBodies(objectStates);
@@ -122,74 +128,58 @@ export class AnimationController {
     public resizeCanvas(width: number, height: number) {
         this.canvas.resize(width, height);
     }
-    public setCanvasView(origin: Vector2D, zoom: number) { 
-        this.setOrigin(origin);
-        this.setZoom(zoom);
-        this.gravityAnimationController.updateStatusBarAnimationInfo();
-    }
-    private moveCanvas(displacement: { x: number; y: number }) {
-        this.moveOrigin(displacement);
-    }
-    public scroll(displacement: { x: number; y: number }) {
-        this.moveCanvas(displacement);
-    }
-    /**
-     * Origin {x:0,y:0} is at the top-left
-     */
-    private setOrigin(newOrigin: Vector2D) {
-        this.canvasSpace.origin = newOrigin;
-    }
-    private moveOrigin(displacement: { x: number, y: number}) {
-        const originPosition = this.canvasSpace.origin;
-        const newOrigin = originPosition.add(displacement);
-        this.setOrigin(newOrigin);
-    }
-    /**
-     * Zoom is measured in simulationUnits (meter) per canvasUnit (pixel)
-     * @param zoomCenter this point stays fixed while zooming
-     * @param zoomStep the change of meter per pixel
-     * @returns the new zoom level
-     */
-    public zoomOut(zoomCenter: Vector2D, zoomStep: number): number {
-        if (this.currentZoom >= MAX_ZOOM) { 
-            return this.currentZoom; 
-        }
 
-        let newZoom = this.currentZoom + zoomStep;
-        if(newZoom > MAX_ZOOM) {
-            newZoom = MAX_ZOOM;
-            zoomStep = MAX_ZOOM - this.canvasSpace.currentZoom;
+        public scrollRight(distance?: number) {
+        if (!distance) {
+            distance = this.scrollDistance("horizontal"); // in simulationUnits
         }
-        
-        const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
-        this.moveOrigin(shiftOrigin.hadamardProduct({x: -1, y: 1}));
-        this.canvasSpace.currentZoom = newZoom;
+        this._viewController.scroll({x: distance, y: 0});
+    }
+    public scrollLeft(distance?: number) {
+        if (!distance) {
+            distance = this.scrollDistance("horizontal"); // in simulationUnits
+        }
+        this._viewController.scroll({x: -distance, y: 0});
+    }
+    public scrollUp(distance?: number) {
+        if (!distance) {
+            distance = this.scrollDistance("vertical"); // in simulationUnits
+        }
+        this._viewController.scroll({x: 0, y: distance});
+    }
+    public scrollDown(distance?: number) {
+        if (!distance) {
+            distance = this.scrollDistance("vertical"); // in simulationUnits
+        }
+        this._viewController.scroll({x: 0, y: -distance});
+    }
+    private scrollDistance(orientation: "horizontal" | "vertical", rate: number = DEFAULT_SCROLL_RATE): number {
+        switch (orientation) {
+            case "horizontal":
+                return this.width * rate * this.canvasSpace.currentZoom;
+            case "vertical":
+                return this.height * rate * this.canvasSpace.currentZoom;
+        }
+    }
+    public zoomIn(
+        zoomCenter: Vector2D = new Vector2D(this.width / 2, this.height / 2),
+        factor: number = DEFAULT_ZOOM_FACTOR, 
+    ): number {
+        const zoomStep = this.canvasSpace.currentZoom * factor;
+        const newZoom = this._viewController.zoomIn(zoomCenter, zoomStep);
 
         return newZoom;
     }
-    /**
-     * Zoom is measured in simulationUnits (meter) per canvasUnit (pixel)
-     * @param zoomCenter this point stays fixed while zooming
-     * @param zoomStep the change in meter per pixel
-     * @returns the new zoom level
-     */
-    public zoomIn(zoomCenter: Vector2D, zoomStep: number): number {
-        if (this.currentZoom <= MIN_ZOOM) { 
-            return this.currentZoom; 
-        }
-
-        let newZoom = this.canvasSpace.currentZoom - zoomStep;
-        if (newZoom < MIN_ZOOM) {
-            newZoom = MIN_ZOOM;
-            zoomStep = this.canvasSpace.currentZoom - MIN_ZOOM;
-        }
-        
-        const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
-        this.moveOrigin(shiftOrigin.hadamardProduct({x: 1, y: -1}));
-        this.canvasSpace.currentZoom = newZoom;
+    public zoomOut(
+        zoomCenter: Vector2D = new Vector2D(this.width / 2, this.height / 2),
+        factor: number = DEFAULT_ZOOM_FACTOR, 
+    ): number {
+        const zoomStep = this.canvasSpace.currentZoom * factor;
+        const newZoom = this._viewController.zoomOut(zoomCenter, zoomStep);
 
         return newZoom;
     }
+    
     private setZoom(newZoom: number) {
         newZoom = util.clamp(newZoom, MIN_ZOOM, MAX_ZOOM);
         this.canvasSpace.currentZoom = newZoom;
@@ -205,7 +195,7 @@ export class AnimationController {
         const newZoom = oldZoom * factor;
         const zoomDelta = newZoom - oldZoom;
 
-        this.gravityAnimationController.updateStatusBarAnimationInfo();
+        this.app.ui.updateStatusBarAnimationInfo();
 
         if (zoomDelta > 0) {
             return this.zoomIn(zoomCenter, zoomDelta);
@@ -215,6 +205,10 @@ export class AnimationController {
             return oldZoom;
         }
 
+    }
+    public scrollInCanvasUnits(movementOnCanvas: Vector2D){
+        const movementInSimulationUnits = movementOnCanvas.scale(this.currentZoom);
+        this._viewController.scroll({ x: -(movementInSimulationUnits.x), y: movementInSimulationUnits.y });
     }
 
 
