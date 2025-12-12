@@ -11,10 +11,9 @@ export const MAX_ZOOM = 100;
 export const DEFAULT_ZOOM_FACTOR = 0.075;
 export const DEFAULT_SCROLL_RATE = 0.1;
 export const VECTOR_THICKNESS = 1;
-export const VECTOR_ACC_COLOR = "#20ff20ff"
-export const VECTOR_ACC_COLOR_NAME = "Green"
-export const VECTOR_VEL_COLOR = "#ffd700ff"
-export const VECTOR_VEL_COLOR_NAME = "Yellow"
 export const MIN_DISPLAYED_RADIUS = 0.75;
 export const BACKGROUND_COLOR = "#222222ff";
+export const VECTOR_COLORS: Map<string, {hex: string, name: string}> = new Map()
+    .set("acceleration", { hex: "#20ff20ff", name: "Green" })
+    .set("velocity", { hex: "#ffd700ff", name: "Yellow" });
 //#endregion

@@ -2,7 +2,7 @@ import { Body2d } from "../simulation/gravity";
 import * as util from "../util/util";
 import { UIElements, RadioButtonGroup, StatusBar, UIAnimationSettings } from "../types/types";
 import { App } from "../app/app";
-import { VECTOR_ACC_COLOR_NAME, VECTOR_VEL_COLOR_NAME } from "../const/const";
+import { VECTOR_COLORS } from "../const/const";
 
 export class UI implements UIElements {
 //#region properties
@@ -241,7 +241,7 @@ export class UI implements UIElements {
         this.setStatusMessage(`Canvas dimension: ${width} * ${height}`, statusBarFieldIndex);
     }
     private statusBarVectorMessage() {
-        return `Acceleration: ${VECTOR_ACC_COLOR_NAME} - Velocity: ${VECTOR_VEL_COLOR_NAME}`;
+        return `Acceleration: ${VECTOR_COLORS.get("acceleration")?.name} - Velocity: ${VECTOR_COLORS.get("velocity")?.name}`;
     }
     /**
      * @param fieldIndexOrId number of field (starting at one) OR id of the field

@@ -1,4 +1,4 @@
-import { BACKGROUND_COLOR, DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM, VECTOR_ACC_COLOR, VECTOR_VEL_COLOR } from "../const/const";
+import { BACKGROUND_COLOR, DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM, VECTOR_COLORS } from "../const/const";
 import { Canvas } from "./canvas";
 import { Body2d } from "../simulation/gravity";
 import { Gravity } from "../simulation/gravity";
@@ -22,7 +22,6 @@ export class AnimationController {
     private _viewController: ViewController;
     private _running: boolean;
     
-    private gravityController: Gravity
 //#endregion
 //#region get, set
     public get canvas(): Canvas {
@@ -70,7 +69,6 @@ export class AnimationController {
         this._animationSettings = { frameLength: 25, displayVectors: true, tracePaths: true };
         this._canvasSpace = {origin: new Vector2D(0, 0), currentZoom: 1, orientationY: -1};
         this._viewController = new ViewController(this);
-        this.gravityController = app.gravity;
         this._canvas = canvas;
         this._running = false;
     }
@@ -124,8 +122,8 @@ export class AnimationController {
             const accelerationOnCanvas = tfm.directionFromSimulationSpaceToCanvasSpace(objectState.acceleration, this.canvasSpace);
             const velocityOnCanvas = tfm.directionFromSimulationSpaceToCanvasSpace(objectState.velocity, this.canvasSpace);
             
-            this.canvas.drawVector(positionOnCanvas, accelerationOnCanvas, VECTOR_ACC_COLOR);
-            this.canvas.drawVector(positionOnCanvas, velocityOnCanvas, VECTOR_VEL_COLOR);
+            this.canvas.drawVector(positionOnCanvas, accelerationOnCanvas, VECTOR_COLORS.get("acceleration")?.hex);
+            this.canvas.drawVector(positionOnCanvas, velocityOnCanvas, VECTOR_COLORS.get("velocity")?.hex);
         });
     }
     public setDisplayVectors(display: boolean) {
@@ -135,11 +133,11 @@ export class AnimationController {
         this.canvas.resize(width, height);
     }
 
-        public scrollRight(distance?: number) {
-        if (!distance) {
-            distance = this.scrollDistance("horizontal"); // in simulationUnits
-        }
-        this._viewController.scroll({x: distance, y: 0});
+    public scrollRight(distance?: number) {
+    if (!distance) {
+        distance = this.scrollDistance("horizontal"); // in simulationUnits
+    }
+    this._viewController.scroll({x: distance, y: 0});
     }
     public scrollLeft(distance?: number) {
         if (!distance) {
@@ -204,9 +202,9 @@ export class AnimationController {
         this.app.ui.updateStatusBarAnimationInfo();
 
         if (zoomDelta > 0) {
-            return this.zoomIn(zoomCenter, zoomDelta);
+            return this._viewController.zoomIn(zoomCenter, zoomDelta);
         } else if (zoomDelta < 0) {
-            return this.zoomOut(zoomCenter, -zoomDelta);
+            return this._viewController.zoomOut(zoomCenter, -zoomDelta);
         } else {
             return oldZoom;
         }
