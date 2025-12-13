@@ -1,5 +1,5 @@
 import { Vector2D } from "../util/vector2d";
-import { TouchAction, ButtonState, MouseButtons, Pointer, MouseAction, MultiTouchGesture } from "../types/types";
+import { TouchAction, ButtonState, MouseButtons, Pointer, MouseAction, MultiTouchGesture as MultiTouch } from "../types/types";
 import * as util from "../util/util";
 import { Canvas } from "../animation/canvas";
 import { App } from "../app/app";
@@ -55,25 +55,18 @@ export class InteractionManager {
     set previousTouchesDist(dist: number | null) {
         this._previousTouchesDist = dist;
     }
-    // additional getters
-    get animationController() {
-        return this.app.animation;
-    }
-    get ui() {
-        return this.app.ui;
-    }
+
 //#endregion
-    constructor(private canvas: Canvas, private app: App) {
-        const visibleCanvas = canvas.visibleCanvas;
-        visibleCanvas.addEventListener("pointerdown",   (ev) => this.canvasPointerDown(ev as PointerEvent));
-        visibleCanvas.addEventListener("pointerup",     (ev) => this.canvasPointerUp(ev as PointerEvent));
-        visibleCanvas.addEventListener("pointermove",   (ev) => this.canvasPointerMoving(ev as PointerEvent));
-        visibleCanvas.addEventListener("pointercancel", (ev) => this.reset());
-        visibleCanvas.addEventListener("mousedown",     (ev) => this.canvasMouseDown(ev as MouseEvent));    // pointerEvents only fire when the first button is pressed, and the last button is released
-        visibleCanvas.addEventListener("mouseup",       (ev) => this.canvasMouseUp(ev as MouseEvent));      // so we need mouse events to catch all button interactions
-        visibleCanvas.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
-        visibleCanvas.addEventListener("contextmenu",   (ev) => { ev.preventDefault() });
-        visibleCanvas.addEventListener("touchend",      (ev) => { ev.preventDefault() }, { passive: false });   // prevent touch-triggered MouseUp
+    constructor(private canvas: HTMLCanvasElement, private app: App) {
+        canvas.addEventListener("pointerdown",   (ev) => this.canvasPointerDown(ev as PointerEvent));
+        canvas.addEventListener("pointerup",     (ev) => this.canvasPointerUp(ev as PointerEvent));
+        canvas.addEventListener("pointermove",   (ev) => this.canvasPointerMoving(ev as PointerEvent));
+        canvas.addEventListener("pointercancel", (ev) => this.reset());
+        canvas.addEventListener("mousedown",     (ev) => this.canvasMouseDown(ev as MouseEvent));    // pointerEvents only fire when the first button is pressed, and the last button is released
+        canvas.addEventListener("mouseup",       (ev) => this.canvasMouseUp(ev as MouseEvent));      // so we need mouse events to catch all button interactions
+        canvas.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
+        canvas.addEventListener("contextmenu",   (ev) => { ev.preventDefault() });
+        canvas.addEventListener("touchend",      (ev) => { ev.preventDefault() }, { passive: false });   // prevent touch-triggered MouseUp
     }
 //#region primary interaction
     private canvasPointerDown(ev: PointerEvent) {
@@ -81,7 +74,7 @@ export class InteractionManager {
             // handled in its own eventListener. PointerDown only fires for presses while no other button is down.
             return;
         }
-        this.canvas.visibleCanvas.setPointerCapture(ev.pointerId);
+        this.canvas.setPointerCapture(ev.pointerId);
         switch (ev.pointerType) {
             case "touch":
                 this.canvasTouchStart(ev);
@@ -101,7 +94,7 @@ export class InteractionManager {
             // handled in its own eventListener. PointerUp only fires when the last button is released.
             return;
         }
-        this.canvas.visibleCanvas.releasePointerCapture(ev.pointerId);
+        this.canvas.releasePointerCapture(ev.pointerId);
         switch (ev.pointerType) {
             case "touch":
                 this.canvasTouchEnd(ev);
@@ -124,7 +117,7 @@ export class InteractionManager {
             case "mouse":
                 if (this.pointer.wheel.state === ButtonState.Down) {
                     ev.preventDefault(); // prevent scroll-symbol
-                    this.animationController.scrollInCanvasUnits(currentMovement);
+                    this.app.scrollInCanvasUnits(currentMovement);
                 }
                 break;
         
@@ -151,8 +144,7 @@ export class InteractionManager {
                                 const dx = currentTouchPosition.x - this.lastSingleTouchPos.x;
                                 const dy = currentTouchPosition.y - this.lastSingleTouchPos.y;
 
-                                // RefactorMe(maybe?) use movement.x / y, mostly works but not technically part of PointerEvents
-                                this.animationController.scrollInCanvasUnits(new Vector2D(dx, dy));
+                                this.app.scrollInCanvasUnits(new Vector2D(dx, dy));
                             }
 
                             this.lastSingleTouchPos = new Vector2D(currentTouchPosition.x, currentTouchPosition.y);
@@ -163,7 +155,7 @@ export class InteractionManager {
                             // --------------------
                             //      MULTI TOUCH IS WHAT'S LEFT
                             // --------------------
-                            const gesture = this.multiTouchGesture();
+                            const gesture = this.multiTouch();
                             if (!gesture) { return; }
 
                             const touchesMidpoint = gesture.midpoint;
@@ -177,10 +169,10 @@ export class InteractionManager {
                             }
 
                             const zoomFactor = touchesDistance / this.previousTouchesDist;
-                            const zoomCenterCanvas = tfm.relativePosition(touchesMidpoint, this.canvas.visibleCanvas);
+                            const zoomCenterCanvas = tfm.relativePosition(touchesMidpoint, this.canvas);
                             const scroll = touchesMidpoint.subtract(this.previousTouchesMid);
-                            this.animationController.zoomToFactor(zoomFactor, zoomCenterCanvas);
-                            this.animationController.scrollInCanvasUnits(scroll);
+                            this.app.zoomToFactor(zoomFactor, zoomCenterCanvas);
+                            this.app.scrollInCanvasUnits(scroll);
 
                             this.previousTouchesMid = touchesMidpoint;
                             this.previousTouchesDist = touchesDistance;
@@ -207,14 +199,14 @@ export class InteractionManager {
         ev.preventDefault();
         
         const cursorPos = new Vector2D(util.getAbsolutePointerPosition(ev));
-        const posOnCanvas = tfm.relativePosition(cursorPos, this.canvas.visibleCanvas);
+        const posOnCanvas = tfm.relativePosition(cursorPos, this.canvas);
 
         if (ev.deltaY < 0) {
-            this.animationController.zoomIn(posOnCanvas);
+            this.app.zoomIn(posOnCanvas);
         } else if (ev.deltaY > 0) {
-            this.animationController.zoomOut(posOnCanvas);
+            this.app.zoomOut(posOnCanvas);
         }
-        this.ui.updateStatusBarAnimationInfo();
+        this.app.updateStatusBarAnimationInfo();
     }
     private canvasTouchStart(ev: PointerEvent) {
         const touch = new Vector2D(ev.clientX, ev.clientY);
@@ -226,7 +218,7 @@ export class InteractionManager {
             
             
             const positionVector = new Vector2D(ev.clientX, ev.clientY);
-            const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionVector, this.animationController.canvasSpace);
+            const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionVector, this.app.canvasSpace);
             this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
 
         } else if (this.activeTouches.size === 2) {
@@ -248,7 +240,7 @@ export class InteractionManager {
         switch (this.touchAction) {
             case TouchAction.AddBody:
                 const absPos = util.getAbsolutePointerPosition(ev);
-                this.addBodyAtPointer(tfm.relativePosition(absPos, this.canvas.visibleCanvas));
+                this.addBodyAtPointer(tfm.relativePosition(absPos, this.canvas));
                 this.touchAction = TouchAction.None;
                 break;
 
@@ -310,12 +302,12 @@ export class InteractionManager {
         }
     }
     private canvasMainMouseDown(absoluteMousePosition: Vector2D) {
-        switch (MouseAction[this.ui.selectedClickAction as keyof typeof MouseAction]) {
+        switch (MouseAction[this.app.selectedClickAction as keyof typeof MouseAction]) {
             case MouseAction.None:
                 break;
             case MouseAction.AddBody:
                 const positionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
-                const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionVector, this.animationController.canvasSpace);
+                const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionVector, this.app.canvasSpace);
                 this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
                 break;
             default:
@@ -323,11 +315,11 @@ export class InteractionManager {
         }
     }
     private canvasMainMouseUp(absoluteMousePosition: Vector2D) {
-        switch (MouseAction[this.ui.selectedClickAction as keyof typeof MouseAction]) {
+        switch (MouseAction[this.app.selectedClickAction as keyof typeof MouseAction]) {
             case MouseAction.None:
                 break;
             case MouseAction.AddBody:
-                this.addBodyAtPointer(tfm.relativePosition(absoluteMousePosition, this.canvas.visibleCanvas));
+                this.addBodyAtPointer(tfm.relativePosition(absoluteMousePosition, this.canvas));
                 break;
             default:
                 break;
@@ -342,7 +334,7 @@ export class InteractionManager {
             touch.y = y;
         }
     }
-    private multiTouchGesture(): MultiTouchGesture | null {
+    private multiTouch(): MultiTouch | null {
         if (this.activeTouches.size < 2) return null;
 
         const touches = this.activeTouches.values();
@@ -365,11 +357,11 @@ export class InteractionManager {
 //#endregion
 //#region do stuff
     private addBodyAtPointer(pointerPositionOnCanvas: Vector2D) {
-        const bodyBeingAdded: Body2d = this.ui.body2dFromInputs();
-        const mousePositionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(pointerPositionOnCanvas, this.animationController.canvasSpace);
+        const bodyBeingAdded: Body2d = this.app.body2dFromUi();
+        const mousePositionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(pointerPositionOnCanvas, this.app.canvasSpace);
         const vel: Vector2D = util.calculateVelocityBetweenPoints(this.pointer.main.downCoordinatesInSimSpace!, mousePositionInSimSpace);
-        this.app.gravity.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
-        this.ui.updateStatusBarSimulationInfo();
+        this.app.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
+        this.app.updateStatusBarSimulationInfo();
     }
 
 //#endregion

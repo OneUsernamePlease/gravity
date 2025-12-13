@@ -1,66 +1,71 @@
-import { Body2d } from "../simulation/body2d";
 import * as util from "../util/util";
-import { UIElements, RadioButtonGroup, StatusBar, UIAnimationSettings, SimulationSettings } from "../types/types";
+import { RadioButtonGroup, StatusBar, UIAnimationSettings, SimulationSettings } from "../types/types";
 import { App } from "../app/app";
 import { VECTOR_COLORS } from "../const/const";
 
-export class UI implements UIElements {
+export class UI {
 //#region properties
     // All UI Elements
-    statusBar: StatusBar;
-    resetButton: HTMLInputElement;
-    playPauseButton: HTMLInputElement;
-    stepButton: HTMLInputElement;
-    repositoryLink: HTMLElement;
-    zoomInButton: HTMLInputElement;
-    zoomOutButton: HTMLInputElement;
-    scrollUpButton: HTMLInputElement;
-    scrollDownButton: HTMLInputElement;
-    scrollLeftButton: HTMLInputElement;
-    scrollRightButton: HTMLInputElement;
-    displayVectorsCheckbox: HTMLInputElement;
-    collisionDetectionCheckbox: HTMLInputElement;
-    elasticCollisionsCheckbox: HTMLInputElement;
-    gravitationalConstantInput: HTMLInputElement;
-    gravitationalConstantRangeInput: HTMLInputElement;
-    clickAction: RadioButtonGroup;
-    massInput: HTMLInputElement;
-    movableCheckbox: HTMLInputElement;
+    private statusBar: StatusBar;
+    private resetButton: HTMLInputElement;
+    private playPauseButton: HTMLInputElement;
+    private stepButton: HTMLInputElement;
+    private repositoryLink: HTMLElement;
+    private zoomInButton: HTMLInputElement;
+    private zoomOutButton: HTMLInputElement;
+    private scrollUpButton: HTMLInputElement;
+    private scrollDownButton: HTMLInputElement;
+    private scrollLeftButton: HTMLInputElement;
+    private scrollRightButton: HTMLInputElement;
+    private displayVectorsCheckbox: HTMLInputElement;
+    private collisionDetectionCheckbox: HTMLInputElement;
+    private elasticCollisionsCheckbox: HTMLInputElement;
+    private gravitationalConstantInput: HTMLInputElement;
+    private gravitationalConstantRangeInput: HTMLInputElement;
+    private clickAction: RadioButtonGroup;
+    private massInput: HTMLInputElement;
+    private movableCheckbox: HTMLInputElement;
 //#endregion
 //#region get, set
     // get all the values
-    public get selectedClickAction() {
-        return this.getSelectedValue(this.clickAction) ?? this.clickAction.buttons[0].value;
-    }
-    get collisionDetection() {
+    private get collisionDetection() {
         return this.collisionDetectionCheckbox.checked;
     }
-    get elasticCollisions() {
+    private get elasticCollisions() {
         return this.elasticCollisionsCheckbox.checked;
     }
-    get gravitationalConstant() {
+    private get gravitationalConstant() {
         return util.getInputNumber(this.gravitationalConstantInput);
     }
-    get displayVectors() {
+    private get displayVectors() {
         return this.displayVectorsCheckbox.checked;
     }
-    get mass() {
+    private get mass() {
         return util.getInputNumber(this.massInput);
     }
-    get movable() {
-        return this.movableCheckbox;
+    private get movable() {
+        return this.movableCheckbox.checked;
+    }
+    get selectedClickAction() {
+        return this.getSelectedValue(this.clickAction) ?? this.clickAction.buttons[0].value;
     }
     get animationSettings(): UIAnimationSettings {
         return {
             displayVectors: this.displayVectors,
         };
     }
-    get simulationSettings() {
+    get simulationSettings(): SimulationSettings {
         return {
             collisionDetection: this.collisionDetection,
             elasticCollisions: this.elasticCollisions,
             gravitationalConstant: this.gravitationalConstant,
         };
+    }
+    get bodyInformation() {
+        return {
+            mass: this.mass,
+            movable: this.movable,
+        }
     }
 //#endregion
 //#region initialize
@@ -202,12 +207,6 @@ export class UI implements UIElements {
         const selected = group.buttons.find(btn => btn.checked);
         return selected?.value ?? null;
     }
-    public body2dFromInputs(): Body2d {
-        const movable = this.movableCheckbox.checked;
-        const mass = util.getInputNumber(this.massInput);
-
-        return new Body2d(util.clamp(mass, 1, Number.MAX_SAFE_INTEGER), movable);
-    }
     public updateSelectedMass() {
         this.massInput.step = this.calculateMassInputStep();
     }
@@ -227,11 +226,11 @@ export class UI implements UIElements {
         }
     }
     public updateStatusBarSimulationInfo() {
-        this.updateStatusBarTickCount(this.app.gravity.tick);
-        this.updateStatusBarBodyCount(this.app.gravity.simulationState.length);
+        this.updateStatusBarTickCount(this.app.tick);
+        this.updateStatusBarBodyCount(this.app.currentSimulationState.length);
     }
     public updateStatusBarAnimationInfo() {
-        this.updateStatusBarZoom(this.app.animation.currentZoom);
+        this.updateStatusBarZoom(this.app.currentZoom);
     }
     public updateStatusBarBodyCount(bodyCount: number, statusBarFieldIndex: number = 1) {
         this.setStatusMessage(`Number of Bodies: ${bodyCount}`, statusBarFieldIndex);

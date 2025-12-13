@@ -3,33 +3,50 @@ import { Gravity } from "../simulation/gravity";
 import { AnimationController } from "../animation/animation-controller";
 import { InteractionManager } from "../interaction/interaction-manager";
 import { Canvas } from "../animation/canvas";
-import { SimulationSettings } from "../types/types";
+import { CanvasSpace, SimulationSettings } from "../types/types";
+import { Vector2D } from "../util/vector2d";
+import { Body2d } from "../simulation/body2d";
 
 export class App {
+
+
 //#region properties
-private _gravity: Gravity;
-private _animation: AnimationController;
-private _interaction: InteractionManager;
-private _ui: UI;
+    private _gravity: Gravity;
+    private _animation: AnimationController;
+    private _interaction: InteractionManager;
+    private _ui: UI;
 //#endregion
-//#region get, set
-    get gravity() {
+//#region get
+    private get gravity() {
         return this._gravity;
     }
-    get animation() {
+    private get animation() {
         return this._animation;
     }
-    get interaction() {
+    private get interaction() {
         return this._interaction;
     }
-    get ui() {
+    private get ui() {
         return this._ui;
     }
+
     get simulationRunning() {
         return this.gravity.running;
     }
     get currentSimulationState() {
         return this.gravity.simulationState;
+    }
+    get canvasSpace(): CanvasSpace {
+        return this.animation.canvasSpace;
+    }
+    get selectedClickAction(): string {
+        return this.ui.selectedClickAction;
+    }
+    get tick(): number {
+        return this.gravity.tick;
+    }
+    get currentZoom(): number {
+        return this.animation.currentZoom;
     }
 //#endregion
 //#region initialize
@@ -41,7 +58,7 @@ private _ui: UI;
         this._gravity = new Gravity();        
         this._animation = new AnimationController(canvas, this);        
         this._ui = new UI(this);
-        this._interaction = new InteractionManager(canvas, this);
+        this._interaction = new InteractionManager(canvas.visibleCanvas, this);
         this.initialize();
     }
     private initialize() {
@@ -49,13 +66,13 @@ private _ui: UI;
         const height = window.innerHeight;
         
         this.animation.initialize(width, height, this.ui.animationSettings);
-        this.applySimulationSettings({ collisionDetection: this.ui.collisionDetection, elasticCollisions: this.ui.elasticCollisions });
+        this.applySimulationSettings(this.ui.simulationSettings);
         this.ui.initialize(width, height);
         
         this.animation.run();
     }
 //#endregion
-// basic sim controls
+// sim controls
     public run() {
         this.gravity.run();
         this.ui.simulationResumed();
@@ -72,12 +89,24 @@ private _ui: UI;
         this.gravity.reset();
         this.ui.updateStatusBarSimulationInfo();
     }
-// animation controls
-    public zoomIn() {
-        this.animation.zoomIn();
+    public applySimulationSettings(simulationSettings: SimulationSettings) {
+        this.gravity.applySettings(simulationSettings);
+    }    
+    public addBody(bodyBeingAdded: Body2d, mousePositionInSimSpace: Vector2D, vel: Vector2D) {
+        return this.gravity.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
     }
-    public zoomOut() {
-        this.animation.zoomOut();
+// animation controls    
+    public zoomToFactor(zoomFactor: number, zoomCenterCanvas: Vector2D) {
+        this.animation.zoomToFactor(zoomFactor, zoomCenterCanvas);
+    }
+    public zoomIn(zoomCenter?: Vector2D) {
+        this.animation.zoomIn(zoomCenter);
+    }
+    public zoomOut(zoomCenter?: Vector2D) {
+        this.animation.zoomOut(zoomCenter);
+    }
+    public scrollInCanvasUnits(scroll: Vector2D) {
+        this.animation.scrollInCanvasUnits(scroll);
     }
     public scrollUp() {
         this.animation.scrollUp();
@@ -98,9 +127,15 @@ private _ui: UI;
     public setDisplayVectors(display: boolean) {
         this.animation.setDisplayVectors(display);
     }
-// simulation controls
-    public applySimulationSettings(simulationSettings: SimulationSettings) {
-        this.gravity.applySettings(simulationSettings);
+// UI related
+    public updateStatusBarAnimationInfo() {
+        this.ui.updateStatusBarAnimationInfo();
     }
-
+    public updateStatusBarSimulationInfo() {
+        this.ui.updateStatusBarSimulationInfo();
+    }
+    public body2dFromUi(): Body2d {
+        const bodyInfo = this.ui.bodyInformation;
+        return new Body2d(bodyInfo.mass, bodyInfo.movable);
+    }
 }
