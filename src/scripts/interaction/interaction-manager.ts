@@ -167,10 +167,10 @@ export class InteractionManager {
                                 return;
                             }
 
-                            const zoomFactor = touchesDistance / this.previousTouchesDist;
+                            const zoomFactor = this.previousTouchesDist / touchesDistance;
                             const zoomCenterCanvas = tfm.relativePosition(touchesMidpoint, this.canvas);
                             const scroll = touchesMidpoint.subtract(this.previousTouchesMid);
-                            this.app.zoomToFactor(1 / zoomFactor, zoomCenterCanvas);
+                            this.app.zoomToFactor(zoomFactor, zoomCenterCanvas);
                             this.app.scrollInCanvasUnits(scroll);
 
                             this.previousTouchesMid = touchesMidpoint;
