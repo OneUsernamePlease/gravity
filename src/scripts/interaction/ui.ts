@@ -121,46 +121,46 @@ export class UI implements UIElements {
         
         this.updateStatusBarCanvasDimensions(width, height);
 
-        this.app.gravity.setG(Number(this.gravitationalConstantRangeInput.value));
+        this.app.setG(Number(this.gravitationalConstantRangeInput.value));
     }
 //#endregion
     public resetButtonClicked() {
-        this.app.gravity.reset()
+        this.app.resetSimulation()
         this.updateStatusBarSimulationInfo();
     }
     public playPauseClicked() {
-        if (this.app.gravity.running) {
+        if (this.app.simulationRunning) {
             this.app.stop();
         } else {
             this.app.run();
         }
     }
     public stepButtonClicked() {
-        this.app.gravity.advanceTick();
+        this.app.advanceOneTick();
         this.updateStatusBarSimulationInfo();
     }
     public zoomInClicked() {
-        this.app.animation.zoomIn();
+        this.app.zoomIn();
         this.updateStatusBarAnimationInfo();
     }
     public zoomOutClicked() {
-        this.app.animation.zoomOut();
+        this.app.zoomOut();
         this.updateStatusBarAnimationInfo();
     }
     public scrollUpClicked() {
-        this.app.animation.scrollUp();
+        this.app.scrollUp();
     }
     public scrollDownClicked() {
-        this.app.animation.scrollDown();
+        this.app.scrollDown();
     }
     public scrollLeftClicked() {
-        this.app.animation.scrollLeft();
+        this.app.scrollLeft();
     }
     public scrollRightClicked() {
-        this.app.animation.scrollRight();
+        this.app.scrollRight();
     }
     public cbxDisplayVectorsChanged() {
-        this.app.animation.setDisplayVectors(this.displayVectors)
+        this.app.setDisplayVectors(this.displayVectors)
         this.setStatusBarVectors();
     }
     public cbxCollisionsChanged() {

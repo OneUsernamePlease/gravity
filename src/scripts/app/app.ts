@@ -24,8 +24,11 @@ private _ui: UI;
     get ui() {
         return this._ui;
     }
-    get running() {
+    get simulationRunning() {
         return this.gravity.running;
+    }
+    get currentSimulationState() {
+        return this.gravity.simulationState;
     }
 //#endregion
 //#region initialize
@@ -51,7 +54,7 @@ private _ui: UI;
         this.animation.run();
     }
 //#endregion
-//#region control
+// basic sim controls
     public run() {
         this.gravity.run();
         this.ui.simulationResumed();
@@ -64,18 +67,39 @@ private _ui: UI;
         this.gravity.advanceTick();
         this.ui.updateStatusBarSimulationInfo();
     }
-    public reset() {
+    public resetSimulation() {
         this.gravity.reset();
         this.ui.updateStatusBarSimulationInfo();
+    }
+// animation controls
+    public zoomIn() {
+        this.animation.zoomIn();
+    }
+    public zoomOut() {
+        this.animation.zoomOut();
+    }
+    public scrollUp() {
+        this.animation.scrollUp();
+    }
+    public scrollDown() {
+        this.animation.scrollDown();
+    }
+    public scrollLeft() {
+        this.animation.scrollLeft();
+    }
+    public scrollRight() {
+        this.animation.scrollRight();
     }
     public resizeCanvas(windowWidth: number, windowHeight: number) {
         this.animation.resizeCanvas(windowWidth, windowHeight);
         this.ui.updateStatusBarCanvasDimensions(windowWidth, windowHeight);
     }
-
-    public zoomIn() {
-        this.animation.zoomIn()
+    public setDisplayVectors(display: boolean) {
+        this.animation.setDisplayVectors(display);
+    }
+// simulation controls
+    public setG(g: number) {
+        this.gravity.setG(g);
     }
 
 }
-//#endregion

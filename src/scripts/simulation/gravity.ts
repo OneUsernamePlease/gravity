@@ -7,10 +7,9 @@ import { clamp } from "../util/util";
 
 export class Body2d {
 //#region properties
-    private _mass: number;
-    private _radius: number;
-    private _color: string;
-    private _movable: boolean;
+    private _radius!: number;
+    private _color!: string;
+    private _movable!: boolean;
     static defaultDensity = 1;
 //#endregion
 // #region get, set
@@ -18,21 +17,19 @@ export class Body2d {
         return this._mass;
     }
     public set mass(newMass: number) {
-        this._mass = newMass;
-        this._radius = this.defaultRadius(newMass);
-        this._color = massDependentColor(newMass);
+        this._mass = Math.max(newMass, 1);
     }
     public get radius() {
         return this._radius;
     }
     private set radius(newRadius: number) {
-        this._radius = newRadius;
+        this._radius = Math.max(newRadius, 1);
     }
     public get movable() {
         return this._movable;
     }
-    public set movable(affected: boolean) {
-        this._movable = affected
+    public set movable(movable: boolean) {
+        this._movable = movable
     }   
     public get color() : string {
         return this._color
@@ -44,24 +41,52 @@ export class Body2d {
         this._color = c;
     } 
 // #endregion
-    constructor(mass: number, movable?: boolean, color?: string, radius?: number)  {
-        this._mass = mass;
-        if (radius === undefined) { radius = this.defaultRadius(mass); }
-        this._radius = radius;
-        if (color === undefined) { color = massDependentColor(mass); }
-        this._color = color;
+    constructor(private _mass: number, movable?: boolean, color?: string, radius?: number)  {
+        if (radius === undefined) { radius = this.defaultRadius(_mass); }
+        this.radius = radius;
+        if (color === undefined) { color = massDependentColor(_mass); }
+        this.color = color;
         if (movable === undefined) { movable = true; }
-        this._movable = movable;     
+        this.movable = movable;     
     }
 
     /**
      * returns the radius of a sphere based on mass and density
      */
     public defaultRadius(mass?: number) {
-        if (mass === undefined) {
+        if (!mass) {
             mass = this.mass;
         }
         return ((3 * mass)/(4 * Math.PI * Body2d.defaultDensity)) ** (1/3); 
+    }
+    /**
+     * Sets the bodies' properties' values. If radius or color are omitted, their mass-dependent defaults are used.
+     * @param mass number
+     * @param radius number
+     * @param mass
+     */
+    setProperties(mass: number): void
+    setProperties(mass: number, radius: number): void
+    setProperties(mass: number, color: string): void
+    setProperties(mass: number, radius: number, color: string): void
+    setProperties(mass: number, maybeRadiusOrColor?: number | string, maybeColor?: string): void {
+        if (!!maybeColor) {
+            this.color = maybeColor;
+            this.radius = +maybeRadiusOrColor!;
+        } else {
+            if (!maybeRadiusOrColor) {
+                this.color = massDependentColor(mass);
+                this.radius = this.defaultRadius(mass);
+            } else if (typeof maybeRadiusOrColor === "string") {
+                this.color = maybeRadiusOrColor;
+                this.radius = this.defaultRadius(mass);
+            } else if (typeof maybeRadiusOrColor === "number") {
+                this.color = massDependentColor(mass);
+                this.radius = maybeRadiusOrColor;
+            }
+        }
+        
+        this._mass = mass;
     }
 }
 export class Gravity implements SimulationAPI {
@@ -251,9 +276,8 @@ export class Gravity implements SimulationAPI {
             removeIndex = index2;
         }
         changeObject.velocity = resultingVelocity;
-        changeObject.body.mass = totalMass;
-        //changeObject.body.radius = changeObject.body.defaultRadius();
-        //changeObject.body.color = massDependentColor(changeObject.body.mass);
+        changeObject.body.setProperties(totalMass);
+        
         changeObject.body.movable = (state1.body.movable && state2.body.movable);
         if (!changeObject.body.movable) {
             changeObject.velocity = new Vector2D(0, 0);

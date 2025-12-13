@@ -1,7 +1,6 @@
 import { BACKGROUND_COLOR, DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM, VECTOR_COLORS } from "../const/const";
 import { Canvas } from "./canvas";
 import { Body2d } from "../simulation/gravity";
-import { Gravity } from "../simulation/gravity";
 import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../types/types";
 import { Vector2D } from "../util/vector2d";
 import * as tfm from "../util/transformations";
@@ -21,7 +20,6 @@ export class AnimationController {
     private _animationSettings: AnimationSettings;
     private _viewController: ViewController;
     private _running: boolean;
-    
 //#endregion
 //#region get, set
     public get canvas(): Canvas {
@@ -62,7 +60,7 @@ export class AnimationController {
         return this.canvas.visibleCanvas.height;
     }
     get simulationState(): ObjectState[] {
-        return this.app.gravity.simulationState;
+        return this.app.currentSimulationState;
     }
 //#endregion
     constructor(canvas: Canvas, private app: App) {
@@ -101,7 +99,7 @@ export class AnimationController {
     }
     private drawBodies(objectStates: ObjectState[]) {
         objectStates.forEach(object => {
-            this.drawBody(object.body, tfm.pointFromSimulationSpaceToCanvasSpace(object.position, this.canvasSpace));
+            this.drawBody(object.body, tfm.pointFromSimulationToCanvas(object.position, this.canvasSpace));
         });
     }
     private drawBody(body: Body2d, position: Vector2D) {
@@ -118,9 +116,9 @@ export class AnimationController {
     }
     private drawVectors(objectStates: ObjectState[]) {
         objectStates.forEach(objectState => {
-            const positionOnCanvas = tfm.pointFromSimulationSpaceToCanvasSpace(objectState.position, this.canvasSpace);
-            const accelerationOnCanvas = tfm.directionFromSimulationSpaceToCanvasSpace(objectState.acceleration, this.canvasSpace);
-            const velocityOnCanvas = tfm.directionFromSimulationSpaceToCanvasSpace(objectState.velocity, this.canvasSpace);
+            const positionOnCanvas = tfm.pointFromSimulationToCanvas(objectState.position, this.canvasSpace);
+            const accelerationOnCanvas = tfm.directionFromSimulationToCanvas(objectState.acceleration, this.canvasSpace);
+            const velocityOnCanvas = tfm.directionFromSimulationToCanvas(objectState.velocity, this.canvasSpace);
             
             this.canvas.drawVector(positionOnCanvas, accelerationOnCanvas, VECTOR_COLORS.get("acceleration")?.hex);
             this.canvas.drawVector(positionOnCanvas, velocityOnCanvas, VECTOR_COLORS.get("velocity")?.hex);
@@ -183,7 +181,6 @@ export class AnimationController {
 
         return newZoom;
     }
-    
     private setZoom(newZoom: number) {
         newZoom = util.clamp(newZoom, MIN_ZOOM, MAX_ZOOM);
         this.canvasSpace.currentZoom = newZoom;
@@ -214,6 +211,4 @@ export class AnimationController {
         const movementInSimulationUnits = movementOnCanvas.scale(this.currentZoom);
         this._viewController.scroll({ x: -(movementInSimulationUnits.x), y: movementInSimulationUnits.y });
     }
-
-
 }

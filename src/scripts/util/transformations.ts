@@ -1,19 +1,18 @@
 import { CanvasSpace } from "../types/types";
 import { Coordinate, Vector2D } from "./vector2d";
-
-export function absoluteToCanvasPosition(absolutePosition: Coordinate, canvas: HTMLCanvasElement): Vector2D {
-    const canvasRect = canvas.getBoundingClientRect();
-    const x = absolutePosition.x - canvasRect.left;
-    const y = absolutePosition.y - canvasRect.top;
-    return new Vector2D(x, y);
-}
 export function relativePosition(absolutePosition: Coordinate, element: HTMLElement): Vector2D {
     const elementRect = element.getBoundingClientRect();
     const x = absolutePosition.x - elementRect.left;
     const y = absolutePosition.y - elementRect.top;
     return new Vector2D(x, y);
 }
-export function pointFromCanvasSpaceToSimulationSpace(point: Vector2D, canvasSpace: CanvasSpace): Vector2D {
+/**
+ * Transforms a point from a canvas which is defined by canvasSpace (zoom, origin).
+ * @param direction *Vector2d* representing a coordinate.
+ * @param canvasSpace 
+ * @returns the transformed Vector2D
+ */
+export function pointFromCanvasToSimulation(point: Vector2D, canvasSpace: CanvasSpace): Vector2D {
     // transformation:
     // 1. scale (canvasVector * zoom in simulationUnits/canvasUnit)
     // 2. flip (y axis are in opposite directions)
@@ -24,7 +23,13 @@ export function pointFromCanvasSpaceToSimulationSpace(point: Vector2D, canvasSpa
     return shifted;
 }
 
-export function pointFromSimulationSpaceToCanvasSpace(point: Vector2D, canvasSpace: CanvasSpace): Vector2D {
+/**
+ * Transforms a point from cartesian space to its position on a canvas, defined by canvasSpace.
+ * @param direction *Vector2d* representing a coordinate.
+ * @param canvasSpace 
+ * @returns the transformed Vector2D
+ */
+export function pointFromSimulationToCanvas(point: Vector2D, canvasSpace: CanvasSpace): Vector2D {
     // transformation:
     // 1. shift (point in SimSpace - Origin of C in SimSpace)
     // 2. flip (y axis point in opposite directions)
@@ -34,7 +39,13 @@ export function pointFromSimulationSpaceToCanvasSpace(point: Vector2D, canvasSpa
     const scaled: Vector2D = flipped.scale(1 / canvasSpace.currentZoom);
     return scaled;
 }
-export function directionFromSimulationSpaceToCanvasSpace(direction: Vector2D, canvasSpace: CanvasSpace): Vector2D {
+/**
+ * Transforms a direction/distance from cartesian space to its position on a canvas, defined by canvasSpace.
+ * @param direction *Vector2d* representing a direction (a vector from the origin to this coordinate)
+ * @param canvasSpace 
+ * @returns the transformed Vector2D
+ */
+export function directionFromSimulationToCanvas(direction: Vector2D, canvasSpace: CanvasSpace): Vector2D {
     // transformation:
     // 1. flip (y axis are in opposite directions)
     // 2. scale (result from 2 divided by Zoom in simulationUnits/canvasUnit)

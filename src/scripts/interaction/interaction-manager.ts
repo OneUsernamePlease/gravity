@@ -207,15 +207,15 @@ export class InteractionManager {
         ev.preventDefault();
         
         const cursorPos = new Vector2D(util.getAbsolutePointerPosition(ev));
-        const posInCanvasSpace = tfm.absoluteToCanvasPosition(cursorPos, this.canvas.visibleCanvas);
+        const posOnCanvas = tfm.relativePosition(cursorPos, this.canvas.visibleCanvas);
 
         if (ev.deltaY < 0) {
-            this.animationController.zoomIn(posInCanvasSpace);
+            this.animationController.zoomIn(posOnCanvas);
         } else if (ev.deltaY > 0) {
-            this.animationController.zoomOut(posInCanvasSpace);
+            this.animationController.zoomOut(posOnCanvas);
         }
         this.ui.updateStatusBarAnimationInfo();
-    }    
+    }
     private canvasTouchStart(ev: PointerEvent) {
         const touch = new Vector2D(ev.clientX, ev.clientY);
         this.activeTouches.set(ev.pointerId, touch);
@@ -226,7 +226,7 @@ export class InteractionManager {
             
             
             const positionVector = new Vector2D(ev.clientX, ev.clientY);
-            const positionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(positionVector, this.animationController.canvasSpace);
+            const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionVector, this.animationController.canvasSpace);
             this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
 
         } else if (this.activeTouches.size === 2) {
@@ -248,7 +248,7 @@ export class InteractionManager {
         switch (this.touchAction) {
             case TouchAction.AddBody:
                 const absPos = util.getAbsolutePointerPosition(ev);
-                this.addBodyAtPointer(tfm.absoluteToCanvasPosition(absPos, this.canvas.visibleCanvas));
+                this.addBodyAtPointer(tfm.relativePosition(absPos, this.canvas.visibleCanvas));
                 this.touchAction = TouchAction.None;
                 break;
 
@@ -315,7 +315,7 @@ export class InteractionManager {
                 break;
             case MouseAction.AddBody:
                 const positionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
-                const positionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(positionVector, this.animationController.canvasSpace);
+                const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionVector, this.animationController.canvasSpace);
                 this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
                 break;
             default:
@@ -327,7 +327,7 @@ export class InteractionManager {
             case MouseAction.None:
                 break;
             case MouseAction.AddBody:
-                this.addBodyAtPointer(tfm.absoluteToCanvasPosition(absoluteMousePosition, this.canvas.visibleCanvas));
+                this.addBodyAtPointer(tfm.relativePosition(absoluteMousePosition, this.canvas.visibleCanvas));
                 break;
             default:
                 break;
@@ -366,7 +366,7 @@ export class InteractionManager {
 //#region do stuff
     private addBodyAtPointer(pointerPositionOnCanvas: Vector2D) {
         const bodyBeingAdded: Body2d = this.ui.body2dFromInputs();
-        const mousePositionInSimSpace: Vector2D = tfm.pointFromCanvasSpaceToSimulationSpace(pointerPositionOnCanvas, this.animationController.canvasSpace);
+        const mousePositionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(pointerPositionOnCanvas, this.animationController.canvasSpace);
         const vel: Vector2D = util.calculateVelocityBetweenPoints(this.pointer.main.downCoordinatesInSimSpace!, mousePositionInSimSpace);
         this.app.gravity.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
         this.ui.updateStatusBarSimulationInfo();
