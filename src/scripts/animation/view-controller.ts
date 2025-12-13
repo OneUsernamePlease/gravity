@@ -15,45 +15,31 @@ export class ViewController {
     private get canvasSpace() {
         return this.animation.canvasSpace;
     }
+    private get currentZoom() {
+        return this.canvasSpace.currentZoom;
+    }
 
     public scroll(displacement: { x: number; y: number }) {
         this.moveOrigin(displacement);
     }
 
     public zoomToFactor(factor: number, zoomCenter: Vector2D): number {
-        return this.animation.zoomToFactor(factor, zoomCenter);
-    }
-
-    /**
-     * Zoom is measured in simulationUnits (meter) per canvasUnit (pixel)
-     * @param zoomCenter this point stays fixed while zooming
-     * @param zoomStep the change of meter per pixel
-     * @returns the new zoom level
-     */
-    public zoomOut(zoomCenter: Vector2D, zoomStep: number): number {
-        if (this.canvasSpace.currentZoom >= MAX_ZOOM) { 
-            return this.canvasSpace.currentZoom; 
-        }
-
-        let newZoom = this.canvasSpace.currentZoom + zoomStep;
-        if(newZoom > MAX_ZOOM) {
-            newZoom = MAX_ZOOM;
-            zoomStep = MAX_ZOOM - this.canvasSpace.currentZoom;
-        }
+        if (factor <= 0) return this.currentZoom;
         
-        const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
-        this.moveOrigin(shiftOrigin.hadamardProduct({x: -1, y: 1}));
-        this.canvasSpace.currentZoom = newZoom;
+        const oldZoom = this.currentZoom;
+        const newZoom = oldZoom * factor;
+        const zoomDelta = newZoom - oldZoom;
 
-        return newZoom;
+        return this.zoomByStep(zoomCenter, zoomDelta)
     }
+
     /**
      * Zoom is measured in simulationUnits (meter) per canvasUnit (pixel)
      * @param zoomCenter this point stays fixed while zooming
-     * @param zoomStep the change in meter per pixel
+     * @param zoomStep the change in meter per pixel. positive = zoom in, negative = zoom out
      * @returns the new zoom level
      */
-    public zoomIn(zoomCenter: Vector2D, zoomStep: number): number {
+    public zoomByStep(zoomCenter: Vector2D, zoomStep: number): number {
         if (this.canvasSpace.currentZoom <= MIN_ZOOM) { 
             return this.canvasSpace.currentZoom; 
         }

@@ -9,44 +9,49 @@ import { ViewController } from "./view-controller";
 import { App } from "../app/app";
 
 /**
- * This class deals with everything animation.
- * 
+ * This class deals with everything animation related.
  */
-
 export class AnimationController {
 //#region properties
-    private _canvas: Canvas;
     private _canvasSpace: CanvasSpace;
     private _animationSettings: AnimationSettings;
     private _viewController: ViewController;
     private _running: boolean;
 //#endregion
 //#region get, set
-    public get canvas(): Canvas {
+    private get canvas(): Canvas {
         return this._canvas;
     }
     private set canvas(canvas: Canvas) {
         this._canvas = canvas;
     }
 
-    private get animationSettings(): AnimationSettings {
+    private get viewController() {
+        return this._viewController;
+    }
+
+    get animationSettings(): AnimationSettings {
         return this._animationSettings;
     }
-    private set animationSettings(animationSettings: AnimationSettings) {
+    set animationSettings(animationSettings: AnimationSettings) {
         this._animationSettings = animationSettings;
     }
 
     get canvasSpace() {
         return this._canvasSpace;
     }
-    set canvasSpace(canvasSpace: CanvasSpace) {
+    private set canvasSpace(canvasSpace: CanvasSpace) {
         this._canvasSpace = canvasSpace;
+    }
+
+    private get app() {
+        return this._app;
     }
 
     get running() {
         return this._running;
     }
-    set running(running: boolean) {
+    private set running(running: boolean) {
         this._running = running;
     }
     // additional getters
@@ -54,20 +59,16 @@ export class AnimationController {
         return this.canvasSpace.currentZoom;
     }
     get width(): number {
-        return this.canvas.visibleCanvas.width;
+        return this.canvas.width;
     }
     get height(): number {
-        return this.canvas.visibleCanvas.height;
-    }
-    get simulationState(): ObjectState[] {
-        return this.app.currentSimulationState;
+        return this.canvas.height;
     }
 //#endregion
-    constructor(canvas: Canvas, private app: App) {
+    constructor(private _canvas: Canvas, private _app: App) {
         this._animationSettings = { frameLength: 25, displayVectors: true, tracePaths: true };
         this._canvasSpace = {origin: new Vector2D(0, 0), currentZoom: 1, orientationY: -1};
         this._viewController = new ViewController(this);
-        this._canvas = canvas;
         this._running = false;
     }
     public initialize(width: number, height: number, animationSettings: UIAnimationSettings) {
@@ -88,8 +89,8 @@ export class AnimationController {
         const loop = () => {
             if (this.running) {
                 setTimeout(loop, this.animationSettings.frameLength);
-                this.redrawSimulationState(this.simulationState, this.animationSettings);
-                this.app.ui.updateStatusBarSimulationInfo();
+                this.redrawSimulationState(this.app.currentSimulationState, this.animationSettings);
+                this._app.updateStatusBarSimulationInfo();
             }
         };
         loop();
@@ -135,25 +136,25 @@ export class AnimationController {
     if (!distance) {
         distance = this.scrollDistance("horizontal"); // in simulationUnits
     }
-    this._viewController.scroll({x: distance, y: 0});
+    this.viewController.scroll({x: distance, y: 0});
     }
     public scrollLeft(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("horizontal"); // in simulationUnits
         }
-        this._viewController.scroll({x: -distance, y: 0});
+        this.viewController.scroll({x: -distance, y: 0});
     }
     public scrollUp(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("vertical"); // in simulationUnits
         }
-        this._viewController.scroll({x: 0, y: distance});
+        this.viewController.scroll({x: 0, y: distance});
     }
     public scrollDown(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("vertical"); // in simulationUnits
         }
-        this._viewController.scroll({x: 0, y: -distance});
+        this.viewController.scroll({x: 0, y: -distance});
     }
     private scrollDistance(orientation: "horizontal" | "vertical", rate: number = DEFAULT_SCROLL_RATE): number {
         switch (orientation) {
@@ -168,7 +169,7 @@ export class AnimationController {
         factor: number = DEFAULT_ZOOM_FACTOR, 
     ): number {
         const zoomStep = this.canvasSpace.currentZoom * factor;
-        const newZoom = this._viewController.zoomIn(zoomCenter, zoomStep);
+        const newZoom = this.viewController.zoomByStep(zoomCenter, zoomStep);
 
         return newZoom;
     }
@@ -177,7 +178,7 @@ export class AnimationController {
         factor: number = DEFAULT_ZOOM_FACTOR, 
     ): number {
         const zoomStep = this.canvasSpace.currentZoom * factor;
-        const newZoom = this._viewController.zoomOut(zoomCenter, zoomStep);
+        const newZoom = this.viewController.zoomByStep(zoomCenter, -zoomStep);
 
         return newZoom;
     }
@@ -186,29 +187,14 @@ export class AnimationController {
         this.canvasSpace.currentZoom = newZoom;
     }
     public zoomToFactor(factor: number, zoomCenter?: Vector2D): number {
-        if (factor <= 0) return this.currentZoom;
+        if (!zoomCenter) zoomCenter = new Vector2D(this.width / 2, this.height / 2);
         
-        if (!zoomCenter) {
-            zoomCenter = new Vector2D(this.width / 2, this.height / 2);
-        }
-
-        const oldZoom = this.currentZoom;
-        const newZoom = oldZoom * factor;
-        const zoomDelta = newZoom - oldZoom;
-
-        this.app.ui.updateStatusBarAnimationInfo();
-
-        if (zoomDelta > 0) {
-            return this._viewController.zoomIn(zoomCenter, zoomDelta);
-        } else if (zoomDelta < 0) {
-            return this._viewController.zoomOut(zoomCenter, -zoomDelta);
-        } else {
-            return oldZoom;
-        }
-
+        this.app.updateStatusBarAnimationInfo();
+        
+        return this.viewController.zoomToFactor(factor, zoomCenter);
     }
     public scrollInCanvasUnits(movementOnCanvas: Vector2D){
         const movementInSimulationUnits = movementOnCanvas.scale(this.currentZoom);
-        this._viewController.scroll({ x: -(movementInSimulationUnits.x), y: movementInSimulationUnits.y });
+        this.viewController.scroll({ x: -(movementInSimulationUnits.x), y: movementInSimulationUnits.y });
     }
 }

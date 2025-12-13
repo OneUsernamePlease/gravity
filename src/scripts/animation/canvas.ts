@@ -6,25 +6,17 @@ export class Canvas {
 //#region properties
     // let offscreenCanvas: OffscreenCanvas; // use this in a worker thread to render or draw on, then transfer content to the visible html-canvas
     // let offscreenCanvasCtx: OffscreenCanvasRenderingContext2D;
-    private _visibleCanvas: HTMLCanvasElement;
     private _visibleCanvasContext: CanvasRenderingContext2D;
-    constructor(visibleCanvas: HTMLCanvasElement) {
-        this._visibleCanvas = visibleCanvas;
-        this._visibleCanvasContext = visibleCanvas.getContext("2d", { alpha: false })!;
+    constructor(private _visibleCanvas: HTMLCanvasElement) {
+        this._visibleCanvasContext = _visibleCanvas.getContext("2d", { alpha: false })!;
     }
 //#endregion
 //#region get, set
     get visibleCanvas() {
         return this._visibleCanvas;
     }
-    set visibleCanvas(canvas: HTMLCanvasElement) {
-        this._visibleCanvas = canvas;
-    }
-    get visibleCanvasContext() {
+    private get visibleCanvasContext() {
         return this._visibleCanvasContext;
-    }
-    set visibleCanvasContext(context: CanvasRenderingContext2D) {
-        this._visibleCanvasContext = context;
     }
     // additional getters
     get width(): number {
