@@ -96,14 +96,14 @@ export class App {
         return this.gravity.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
     }
 // animation controls    
-    public zoomToFactor(zoomFactor: number, zoomCenterCanvas: Vector2D) {
+    public zoomToFactor(zoomFactor: number, zoomCenterCanvas?: Vector2D) {
         this.animation.zoomToFactor(zoomFactor, zoomCenterCanvas);
     }
-    public zoomIn(zoomCenter?: Vector2D) {
-        this.animation.zoomIn(zoomCenter);
+    public zoomIn(zoomCenter?: Vector2D, factor?: number) {
+        this.animation.zoomIn(zoomCenter, factor);
     }
-    public zoomOut(zoomCenter?: Vector2D) {
-        this.animation.zoomOut(zoomCenter);
+    public zoomOut(zoomCenter?: Vector2D, factor?: number) {
+        this.animation.zoomOut(zoomCenter, factor);
     }
     public scrollInCanvasUnits(scroll: Vector2D) {
         this.animation.scrollInCanvasUnits(scroll);

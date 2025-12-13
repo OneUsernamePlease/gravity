@@ -65,7 +65,10 @@ export class AnimationController {
         return this.canvas.height;
     }
 //#endregion
-    constructor(private _canvas: Canvas, private _app: App) {
+    constructor(
+        private _canvas: Canvas, 
+        private _app: App
+    ) {
         this._animationSettings = { frameLength: 25, displayVectors: true, tracePaths: true };
         this._canvasSpace = {origin: new Vector2D(0, 0), currentZoom: 1, orientationY: -1};
         this._viewController = new ViewController(this);
@@ -168,24 +171,23 @@ export class AnimationController {
         zoomCenter: Vector2D = new Vector2D(this.width / 2, this.height / 2),
         factor: number = DEFAULT_ZOOM_FACTOR, 
     ): number {
-        const zoomStep = this.canvasSpace.currentZoom * factor;
-        const newZoom = this.viewController.zoomByStep(zoomCenter, zoomStep);
 
-        return newZoom;
+        return this.zoomToFactor(1 - factor, zoomCenter);
     }
     public zoomOut(
         zoomCenter: Vector2D = new Vector2D(this.width / 2, this.height / 2),
         factor: number = DEFAULT_ZOOM_FACTOR, 
     ): number {
-        const zoomStep = this.canvasSpace.currentZoom * factor;
-        const newZoom = this.viewController.zoomByStep(zoomCenter, -zoomStep);
 
-        return newZoom;
+        return this.zoomToFactor(1 + factor, zoomCenter);
+
     }
-    private setZoom(newZoom: number) {
-        newZoom = util.clamp(newZoom, MIN_ZOOM, MAX_ZOOM);
-        this.canvasSpace.currentZoom = newZoom;
-    }
+    /**
+     * 
+     * @param factor if this is 0 or less, nothing happens
+     * @param zoomCenter 
+     * @returns the new zoom level (in meter/pixel).
+     */
     public zoomToFactor(factor: number, zoomCenter?: Vector2D): number {
         if (!zoomCenter) zoomCenter = new Vector2D(this.width / 2, this.height / 2);
         

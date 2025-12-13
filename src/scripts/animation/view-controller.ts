@@ -28,7 +28,7 @@ export class ViewController {
         
         const oldZoom = this.currentZoom;
         const newZoom = oldZoom * factor;
-        const zoomDelta = newZoom - oldZoom;
+        const zoomDelta = oldZoom - newZoom;
 
         return this.zoomByStep(zoomCenter, zoomDelta)
     }
@@ -40,14 +40,13 @@ export class ViewController {
      * @returns the new zoom level
      */
     public zoomByStep(zoomCenter: Vector2D, zoomStep: number): number {
-        if (this.canvasSpace.currentZoom <= MIN_ZOOM) { 
-            return this.canvasSpace.currentZoom; 
-        }
-
         let newZoom = this.canvasSpace.currentZoom - zoomStep;
         if (newZoom < MIN_ZOOM) {
             newZoom = MIN_ZOOM;
             zoomStep = this.canvasSpace.currentZoom - MIN_ZOOM;
+        } else if (newZoom > MAX_ZOOM) {
+            newZoom = MAX_ZOOM;
+            zoomStep = MAX_ZOOM - this.canvasSpace.currentZoom;
         }
         
         const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
