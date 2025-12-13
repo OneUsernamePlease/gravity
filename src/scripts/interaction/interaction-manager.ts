@@ -1,7 +1,6 @@
 import { Vector2D } from "../util/vector2d";
 import { TouchAction, ButtonState, MouseButtons, Pointer, MouseAction, MultiTouchGesture as MultiTouch } from "../types/types";
 import * as util from "../util/util";
-import { Canvas } from "../animation/canvas";
 import { App } from "../app/app";
 import * as tfm from "../util/transformations";
 import { Body2d } from "../simulation/body2d";
@@ -171,7 +170,7 @@ export class InteractionManager {
                             const zoomFactor = touchesDistance / this.previousTouchesDist;
                             const zoomCenterCanvas = tfm.relativePosition(touchesMidpoint, this.canvas);
                             const scroll = touchesMidpoint.subtract(this.previousTouchesMid);
-                            this.app.zoomToFactor(zoomFactor, zoomCenterCanvas);
+                            this.app.zoomToFactor(1 / zoomFactor, zoomCenterCanvas);
                             this.app.scrollInCanvasUnits(scroll);
 
                             this.previousTouchesMid = touchesMidpoint;
