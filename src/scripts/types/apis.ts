@@ -1,4 +1,4 @@
-import { Body2d } from "../simulation/gravity";
+import { Body2d } from "../simulation/body2d";
 import { Vector2D } from "../util/vector2d";
 import { ObjectState, SimulationSettings } from "./types";
 export interface SimulationAPI {
@@ -7,10 +7,9 @@ export interface SimulationAPI {
     run: () => void,
     stop: () => void,
 
-    setG: (g: number) => number,
-    setCollisions: (collisions: boolean, elastic: boolean) => void,
     applySettings: (settings: SimulationSettings) => void,
 
+    get g(): number,
     get simulationState(): ObjectState[],
     get running(): boolean,
     get tick(): number,

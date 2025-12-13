@@ -4,7 +4,7 @@ import * as util from "../util/util";
 import { Canvas } from "../animation/canvas";
 import { App } from "../app/app";
 import * as tfm from "../util/transformations";
-import { Body2d } from "../simulation/gravity";
+import { Body2d } from "../simulation/body2d";
 
 export class InteractionManager {
 //#region properties

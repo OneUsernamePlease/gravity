@@ -3,6 +3,7 @@ import { Gravity } from "../simulation/gravity";
 import { AnimationController } from "../animation/animation-controller";
 import { InteractionManager } from "../interaction/interaction-manager";
 import { Canvas } from "../animation/canvas";
+import { SimulationSettings } from "../types/types";
 
 export class App {
 //#region properties
@@ -48,7 +49,7 @@ private _ui: UI;
         const height = window.innerHeight;
         
         this.animation.initialize(width, height, this.ui.animationSettings);
-        this.gravity.setCollisions(this.ui.collisionDetection, this.ui.elasticCollisions);
+        this.applySimulationSettings({ collisionDetection: this.ui.collisionDetection, elasticCollisions: this.ui.elasticCollisions });
         this.ui.initialize(width, height);
         
         this.animation.run();
@@ -98,8 +99,8 @@ private _ui: UI;
         this.animation.setDisplayVectors(display);
     }
 // simulation controls
-    public setG(g: number) {
-        this.gravity.setG(g);
+    public applySimulationSettings(simulationSettings: SimulationSettings) {
+        this.gravity.applySettings(simulationSettings);
     }
 
 }

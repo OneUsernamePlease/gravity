@@ -1,6 +1,6 @@
 import { BACKGROUND_COLOR, DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM, VECTOR_COLORS } from "../const/const";
 import { Canvas } from "./canvas";
-import { Body2d } from "../simulation/gravity";
+import { Body2d } from "../simulation/body2d";
 import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../types/types";
 import { Vector2D } from "../util/vector2d";
 import * as tfm from "../util/transformations";

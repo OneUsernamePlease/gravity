@@ -1,4 +1,4 @@
-import { Body2d } from "../simulation/gravity";
+import { Body2d } from "../simulation/body2d";
 import { Vector2D } from "../util/vector2d";
 
 //++++++++++++++++++++
@@ -75,9 +75,9 @@ export interface UIAnimationSettings {
 //+ user-input-related
 //++++++++++++++++++++
 export interface SimulationSettings {
-    collisionDetection: boolean;
-    elasticCollisions: boolean;
-    gravitationalConstant: number;
+    collisionDetection?: boolean;
+    elasticCollisions?: boolean;
+    gravitationalConstant?: number;
 }
 
 export interface ObjectState {

@@ -44,33 +44,3 @@ export function mixColorsWeighted(color1: string, weight1: number, color2: strin
 
     return `#${twoDigitHex(r)}${twoDigitHex(g)}${twoDigitHex(b)}${twoDigitHex(a)}`;
 }
-export function massDependentColor(mass: number): string {
-    const lowestColorMass = 50;
-    const biggestColorMass = 100000000;
-    const alpha = "ff";
-
-    if (mass <= lowestColorMass) {
-        return "#ff0000ff";
-    }
-    if (mass >= biggestColorMass) {
-        return "#0000ffff";
-    }
-    const mid = Math.sqrt(lowestColorMass * biggestColorMass)
-    let r,g,b;
-
-    if (mass < mid) {
-        // Red -> White
-        const t = (Math.log(mass) - Math.log(lowestColorMass)) / (Math.log(mid) - Math.log(lowestColorMass));
-        r = 255;
-        g = Math.round(255 * t);
-        b = Math.round(255 * t);
-    } else {
-        // White -> Blue
-        const t = (Math.log(mass) - Math.log(mid)) / (Math.log(biggestColorMass) - Math.log(mid));
-        r = Math.round(255 * (1 - t));
-        g = Math.round(255 * (1 - t));
-        b = 255;
-    }
-
-    return `#${twoDigitHex(r)}${twoDigitHex(g)}${twoDigitHex(b)}${alpha}`;
-}

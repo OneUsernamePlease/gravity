@@ -1,6 +1,6 @@
-import { Body2d } from "../simulation/gravity";
+import { Body2d } from "../simulation/body2d";
 import * as util from "../util/util";
-import { UIElements, RadioButtonGroup, StatusBar, UIAnimationSettings } from "../types/types";
+import { UIElements, RadioButtonGroup, StatusBar, UIAnimationSettings, SimulationSettings } from "../types/types";
 import { App } from "../app/app";
 import { VECTOR_COLORS } from "../const/const";
 
@@ -121,7 +121,7 @@ export class UI implements UIElements {
         
         this.updateStatusBarCanvasDimensions(width, height);
 
-        this.app.setG(Number(this.gravitationalConstantRangeInput.value));
+        this.app.applySimulationSettings({gravitationalConstant: Number(this.gravitationalConstantRangeInput.value)})
     }
 //#endregion
     public resetButtonClicked() {
@@ -169,18 +169,23 @@ export class UI implements UIElements {
         
         this.elasticCollisionsCheckbox.disabled = !checked;
         
-        this.app.gravity.setCollisions(checked, elasticChecked);
+        const simulationSettings: SimulationSettings = {
+            collisionDetection: checked,
+            elasticCollisions: elasticChecked,
+        }
+
+        this.app.applySimulationSettings(simulationSettings);
     }
     public numberInputGChanged() {
         const newG: string = this.gravitationalConstantInput.value;
         this.gravitationalConstantRangeInput.value = newG;
-        this.app.gravity.setG(Number(newG));
+        this.app.applySimulationSettings({gravitationalConstant: Number(newG) });
     }
     public rangeInputGChanged() {
         const newG: string = this.gravitationalConstantRangeInput.value;
         if (this.gravitationalConstantInput.value !== newG) {
             this.gravitationalConstantInput.value = newG;
-            this.app.gravity.setG(Number(newG));
+            this.app.applySimulationSettings({gravitationalConstant: Number(newG) });
         }
     }
     public simulationStopped() {
