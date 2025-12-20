@@ -226,7 +226,7 @@ export class UI {
         }
     }
     public updateStatusBarSimulationInfo() {
-        this.updateStatusBarTickCount(this.app.tick);
+        this.updateStatusBarTickCount(this.app.currentTick);
         this.updateStatusBarBodyCount(this.app.currentSimulationState.length);
     }
     public updateStatusBarAnimationInfo() {

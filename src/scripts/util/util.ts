@@ -128,10 +128,9 @@ export function getAbsolutePointerPosition(ev: PointerEvent | WheelEvent | Mouse
  * @param fromCoordinate value in simulation space
  * @param timeFrameInSeconds *optional* defaults to 1
  */
-export function calculateVelocityBetweenPoints(toCoordinate: Vector2D | {x: number, y: number}, fromCoordinate: Vector2D, timeFrameInSeconds: number = 1): Vector2D {
+export function calculateVelocityBetweenPoints(toCoordinate: Vector2D , fromCoordinate: Vector2D, timeFrameInSeconds: number = 1): Vector2D {
     if (timeFrameInSeconds <= 0) { timeFrameInSeconds = 1; }
-    const toVector = toCoordinate instanceof Vector2D ? toCoordinate : new Vector2D(toCoordinate)
-    const distance: Vector2D = toVector.subtract(fromCoordinate);
+    const distance: Vector2D = toCoordinate.subtract(fromCoordinate);
     return distance.scale(1 / timeFrameInSeconds);
 }
 /**

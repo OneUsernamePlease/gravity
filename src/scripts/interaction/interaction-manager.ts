@@ -1,5 +1,5 @@
 import { Vector2D } from "../util/vector2d";
-import { TouchAction, ButtonState, MouseButtons, Pointer, MouseAction, MultiTouchGesture as MultiTouch } from "../types/types";
+import { TouchAction, ButtonState, MouseButtons, Pointer, MouseAction, MultiTouchGesture as MultiTouch, ObjectState } from "../types/types";
 import * as util from "../util/util";
 import { App } from "../app/app";
 import * as tfm from "../util/transformations";
@@ -75,12 +75,9 @@ export class InteractionManager {
         }
         this.canvas.setPointerCapture(ev.pointerId);
         switch (ev.pointerType) {
+            case "pen":
             case "touch":
                 this.canvasTouchStart(ev);
-                break;
-
-            case "pen":
-                
                 break;
 
             default:
@@ -95,19 +92,15 @@ export class InteractionManager {
         }
         this.canvas.releasePointerCapture(ev.pointerId);
         switch (ev.pointerType) {
+            case "pen":
             case "touch":
                 this.canvasTouchEnd(ev);
                 break;
-        
-            case "pen":
-                
-                break;
-        
+
             default:
                 console.log("unknown pointerType: " + ev.pointerType);
                 break;
         }
-        
     }
     private canvasPointerMoving(ev: PointerEvent) {
         const currentMovement = new Vector2D(ev.movementX, ev.movementY);
@@ -119,7 +112,8 @@ export class InteractionManager {
                     this.app.scrollInCanvasUnits(currentMovement);
                 }
                 break;
-        
+
+            case "pen":
             case "touch":
                 const currentTouchPosition = this.activeTouches.get(ev.pointerId)!;
                 if (!currentTouchPosition) return;
@@ -179,10 +173,6 @@ export class InteractionManager {
                         break;
                     }
 
-                break;
-        
-            case "pen":
-                
                 break;
         
             default:
@@ -355,13 +345,33 @@ export class InteractionManager {
     }
 //#endregion
 //#region do stuff
+    private canvasToSimulation(positionOnCanvas: Vector2D): Vector2D {
+        return tfm.pointFromCanvasToSimulation(positionOnCanvas, this.app.canvasSpace);
+    }
+    /**
+     * @returns the distance, from the coordinate, where the button was pressed (in the simulation), to the current position (in the simulation).
+     */
+    private getPointerDragDistanceInSimulation(pointerPositionOnCanvas: Vector2D, button = this.pointer.main): Vector2D | null {
+        if (!button.downCoordinatesInSimSpace) return null;
+        const currentPositionInSimulation = this.canvasToSimulation(pointerPositionOnCanvas);
+        return currentPositionInSimulation.displacementVector(button.downCoordinatesInSimSpace);
+    }
     private addBodyAtPointer(pointerPositionOnCanvas: Vector2D) {
-        const bodyBeingAdded: Body2d = this.app.body2dFromUi();
-        const mousePositionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(pointerPositionOnCanvas, this.app.canvasSpace);
-        const vel: Vector2D = util.calculateVelocityBetweenPoints(this.pointer.main.downCoordinatesInSimSpace!, mousePositionInSimSpace);
-        this.app.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
+        this.app.addObject(this.objectStateFromUiAndInteraction(pointerPositionOnCanvas));
         this.app.updateStatusBarSimulationInfo();
     }
-
+    private objectStateFromUiAndInteraction(pointerPositionOnCanvas: Vector2D): ObjectState {
+        const body: Body2d = this.app.body2dFromUi();
+        const position: Vector2D = this.canvasToSimulation(pointerPositionOnCanvas);
+        const velocity: Vector2D = this.pointer.main.downCoordinatesInSimSpace ? util.calculateVelocityBetweenPoints(this.pointer.main.downCoordinatesInSimSpace, position) : new Vector2D;
+    
+        const objectState: ObjectState = {
+            body,
+            position,
+            velocity,
+            acceleration: new Vector2D(),
+        }
+        return objectState;
+    }
 //#endregion
 }

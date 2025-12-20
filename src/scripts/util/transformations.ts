@@ -7,7 +7,7 @@ export function relativePosition(absolutePosition: Coordinate, element: HTMLElem
     return new Vector2D(x, y);
 }
 /**
- * Transforms a point from a canvas which is defined by canvasSpace (zoom, origin).
+ * A cartesian transformation of a point on a canvas, which is defined by canvasSpace (zoom (scale), origin (translation), alignment of y-axis (compared to the target coordinate system, eg. -1 if they point in opposite directions), no rotation), to the coordinate system the canvasSpace is defined in.
  * @param direction *Vector2d* representing a coordinate.
  * @param canvasSpace 
  * @returns the transformed Vector2D

@@ -59,9 +59,8 @@ export class Vector2D {
     /**
      * returns a vector pointing from this to v
      */
-    public displacementVector(v: Coordinate) {
-        const vector = new Vector2D(v.x, v.y);
-        return vector.subtract(this);
+    public displacementVector(v: Vector2D) {
+        return v.subtract(this);
     }
     public hadamardProduct(v: Coordinate) {
         return new Vector2D(this.x * v.x, this.y * v.y);

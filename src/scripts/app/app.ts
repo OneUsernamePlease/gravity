@@ -3,7 +3,7 @@ import { Gravity } from "../simulation/gravity";
 import { AnimationController } from "../animation/animation-controller";
 import { InteractionManager } from "../interaction/interaction-manager";
 import { Canvas } from "../animation/canvas";
-import { CanvasSpace, SimulationSettings } from "../types/types";
+import { CanvasSpace, ObjectState, SimulationSettings } from "../types/types";
 import { Vector2D } from "../util/vector2d";
 import { Body2d } from "../simulation/body2d";
 
@@ -36,17 +36,17 @@ export class App {
     get currentSimulationState() {
         return this.gravity.simulationState;
     }
+    get currentTick(): number {
+        return this.gravity.tick;
+    }
+    get currentZoom(): number {
+        return this.animation.currentZoom;
+    }
     get canvasSpace(): CanvasSpace {
         return this.animation.canvasSpace;
     }
     get selectedClickAction(): string {
         return this.ui.selectedClickAction;
-    }
-    get tick(): number {
-        return this.gravity.tick;
-    }
-    get currentZoom(): number {
-        return this.animation.currentZoom;
     }
 //#endregion
 //#region initialize
@@ -92,8 +92,8 @@ export class App {
     public applySimulationSettings(simulationSettings: SimulationSettings) {
         this.gravity.applySettings(simulationSettings);
     }    
-    public addBody(bodyBeingAdded: Body2d, mousePositionInSimSpace: Vector2D, vel: Vector2D) {
-        return this.gravity.addBody(bodyBeingAdded, mousePositionInSimSpace, vel);
+    public addObject(objectState: ObjectState) {
+        return this.gravity.addObject(objectState);
     }
 // animation controls    
     public zoomToFactor(zoomFactor: number, zoomCenterCanvas?: Vector2D) {

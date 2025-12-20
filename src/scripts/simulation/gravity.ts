@@ -52,17 +52,19 @@ export class Gravity implements SimulationAPI {
         this._g = c.DEFAULT_G;
     }
     public applySettings(settings: SimulationSettings): void {
-        if (settings.collisionDetection != undefined)       this.collisionDetection = settings.collisionDetection;
-        if (settings.elasticCollisions != undefined)        this.elasticCollisions = settings.elasticCollisions;
-        if (settings.gravitationalConstant != undefined)    this.g = settings.gravitationalConstant;
+        if (settings.collisionDetection !== undefined)       this.collisionDetection = settings.collisionDetection;
+        if (settings.elasticCollisions !== undefined)        this.elasticCollisions = settings.elasticCollisions;
+        if (settings.gravitationalConstant !== undefined)    this.g = settings.gravitationalConstant;
     }
     public addBody(body: Body2d, position: Vector2D, velocity: Vector2D): number {
-
-        const objectState = { body, position, velocity,  acceleration: new Vector2D(0, 0)};
-        if (!body.movable) {
+        const objectState = { body, position, velocity, acceleration: new Vector2D(0, 0)};
+        return this.addObject(objectState);
+    }    
+    public addObject(objectState: ObjectState): number  {
+        if (!objectState.body.movable) {
             objectState.velocity = new Vector2D(0, 0);
         }
-        return this.addObject(objectState);
+        return this.simulationState.push(objectState);
     }
     public stop() {
         this._running = false;
@@ -92,12 +94,6 @@ export class Gravity implements SimulationAPI {
             this.handleCollisions();
         }
         this._tickCount++;
-    }    
-    private addObject(objectState: ObjectState): number  {
-        if (!objectState.body.movable) {
-            objectState.velocity = new Vector2D(0, 0);
-        }
-        return this.simulationState.push(objectState);
     }
     private clearObjects() {
         this._simulationState = [];

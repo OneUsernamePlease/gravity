@@ -1,8 +1,8 @@
-import { Body2d } from "../simulation/body2d";
 import { Vector2D } from "../util/vector2d";
 import { ObjectState, SimulationSettings } from "./types";
+
 export interface SimulationAPI {
-    addBody: (body: Body2d, position: Vector2D, velocity: Vector2D) => number,
+    addObject: (objectState: ObjectState) => number,
     reset: () => void,
     run: () => void,
     stop: () => void,

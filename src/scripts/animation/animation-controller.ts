@@ -4,7 +4,6 @@ import { Body2d } from "../simulation/body2d";
 import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../types/types";
 import { Vector2D } from "../util/vector2d";
 import * as tfm from "../util/transformations";
-import * as util from "../util/util";
 import { ViewController } from "./view-controller";
 import { App } from "../app/app";
 
