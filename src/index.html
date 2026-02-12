@@ -9,18 +9,19 @@
 </head>
 <body>
     <div>
-        <div id="mainContent" class="content">
-            <div class="canvasControlsTop">
+        <div id="mainContent" class="@container relative w-screen h-screen overflow-auto">
+            <div oldClass="canvasControlsTop" class="flex-row absolute top-0 left-0 w-full z-10">
                 <button id="btnResetSim">Reset</button>
                 <button id="btnToggleSim">Play</button>
                 <button id="btnNextStep" disabled>Next Step</button>
                 <a href="https://github.com/OneUsernamePlease/gravity" target="_blank" id="repoLink"><button>To the repository</button></a>
             </div>
             <div id="canvasWrapper">
-                <div id="canvasContainer">
-                    <canvas id="theCanvas"></canvas>
+                <div id="canvasContainer" class="absolute inset-0 w-full h-full">
+                    <canvas id="theCanvas" class="touch-none block"
+                    ></canvas>
                 </div>
-                <div id="controlBar">
+                <div id="controlBar" class="">
                     <div class="splitInputContainer">
                         <button id="btnZoomOut">Zoom Out</button>
                         <button id="btnZoomIn">Zoom In</button>
@@ -82,15 +83,15 @@
                         <input type="checkbox" id="cbxBodyMovable" checked>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div id="footer">
-            <div id="statusBar">
-                <span id="statusText1" class="statusBarItem">Status message</span>
-                <span id="statusText2" class="statusBarItem">Status message</span>
-                <span id="statusText3" class="statusBarItem">Status message</span>
-                <span id="statusText4" class="statusBarItem">Zoom</span>
-                <span id="statusText5" class="statusBarItem">Status message</span>
+                <div id="footer" class="absolute bottom-0 left-0 w-full z-10 bg-white">
+                    <div id="statusBar">
+                        <span id="statusText1" class="statusBarItem">Status message</span>
+                        <span id="statusText2" class="statusBarItem">Status message</span>
+                        <span id="statusText3" class="statusBarItem">Status message</span>
+                        <span id="statusText4" class="statusBarItem">Zoom</span>
+                        <span id="statusText5" class="statusBarItem">Status message</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
