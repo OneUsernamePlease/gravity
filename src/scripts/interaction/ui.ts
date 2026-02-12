@@ -1,7 +1,7 @@
-import * as util from "../util/util";
-import { RadioButtonGroup, StatusBar, UIAnimationSettings, SimulationSettings } from "../types/types";
-import { App } from "../app/app";
-import { VECTOR_COLORS } from "../const/const";
+import * as util from "../util/util.js";
+import { RadioButtonGroup, StatusBar, UIAnimationSettings, SimulationSettings } from "../types/types.js";
+import { App } from "../app/app.js";
+import { VECTOR_COLORS } from "../const/const.js";
 
 export class UI {
 //#region properties

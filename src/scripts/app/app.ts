@@ -1,11 +1,11 @@
-import { UI } from "../interaction/ui";
-import { Gravity } from "../simulation/gravity";
-import { AnimationController } from "../animation/animation-controller";
-import { InteractionManager } from "../interaction/interaction-manager";
-import { Canvas } from "../animation/canvas";
-import { CanvasSpace, ObjectState, SimulationSettings } from "../types/types";
-import { Vector2D } from "../util/vector2d";
-import { Body2d } from "../simulation/body2d";
+import { UI } from "../interaction/ui.js";
+import { Gravity } from "../simulation/gravity.js";
+import { AnimationController } from "../animation/animation-controller.js";
+import { InteractionManager } from "../interaction/interaction-manager.js";
+import { Canvas } from "../animation/canvas.js";
+import { CanvasSpace, ObjectState, SimulationSettings } from "../types/types.js";
+import { Vector2D } from "../util/vector2d.js";
+import { Body2d } from "../simulation/body2d.js";
 
 export class App {
 

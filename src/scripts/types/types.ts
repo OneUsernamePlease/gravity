@@ -1,5 +1,5 @@
-import { Body2d } from "../simulation/body2d";
-import { Vector2D } from "../util/vector2d";
+import { Body2d } from "../simulation/body2d.js";
+import { Vector2D } from "../util/vector2d.js";
 
 //++++++++++++++++++++
 //+ pointer (touch, mouse)

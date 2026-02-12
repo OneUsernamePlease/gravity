@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   // This is the default public directory and root.
   root: 'src',
@@ -8,5 +9,8 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: true
   },
-  base: "/gravity"
+  base: "/gravity",
+  plugins: [
+    tailwindcss(),
+  ]
 });
