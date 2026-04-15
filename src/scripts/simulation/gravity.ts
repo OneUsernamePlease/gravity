@@ -1,9 +1,9 @@
-import { ObjectState, SimulationSettings } from "../types/types";
-import { Vector2D } from "../util/vector2d";
-import * as c from "../const/const";
-import { SimulationAPI } from "../types/apis";
-import { clamp } from "../util/util";
-import { Body2d } from "./body2d";
+import { ObjectState, SimulationSettings } from "../types/types.js";
+import { Vector2D } from "../util/vector2d.js";
+import * as c from "../const/const.js";
+import { SimulationAPI } from "../types/apis.js";
+import { clamp } from "../util/util.js";
+import { Body2d } from "./body2d.js";
 
 
 export class Gravity implements SimulationAPI {

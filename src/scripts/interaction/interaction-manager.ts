@@ -1,9 +1,9 @@
-import { Vector2D } from "../util/vector2d";
-import { TouchAction, ButtonState, MouseButtons, Pointer, MouseAction, MultiTouchGesture as MultiTouch, ObjectState } from "../types/types";
-import * as util from "../util/util";
-import { App } from "../app/app";
-import * as tfm from "../util/transformations";
-import { Body2d } from "../simulation/body2d";
+import { Vector2D } from "../util/vector2d.js";
+import { TouchAction, ButtonState, MouseButtons, Pointer, MouseAction, MultiTouchGesture as MultiTouch, ObjectState } from "../types/types.js";
+import * as util from "../util/util.js";
+import { App } from "../app/app.js";
+import * as tfm from "../util/transformations.js";
+import { Body2d } from "../simulation/body2d.js";
 
 export class InteractionManager {
 //#region properties
@@ -296,7 +296,8 @@ export class InteractionManager {
                 break;
             case MouseAction.AddBody:
                 const positionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
-                const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionVector, this.app.canvasSpace);
+                const positionOnCanvas = tfm.relativePosition(positionVector, this.canvas)
+                const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionOnCanvas, this.app.canvasSpace);
                 this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
                 break;
             default:

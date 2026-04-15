@@ -7,90 +7,114 @@
     <link rel="stylesheet" type="text/css" href="main.css">
     <script src="scripts/app/main.ts" type="module"></script>
 </head>
-<body>
-    <div>
-        <div id="mainContent" class="content">
-            <div class="canvasControlsTop">
-                <button id="btnResetSim">Reset</button>
-                <button id="btnToggleSim">Play</button>
-                <button id="btnNextStep" disabled>Next Step</button>
-                <a href="https://github.com/OneUsernamePlease/gravity" target="_blank" id="repoLink"><button>To the repository</button></a>
-            </div>
-            <div id="canvasWrapper">
-                <div id="canvasContainer">
-                    <canvas id="theCanvas"></canvas>
+<body class="m-0 p-0 h-dvh w-dvw overflow-hidden">
+    <div id="mainContent" class="relative w-full h-full overflow-hidden">
+        <div id="canvasWrapper"  class="inset-0 w-full h-full">
+            <canvas id="theCanvas" class="touch-none block w-full h-full"></canvas>
+        </div>
+
+        <div oldClass="canvasControlsTop" class="flex flex-row justify-center absolute top-0 left-0 w-full z-10  bg-gray-600/60">
+            <button id="btnResetSim" class="button">Reset</button>
+            <button id="btnToggleSim" class="button">Play</button>
+            <button id="btnNextStep" class="button">Next Step</button>
+            <a href="https://github.com/OneUsernamePlease/gravity" target="_blank" id="repoLink" class="ml-5">
+                <button class="buttonSecondary">To the Repository</button>
+            </a>
+        </div>
+
+        <button id="toggleControlBarBtn" class="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-blue-800/80 text-white px-1.5 py-3 rounded-l-lg">
+            ❯
+        </button>
+
+        <div id="controlBar" class="panel w-56 max-h-[90vh] overflow-y-auto absolute right-0 top-1/2 -translate-y-1/2 transition-transform duration-300">
+            
+           <!-- View -->
+            <div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="btnZoomOut" class="button w-full text-center">Zoom Out</button>
+                    <button id="btnZoomIn" class="button w-full text-center">Zoom In</button>
                 </div>
-                <div id="controlBar">
-                    <div class="splitInputContainer">
-                        <button id="btnZoomOut">Zoom Out</button>
-                        <button id="btnZoomIn">Zoom In</button>
-                    </div>
-                    <div class="splitInputContainer">
-                        <button id="btnScrollUp">Move Up</button>
-                        <button id="btnScrollDown">Move Down</button>
-                    </div>
-                    <div class="splitInputContainer">
-                        <button id="btnScrollLeft" class="splitInputControl">Move Left</button>
-                        <button id="btnScrollRight" class="splitInputControl">Move Right</button>
-                    </div>
 
-                    <div class="hSeparator"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="btnScrollUp" class="button w-full text-center">Up</button>
+                    <button id="btnScrollDown" class="button w-full text-center">Down</button>
+                </div>
 
-                    <div>
-                        <label for="cbxDisplayVectors">Display Vectors</label>
-                        <input type="checkbox" id="cbxDisplayVectors">
-                    </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button id="btnScrollLeft" class="button w-full text-center">Left</button>
+                    <button id="btnScrollRight" class="button w-full text-center">Right</button>
+                </div>
+            </div>
 
-                    <div class="hSeparator"></div>
+            <!-- Animation -->
+            <div class="section">
+                <div class="row">
+                    <label for="cbxDisplayVectors" class="label">Display Vectors</label>
+                    <input type="checkbox" id="cbxDisplayVectors">
+                </div>
+            </div>
 
-                    <label class="bold">Physics:</label>
-                    <div>
-                        <label for="cbxCollisions">Collisions</label>
-                        <input type="checkbox" id="cbxCollisions" checked>
-                    </div>
-                    <div>
-                        <label for="cbxElasticCollisions">Elastic Collisions</label>
-                        <input type="checkbox" id="cbxElasticCollisions" checked>
-                    </div>
-                    <div class="slider-container">
-                        <label for="rangeG">G (Gravitational Constant)</label>
-                        <input type="range" id="rangeG" name="rangeG" min="-10" max="100" value="50">
-                        <input type="number" id="numberG" min="-10" max="100" value="50">
-                    </div>
+            <!-- Physics -->
+            <div class="section">
+                <h3 class="text-sm font-semibold text-gray-200">Physics</h3>
 
-                    <div class="hSeparator"></div>
+                <div class="row">
+                    <label for="cbxCollisions" class="label">Collisions</label>
+                    <input type="checkbox" id="cbxCollisions" checked>
+                </div>
 
-                    <label class="bold">Click Action:</label>
-                    <div>
-                        <label for="cvsRdbAdd">Add (Drag for Velocity)</label>
-                        <input type="radio" id="cvsRdbAdd"  value="AddBody" name="radioBtnMouseAction" checked>
-                    </div>
-                    <div>
-                        <label for="cvsRdbNone">None</label>
-                        <input type="radio" id="cvsRdbNone" value="None" name="radioBtnMouseAction">                        
-                    </div>
+                <div class="row">
+                    <label for="cbxElasticCollisions" class="label">Elastic</label>
+                    <input type="checkbox" id="cbxElasticCollisions" checked>
+                </div>
 
-                    <div class="hSeparator"></div>
+                <div class="space-y-1">
+                    <label for="rangeG" class="label">Gravity (G)</label>
+                    <input type="range" id="rangeG" min="-10" max="100" value="50" class="w-full">
+                    <input type="number" id="numberG" min="-10" max="100" value="50" class="input">
+                </div>
+            </div>
 
-                    <label class="bold">New Body:</label>
-                    <div class="splitInputControl">
-                        <label for="massInput">Mass</label>
-                        <input type="number" id="massInput" value="1000" min="1" max="1000000000" step="100">
-                    </div>
-                    <div>
-                        <label for="cbxBodyMovable">Moveable</label>
-                        <input type="checkbox" id="cbxBodyMovable" checked>
-                    </div>
+            <!-- Click Action -->
+            <div class="section">
+                <h3 class="text-sm font-semibold text-gray-200">Click Action</h3>
+
+                <div class="row">
+                    <label for="cvsRdbAdd" class="label">Add</label>
+                <input type="radio" id="cvsRdbAdd" value="AddBody" name="radioBtnMouseAction" checked>
+                </div>
+
+                <div class="row">
+                    <label for="cvsRdbNone" class="label">None</label>
+                    <input type="radio" id="cvsRdbNone" value="None" name="radioBtnMouseAction">
+                </div>
+            </div>
+
+            <!-- New Body -->
+            <div class="section">
+                <h3 class="text-sm font-semibold text-gray-200">New Body</h3>
+
+                <div class="space-y-1">
+                    <label for="massInput" class="label">Mass</label>
+                    <input type="number" id="massInput" value="1000" class="input">
+                </div>
+
+                <div class="row">
+                    <label for="cbxBodyMovable" class="label">Movable</label>
+                    <input type="checkbox" id="cbxBodyMovable" checked>
                 </div>
             </div>
         </div>
-        <div id="footer">
-            <div id="statusBar">
-                <span id="statusText1" class="statusBarItem">Status message</span>
-                <span id="statusText2" class="statusBarItem">Status message</span>
-                <span id="statusText3" class="statusBarItem">Status message</span>
-                <span id="statusText4" class="statusBarItem">Zoom</span>
-                <span id="statusText5" class="statusBarItem">Status message</span>
+
+        <div id="footer" class="absolute bottom-0 left-0 w-full z-10 bg-gray-600/60 text-white">
+            <div class="overflow-x-auto">
+                <div id="statusBar" class="flex w-max mx-auto whitespace-nowrap divide-x divide-white/40">
+                    <span id="statusText1" class="px-2">Status message</span>
+                    <span id="statusText2" class="px-2">Status message</span>
+                    <span id="statusText3" class="px-2">Status message</span>
+                    <span id="statusText4" class="px-2">Zoom</span>
+                    <span id="statusText5" class="px-2">Status message</span>
+                </div>
             </div>
         </div>
     </div>

@@ -1,11 +1,11 @@
-import { BACKGROUND_COLOR, DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM, VECTOR_COLORS } from "../const/const";
-import { Canvas } from "./canvas";
-import { Body2d } from "../simulation/body2d";
-import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../types/types";
-import { Vector2D } from "../util/vector2d";
-import * as tfm from "../util/transformations";
-import { ViewController } from "./view-controller";
-import { App } from "../app/app";
+import { BACKGROUND_COLOR, DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM, VECTOR_COLORS } from "../const/const.js";
+import { Canvas } from "./canvas.js";
+import { Body2d } from "../simulation/body2d.js";
+import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../types/types.js";
+import { Vector2D } from "../util/vector2d.js";
+import * as tfm from "../util/transformations.js";
+import { ViewController } from "./view-controller.js";
+import { App } from "../app/app.js";
 
 /**
  * This class deals with everything animation related.

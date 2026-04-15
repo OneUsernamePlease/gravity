@@ -1,4 +1,4 @@
-import { rng, twoDigitHex } from "../util/util";
+import { rng, twoDigitHex } from "../util/util.js";
 /**
  * 
  * @param alpha value between 0 and 1. Defaults to 1 (opaque).

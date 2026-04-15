@@ -1,6 +1,6 @@
-import { MAX_ZOOM, MIN_ZOOM } from "../const/const";
-import { Vector2D } from "../util/vector2d";
-import { AnimationController } from "./animation-controller";
+import { MAX_ZOOM, MIN_ZOOM } from "../const/const.js";
+import { Vector2D } from "../util/vector2d.js";
+import { AnimationController } from "./animation-controller.js";
 
 /**
  * This class is responsible for the view into the simulation, which is defined by the CanvasSpace-Interface.

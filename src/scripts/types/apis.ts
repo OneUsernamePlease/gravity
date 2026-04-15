@@ -1,5 +1,5 @@
-import { Vector2D } from "../util/vector2d";
-import { ObjectState, SimulationSettings } from "./types";
+import { Vector2D } from "../util/vector2d.js";
+import { ObjectState, SimulationSettings } from "./types.js";
 
 export interface SimulationAPI {
     addObject: (objectState: ObjectState) => number,

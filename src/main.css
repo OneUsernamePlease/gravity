@@ -1,187 +1,41 @@
-/* Basic page setup */
-html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
-    font-family: Arial, sans-serif;
-    background-color: #252525;
-    color: #ccc;
-    overflow: hidden;
-}
+@import "tailwindcss";
 
-#mainContent {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-}
+@layer components {
+  .button {
+    @apply px-3 py-1 m-1 bg-blue-500/70 text-white text-sm rounded-lg 
+           hover:bg-blue-600/80 transition 
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
 
-/* Top controls (floating) */
-.canvasControlsTop {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 10;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    padding: 10px;
-    background-color: rgba(30, 30, 30, 0.8);
-}
+  .buttonSecondary {
+    @apply px-3 py-1 m-1 bg-blue-400/70 text-white text-sm rounded-lg 
+           hover:bg-blue-600/80 transition 
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
 
-/* Canvas wrapper fills the screen */
-#canvasWrapper, #canvasContainer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-}
 
-#canvasContainer {
-    width: 100%;
-    height: 100%;
-    background-color: #000000;
-}
+  .panel {
+    @apply bg-gray-800/50 backdrop-blur-md text-gray-100 
+           rounded-xl shadow-lg p-3 space-y-3;
+  }
 
-#canvasContainer canvas {
-    display: block;
-    border: none;
+  .section {
+    @apply border-t border-gray-500/40 pt-2 space-y-2;
+  }
 
-    touch-action: none;
-}
+  .label {
+    @apply text-xs text-gray-300;
+  }
 
-/* Right-side control bar (floating) */
-#controlBar {
-    position: absolute;
-    top: 60px; /* below top controls */
-    right: 0;
-    z-index: 10;
-    width: 250px;
-    max-height: calc(100vh - 90px);
-    overflow-y: auto;
-    background-color: rgba(50, 50, 50, 0.9);
-    padding: 10px;
-    border-radius: 5px 0 0 5px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
+  .input {
+    @apply bg-gray-700 text-white rounded px-2 py-1 text-sm w-full;
+  }
 
-.slider-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-}
-
-.slider-container label {
-    width: 100%;
-    margin-bottom: 0;
-}
-
-.slider-container input[type="range"] {
-    width: 100%;
-}
-
-.slider-container input[type="number"] {
-    width: 90%;
-}
-
-/* buttons in the controlBar */
-#controlBar button {
-    background-color: #444;
-    border: none;
-    color: #fff;
-    padding: 10px;
-    cursor: pointer;
-    width: 100%;
-    border-radius: 3px;
-    transition: background-color 0.3s;
-}
-
-#controlBar button:hover {
-    background-color: #555;
-}
-
-#controlBar .bold {
-    font-weight: bold;
-}
-
-.textButtonContainer {
-    display: flex;
-    width: 100%;
-}
-
-.textButtonContainer .labeledInput {
-    flex: 1;
-}
-
-.splitInputContainer {
-    display: flex;
-    width: 100%;
-    gap: 10px;
-}
-
-.splitInputContainer .splitInputControl {    
-    flex: 1;
-    border-radius: 3px;
-    gap: 10px;
-}
-
-.splitInputContainer .splitInputControl input,
-.splitInputContainer .splitInputControl label {   
-    flex: 1;
-    width: 90%;
-    border-radius: 3px;
-}
-
-.hSeparator {
-    width: 100%;
-    height: 3px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    margin: 5px 0;
-}
-
-/* Status bar at bottom */
-#footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    z-index: 10;
-}
-
-#statusBar {
-    height: 30px;
-    background-color: rgba(30, 30, 30, 0.9);
-    color: white;
-    display: flex;
-    justify-content: space-between;
-    padding: 0 10px;
-    font-size: 14px;
-    line-height: 30px;
-}
-
-/* Status text fields */
-.statusBarItem {
-    display: inline-block;
-    padding: 0 10px;
-    text-align: center;
-    flex-grow: 1;
-    border: solid black;
-    border-width: 1px;
-}
-
-#statusText1 {
-    text-align: right;
-}
-#statusText2, #statusText3, #statusText4 {
-    text-align: center;
-}
-#statusText5 {
-    text-align: left;
+  .row {
+    @apply flex items-center justify-between gap-2;
+  }
+   
+  .collapsed {
+    transform: translateX(calc(100% - 16px));
+  }
 }

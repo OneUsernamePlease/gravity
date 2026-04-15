@@ -1,4 +1,4 @@
-import { twoDigitHex } from "../util/util";
+import { twoDigitHex } from "../util/util.js";
 
 export class Body2d {
 //#region properties

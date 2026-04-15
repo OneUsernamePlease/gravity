@@ -4,7 +4,7 @@ Just Some functions
 (hopefully moderately helpful)
 */
 
-import { Vector2D } from "./vector2d";
+import { Vector2D } from "./vector2d.js";
 
 //#region generic stuff
 export function log(message: string) {
