@@ -296,7 +296,8 @@ export class InteractionManager {
                 break;
             case MouseAction.AddBody:
                 const positionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
-                const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionVector, this.app.canvasSpace);
+                const positionOnCanvas = tfm.relativePosition(positionVector, this.canvas)
+                const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionOnCanvas, this.app.canvasSpace);
                 this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
                 break;
             default:
