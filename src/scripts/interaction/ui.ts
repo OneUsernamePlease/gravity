@@ -25,6 +25,10 @@ export class UI {
     private clickAction: RadioButtonGroup;
     private massInput: HTMLInputElement;
     private movableCheckbox: HTMLInputElement;
+    private controlBar: HTMLDivElement;
+    private toggleControlBarButton: HTMLButtonElement;
+    // --- non UI-Element properties ---
+    private isControlBarCollapsed: boolean = false;
 //#endregion
 //#region get, set
     // get all the values
@@ -87,6 +91,8 @@ export class UI {
         this.gravitationalConstantRangeInput    = document.getElementById("rangeG")! as HTMLInputElement;
         this.massInput                          = document.getElementById("massInput")! as HTMLInputElement;
         this.movableCheckbox                    = document.getElementById("cbxBodyMovable")! as HTMLInputElement;
+        this.controlBar                         = document.getElementById("controlBar")! as HTMLDivElement;
+        this.toggleControlBarButton             = document.getElementById("toggleControlBarBtn")! as HTMLButtonElement;
         this.clickAction = {
             name: "radioBtnMouseAction",
             buttons: Array.from(document.querySelectorAll('input[name="radioBtnMouseAction"]')) as HTMLInputElement[]
@@ -95,7 +101,7 @@ export class UI {
             const bar = document.getElementById("statusBar") as HTMLDivElement;
             return {
                 bar: bar,
-                fields: Array.from((bar.querySelectorAll(".statusBarItem")) as NodeListOf<HTMLSpanElement>)
+                fields: Array.from((bar.querySelectorAll("span")) as NodeListOf<HTMLSpanElement>)
             };
         })();
 
@@ -117,6 +123,7 @@ export class UI {
         this.gravitationalConstantInput.addEventListener("change", () => this.numberInputGChanged());
         this.gravitationalConstantRangeInput.addEventListener("input", () => this.rangeInputGChanged());
         this.massInput.addEventListener("change", () => this.updateSelectedMass());
+        this.toggleControlBarButton.addEventListener("click", () => this.toggleControlBar())
     }
     public initialize(width: number, height: number) {
         this.elasticCollisionsCheckbox.disabled = !this.collisionDetectionCheckbox.checked;
@@ -129,6 +136,12 @@ export class UI {
         this.app.applySimulationSettings({gravitationalConstant: Number(this.gravitationalConstantRangeInput.value)})
     }
 //#endregion
+    private toggleControlBar() {
+        this.isControlBarCollapsed = !this.isControlBarCollapsed;
+        this.controlBar.classList.toggle("translate-x-full");
+        this.toggleControlBarButton.textContent = this.isControlBarCollapsed ? "❮" : "❯";
+
+    }
     public resetButtonClicked() {
         this.app.resetSimulation()
         this.updateStatusBarSimulationInfo();
