@@ -3,15 +3,14 @@ import { RadioButtonGroup, UIAnimationSettings, SimulationSettings } from "../..
 import { App } from "../../app/app.js";
 import { VECTOR_COLORS } from "../../const/const.js";
 import { StatusBar } from "./statusBar.js";
+import { TopMenu } from "./topMenu.js";
 
 export class UI {
 //#region properties
     // All UI Elements
     private statusBar: StatusBar;
-    private resetButton: HTMLInputElement;
-    private playPauseButton: HTMLInputElement;
-    private stepButton: HTMLInputElement;
-    private repositoryLink: HTMLElement;
+    private topMenu: TopMenu;
+
     private zoomInButton: HTMLInputElement;
     private zoomOutButton: HTMLInputElement;
     private scrollUpButton: HTMLInputElement;
@@ -75,10 +74,6 @@ export class UI {
 //#endregion
 //#region initialize
     constructor(private app: App) {
-        this.resetButton                        = document.getElementById("btnResetSim")! as HTMLInputElement;
-        this.playPauseButton                    = document.getElementById("btnToggleSim")! as HTMLInputElement;
-        this.stepButton                         = document.getElementById("btnNextStep")! as HTMLInputElement;
-        this.repositoryLink                     = document.getElementById("repoLink")!;
         this.zoomInButton                       = document.getElementById("btnZoomIn")! as HTMLInputElement;
         this.zoomOutButton                      = document.getElementById("btnZoomOut")! as HTMLInputElement;
         this.scrollUpButton                     = document.getElementById("btnScrollUp")! as HTMLInputElement;
@@ -98,14 +93,14 @@ export class UI {
             name: "radioBtnMouseAction",
             buttons: Array.from(document.querySelectorAll('input[name="radioBtnMouseAction"]')) as HTMLInputElement[]
         };
-        this.statusBar = new StatusBar("statusBar");
         
+        this.statusBar = new StatusBar();
+        this.topMenu = new TopMenu(this, this.app);
+
         this.registerEvents();
     }
     private registerEvents() {
-        this.resetButton.addEventListener("click", () => this.resetButtonClicked());
-        this.playPauseButton.addEventListener("click", () => this.playPauseClicked());
-        this.stepButton.addEventListener("click", () => this.stepButtonClicked());
+
         this.zoomInButton.addEventListener("click", () => this.zoomInClicked());
         this.zoomOutButton.addEventListener("click", () => this.zoomOutClicked());
         this.scrollUpButton.addEventListener("click", () => this.scrollUpClicked());
@@ -136,21 +131,6 @@ export class UI {
         this.controlBar.classList.toggle("translate-x-full");
         this.toggleControlBarButton.textContent = this.isControlBarCollapsed ? "❮" : "❯";
 
-    }
-    public resetButtonClicked() {
-        this.app.resetSimulation()
-        this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.length);
-    }
-    public playPauseClicked() {
-        if (this.app.simulationRunning) {
-            this.app.stop();
-        } else {
-            this.app.run();
-        }
-    }
-    public stepButtonClicked() {
-        this.app.advanceOneTick();
-        this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.length);
     }
     public zoomInClicked() {
         this.app.zoomIn();
@@ -202,13 +182,10 @@ export class UI {
         }
     }
     public simulationStopped() {
-        this.playPauseButton.innerHTML = "&#9654;"; // play symbol
-        this.stepButton.disabled = false;
+        this.topMenu.simulationStopped();
     }
     public simulationResumed() {
-        this.playPauseButton.innerHTML = "&#10074;&#10074;"; // pause symbol
-        
-        this.stepButton.disabled = true;
+        this.topMenu.simulationResumed();
         this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.length);
     }
     public getSelectedValue(group: RadioButtonGroup): string | null {
