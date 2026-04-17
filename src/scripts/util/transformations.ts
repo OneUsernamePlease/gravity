@@ -1,6 +1,6 @@
 import { CanvasSpace } from "../types/types.js";
-import { Coordinate, Vector2D } from "./vector2d.js";
-export function relativePosition(absolutePosition: Coordinate, element: HTMLElement): Vector2D {
+import { Vector2D } from "./vector2d.js";
+export function relativePosition(absolutePosition: Vector2D, element: HTMLElement): Vector2D {
     const elementRect = element.getBoundingClientRect();
     const x = absolutePosition.x - elementRect.left;
     const y = absolutePosition.y - elementRect.top;

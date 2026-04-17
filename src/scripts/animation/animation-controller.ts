@@ -138,25 +138,25 @@ export class AnimationController {
     if (!distance) {
         distance = this.scrollDistance("horizontal"); // in simulationUnits
     }
-    this.viewController.scroll({x: distance, y: 0});
+    this.viewController.scroll(new Vector2D(distance, 0));
     }
     public scrollLeft(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("horizontal"); // in simulationUnits
         }
-        this.viewController.scroll({x: -distance, y: 0});
+        this.viewController.scroll(new Vector2D(distance, 0));
     }
     public scrollUp(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("vertical"); // in simulationUnits
         }
-        this.viewController.scroll({x: 0, y: distance});
+        this.viewController.scroll(new Vector2D(0, distance));
     }
     public scrollDown(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("vertical"); // in simulationUnits
         }
-        this.viewController.scroll({x: 0, y: -distance});
+        this.viewController.scroll(new Vector2D(0, -distance));
     }
     private scrollDistance(orientation: "horizontal" | "vertical", rate: number = DEFAULT_SCROLL_RATE): number {
         switch (orientation) {
@@ -196,6 +196,6 @@ export class AnimationController {
     }
     public scrollInCanvasUnits(movementOnCanvas: Vector2D){
         const movementInSimulationUnits = movementOnCanvas.scale(this.currentZoom);
-        this.viewController.scroll({ x: -(movementInSimulationUnits.x), y: movementInSimulationUnits.y });
+        this.viewController.scroll(movementInSimulationUnits);
     }
 }

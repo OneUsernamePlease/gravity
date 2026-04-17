@@ -1,14 +1,10 @@
-export interface Coordinate {
-    x: number,
-    y: number,
-}
 export class Vector2D {
     public x: number;
     public y: number;
     constructor()
-    constructor(pos: Coordinate)
+    constructor(pos: Vector2D)
     constructor(x: number, y: number)
-    constructor(a?: number | Coordinate, b?: number) {
+    constructor(a?: number | Vector2D, b?: number) {
         if (typeof a === "object") {
             this.x = a.x;
             this.y = a.y;
@@ -20,7 +16,7 @@ export class Vector2D {
     public toString() {
         return `x: ${this.x}, y: ${this.y}`;
     }
-    public add(...vectors: Coordinate[]): Vector2D {
+    public add(...vectors: Vector2D[]): Vector2D {
         const result = vectors.reduce((previous, current) => {
             return { x: (previous.x + current.x), y: (previous.y + current.y) };
         }, {x: this.x, y: this.y});
@@ -29,13 +25,13 @@ export class Vector2D {
     /**
      * @returns this - v
      */
-    public subtract(v: Coordinate): Vector2D {
+    public subtract(v: Vector2D): Vector2D {
         return new Vector2D(this.x - v.x, this.y - v.y);
     }
     public scale(scalar: number): Vector2D {
         return new Vector2D(this.x * scalar, this.y * scalar);
     }
-    public dotProduct(v: Coordinate): number {
+    public dotProduct(v: Vector2D): number {
         return this.x * v.x + this.y * v.y;
     }
     public magnitude(): number {
@@ -53,7 +49,7 @@ export class Vector2D {
      * @param v Vector2D
      * @returns Distance to v
      */
-    public distance(v: Coordinate): number {
+    public distance(v: Vector2D): number {
         return Math.hypot(v.x - this.x, v.y - this.y);
     }
     /**
@@ -62,7 +58,7 @@ export class Vector2D {
     public displacementVector(v: Vector2D) {
         return v.subtract(this);
     }
-    public hadamardProduct(v: Coordinate) {
+    public hadamardProduct(v: Vector2D) {
         return new Vector2D(this.x * v.x, this.y * v.y);
     }
     /**
@@ -94,7 +90,7 @@ export class Vector2D {
     /**
      * @param line1 defined by two points
      * @param line2 defined by two points
-     * @param strict false by default. If true, the intersection must be within the line segments defined by the coordinates, not just the infinite lines.
+     * @param strict false by default. If true, the intersection must be within the line segments defined by the Vector2Ds, not just the infinite lines.
      * @returns The intersection of the two lines: a point, null if they don't intersect, or a line (defined by two points) if they are identical, or collinear and overlapping.
      * https://stackoverflow.com/a/565282/97076991 - authored by ai.
      */
@@ -155,7 +151,7 @@ export class Vector2D {
         const intersection = p1.add(r.scale(t));
         return intersection;
     }
-    public static midpoint(v1: Coordinate, v2: Coordinate): Vector2D {
+    public static midpoint(v1: Vector2D, v2: Vector2D): Vector2D {
         return new Vector2D((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
     }
     public static simpleLineIntersection(line1: [p1: Vector2D, p2: Vector2D], line2: [q1: Vector2D, q2: Vector2D]): Vector2D | null {

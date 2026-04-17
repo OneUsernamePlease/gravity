@@ -19,7 +19,7 @@ export class ViewController {
         return this.canvasSpace.currentZoom;
     }
 
-    public scroll(displacement: { x: number; y: number }) {
+    public scroll(displacement: Vector2D) {
         this.moveOrigin(displacement);
     }
 
@@ -50,12 +50,12 @@ export class ViewController {
         }
         
         const shiftOrigin: Vector2D = zoomCenter.scale(zoomStep);
-        this.moveOrigin(shiftOrigin.hadamardProduct({x: 1, y: -1}));
+        this.moveOrigin(shiftOrigin.hadamardProduct(new Vector2D( 1, -1)));
         this.canvasSpace.currentZoom = newZoom;
 
         return newZoom;
     }
-    private moveOrigin(displacement: { x: number, y: number}) {
+    private moveOrigin(displacement: Vector2D) {
         const originPosition = this.canvasSpace.origin;
         const newOrigin = originPosition.add(displacement);
         this.setOrigin(newOrigin);
