@@ -7,8 +7,8 @@ export class StatusBar {
     public bar: HTMLDivElement
     public fields: HTMLSpanElement[];
 
-    constructor(barElementId: string = "statusBar") {
-        this.bar = document.getElementById(barElementId)! as HTMLDivElement;
+    constructor() {
+        this.bar    = document.getElementById("statusBar")! as HTMLDivElement;
         this.fields = Array.from((this.bar.querySelectorAll("span")) as NodeListOf<HTMLSpanElement>);
     }
 
@@ -26,17 +26,17 @@ export class StatusBar {
     public updateAnimationInfo(zoom: number) {
         this.updateZoom(zoom);
     }
-    private updateBodyCount(bodyCount: number, statusBarFieldIndex: number = 1) {
-        this.setStatusMessage(`Number of Bodies: ${bodyCount}`, statusBarFieldIndex);
-    }
-    private updateTickCount(tickCount: number, statusBarFieldIndex: number = 2) {
-        this.setStatusMessage(`Simulation Tick: ${tickCount}`, statusBarFieldIndex);
-    }
     public updateZoom(currentZoom: number, statusBarFieldIndex: number = 4) {
         this.setStatusMessage(`Zoom: ${currentZoom.toFixed(2)} (m per pixel)`, statusBarFieldIndex);
     }
     public updateCanvasDimensions(width: number, height: number, statusBarFieldIndex: number = 5) {
         this.setStatusMessage(`Canvas dimension: ${width} * ${height}`, statusBarFieldIndex);
+    }
+    private updateBodyCount(bodyCount: number, statusBarFieldIndex: number = 1) {
+        this.setStatusMessage(`Number of Bodies: ${bodyCount}`, statusBarFieldIndex);
+    }
+    private updateTickCount(tickCount: number, statusBarFieldIndex: number = 2) {
+        this.setStatusMessage(`Simulation Tick: ${tickCount}`, statusBarFieldIndex);
     }
     private vectorMessage() {
         return `Acceleration: ${VECTOR_COLORS.get("acceleration")?.name} - Velocity: ${VECTOR_COLORS.get("velocity")?.name}`;
@@ -60,6 +60,4 @@ export class StatusBar {
             element!.innerHTML = message;
         }
     }
-
-
 }
