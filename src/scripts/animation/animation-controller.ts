@@ -144,7 +144,7 @@ export class AnimationController {
         if (!distance) {
             distance = this.scrollDistance("horizontal"); // in simulationUnits
         }
-        this.viewController.scroll(new Vector2D(distance, 0));
+        this.viewController.scroll(new Vector2D(-distance, 0));
     }
     public scrollUp(distance?: number) {
         if (!distance) {
@@ -196,6 +196,6 @@ export class AnimationController {
     }
     public scrollInCanvasUnits(movementOnCanvas: Vector2D){
         const movementInSimulationUnits = movementOnCanvas.scale(this.currentZoom);
-        this.viewController.scroll(movementInSimulationUnits);
+        this.viewController.scroll(movementInSimulationUnits.hadamardProduct(new Vector2D(-1, 1)));
     }
 }
