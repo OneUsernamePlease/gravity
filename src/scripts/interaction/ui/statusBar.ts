@@ -7,11 +7,10 @@ export class StatusBar {
     public bar: HTMLDivElement
     public fields: HTMLSpanElement[];
 
-    constructor(barElementId: string) {
+    constructor(barElementId: string = "statusBar") {
         this.bar = document.getElementById(barElementId)! as HTMLDivElement;
         this.fields = Array.from((this.bar.querySelectorAll("span")) as NodeListOf<HTMLSpanElement>);
     }
-
 
     public displayVectorMessage(display: boolean) {
         if (display) {
