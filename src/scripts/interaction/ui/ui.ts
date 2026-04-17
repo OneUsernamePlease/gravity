@@ -1,7 +1,8 @@
-import * as util from "../util/util.js";
-import { RadioButtonGroup, StatusBar, UIAnimationSettings, SimulationSettings } from "../types/types.js";
-import { App } from "../app/app.js";
-import { VECTOR_COLORS } from "../const/const.js";
+import * as util from "../../util/util.js";
+import { RadioButtonGroup, UIAnimationSettings, SimulationSettings } from "../../types/types.js";
+import { App } from "../../app/app.js";
+import { VECTOR_COLORS } from "../../const/const.js";
+import { StatusBar } from "./statusBar.js";
 
 export class UI {
 //#region properties
@@ -97,14 +98,8 @@ export class UI {
             name: "radioBtnMouseAction",
             buttons: Array.from(document.querySelectorAll('input[name="radioBtnMouseAction"]')) as HTMLInputElement[]
         };
-        this.statusBar = (() => {
-            const bar = document.getElementById("statusBar") as HTMLDivElement;
-            return {
-                bar: bar,
-                fields: Array.from((bar.querySelectorAll("span")) as NodeListOf<HTMLSpanElement>)
-            };
-        })();
-
+        this.statusBar = new StatusBar("statusBar");
+        
         this.registerEvents();
     }
     private registerEvents() {
@@ -129,9 +124,9 @@ export class UI {
         this.elasticCollisionsCheckbox.disabled = !this.collisionDetectionCheckbox.checked;
         this.massInput.step = this.calculateMassInputStep();
         
-        this.setStatusBarVectors()
+        this.statusBar.displayVectorMessage(this.displayVectors)
         
-        this.updateStatusBarCanvasDimensions(width, height);
+        this.statusBar.updateCanvasDimensions(width, height);
 
         this.app.applySimulationSettings({gravitationalConstant: Number(this.gravitationalConstantRangeInput.value)})
     }
@@ -144,7 +139,7 @@ export class UI {
     }
     public resetButtonClicked() {
         this.app.resetSimulation()
-        this.updateStatusBarSimulationInfo();
+        this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.length);
     }
     public playPauseClicked() {
         if (this.app.simulationRunning) {
@@ -155,7 +150,7 @@ export class UI {
     }
     public stepButtonClicked() {
         this.app.advanceOneTick();
-        this.updateStatusBarSimulationInfo();
+        this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.length);
     }
     public zoomInClicked() {
         this.app.zoomIn();
@@ -163,7 +158,7 @@ export class UI {
     }
     public zoomOutClicked() {
         this.app.zoomOut();
-        this.updateStatusBarAnimationInfo();
+        this.statusBar.updateAnimationInfo(this.app.currentZoom);
     }
     public scrollUpClicked() {
         this.app.scrollUp();
@@ -179,7 +174,7 @@ export class UI {
     }
     public cbxDisplayVectorsChanged() {
         this.app.setDisplayVectors(this.displayVectors)
-        this.setStatusBarVectors();
+        this.statusBar.displayVectorMessage(this.displayVectors);
     }
     public cbxCollisionsChanged() {
         const checked = this.collisionDetectionCheckbox.checked;
@@ -214,7 +209,7 @@ export class UI {
         this.playPauseButton.innerHTML = "&#10074;&#10074;"; // pause symbol
         
         this.stepButton.disabled = true;
-        this.updateStatusBarSimulationInfo();
+        this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.length);
     }
     public getSelectedValue(group: RadioButtonGroup): string | null {
         const selected = group.buttons.find(btn => btn.checked);
@@ -231,53 +226,13 @@ export class UI {
         let step = 10 ** (Math.floor(Math.log10(this.mass)) - 1);
         return step < 1 ? "1" : step.toString();
     }
-    private setStatusBarVectors() {
-        if (this.displayVectors) {
-            this.setStatusMessage(this.statusBarVectorMessage(), 3);
-        } else {
-            this.setStatusMessage("", 3);
-        }
-    }
     public updateStatusBarSimulationInfo() {
-        this.updateStatusBarTickCount(this.app.currentTick);
-        this.updateStatusBarBodyCount(this.app.currentSimulationState.length);
+        this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.length)
+    }
+    public updateStatusBarCanvasDimensions(windowWidth: number, windowHeight: number) {
+        this.statusBar.updateCanvasDimensions(windowWidth, windowHeight)
     }
     public updateStatusBarAnimationInfo() {
-        this.updateStatusBarZoom(this.app.currentZoom);
+        this.statusBar.updateAnimationInfo(this.app.currentZoom)
     }
-    public updateStatusBarBodyCount(bodyCount: number, statusBarFieldIndex: number = 1) {
-        this.setStatusMessage(`Number of Bodies: ${bodyCount}`, statusBarFieldIndex);
-    }
-    public updateStatusBarTickCount(tickCount: number, statusBarFieldIndex: number = 2) {
-        this.setStatusMessage(`Simulation Tick: ${tickCount}`, statusBarFieldIndex);
-    }
-    public updateStatusBarZoom(currentZoom: number, statusBarFieldIndex: number = 4) {
-        this.setStatusMessage(`Zoom: ${currentZoom.toFixed(2)} (m per pixel)`, statusBarFieldIndex);
-    }
-    public updateStatusBarCanvasDimensions(width: number, height: number, statusBarFieldIndex: number = 5) {
-        this.setStatusMessage(`Canvas dimension: ${width} * ${height}`, statusBarFieldIndex);
-    }
-    private statusBarVectorMessage() {
-        return `Acceleration: ${VECTOR_COLORS.get("acceleration")?.name} - Velocity: ${VECTOR_COLORS.get("velocity")?.name}`;
-    }
-    /**
-     * @param fieldIndexOrId number of field (starting at one) OR id of the field
-     */
-    private setStatusMessage(message: string, fieldIndexOrId?: number | string, append: boolean = false) {
-        let element: HTMLElement;
-        if (typeof fieldIndexOrId === "number") {
-            element = this.statusBar.fields[fieldIndexOrId - 1];
-        } else if (typeof fieldIndexOrId === "string") {
-            element = document.getElementById(fieldIndexOrId)!;
-        } else {
-            element = this.statusBar.fields[0];
-        }
-        
-        if (append) {
-            element!.innerHTML += message;
-        } else {
-            element!.innerHTML = message;
-        }
-    }
-
 }

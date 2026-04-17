@@ -1,3 +1,4 @@
+import { StatusBar } from "../interaction/ui/statusBar.js";
 import { Body2d } from "../simulation/body2d.js";
 import { Vector2D } from "../util/vector2d.js";
 
@@ -90,10 +91,7 @@ export interface ObjectState {
 //++++++++++++++++++++
 //+ UI
 //++++++++++++++++++++
-export interface StatusBar {
-    bar: HTMLDivElement
-    fields: HTMLSpanElement[];
-}
+
 export interface RadioButtonGroup {
     name: string;
     buttons: HTMLInputElement[];
