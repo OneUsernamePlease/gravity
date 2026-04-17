@@ -228,7 +228,7 @@ export class InteractionManager {
 
         switch (this.touchAction) {
             case TouchAction.AddBody:
-                const absPos = util.getAbsolutePointerPosition(ev);
+                const absPos = new Vector2D(util.getAbsolutePointerPosition(ev));
                 this.addBodyAtPointer(tfm.relativePosition(absPos, this.canvas));
                 this.touchAction = TouchAction.None;
                 break;
@@ -295,8 +295,7 @@ export class InteractionManager {
             case MouseAction.None:
                 break;
             case MouseAction.AddBody:
-                const positionVector = new Vector2D(absoluteMousePosition.x, absoluteMousePosition.y);
-                const positionOnCanvas = tfm.relativePosition(positionVector, this.canvas)
+                const positionOnCanvas = tfm.relativePosition(absoluteMousePosition, this.canvas)
                 const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionOnCanvas, this.app.canvasSpace);
                 this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
                 break;
