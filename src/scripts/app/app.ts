@@ -100,9 +100,11 @@ export class App {
     }
     public zoomIn(zoomCenter?: Vector2D, factor?: number) {
         this.animation.zoomIn(zoomCenter, factor);
+        this.ui.updateStatusBarAnimationInfo();
     }
     public zoomOut(zoomCenter?: Vector2D, factor?: number) {
         this.animation.zoomOut(zoomCenter, factor);
+        this.ui.updateStatusBarAnimationInfo();
     }
     public scrollInCanvasUnits(scroll: Vector2D) {
         this.animation.scrollInCanvasUnits(scroll);
@@ -125,6 +127,7 @@ export class App {
     }
     public setDisplayVectors(display: boolean) {
         this.animation.setDisplayVectors(display);
+        this.ui.displayVectorMessage(display);
     }
 // UI related
     public updateStatusBarAnimationInfo() {
