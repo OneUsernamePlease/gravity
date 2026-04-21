@@ -10,7 +10,6 @@ export function randomHexColor(alpha: number = 1): string {
 
     const toHex = (n: number) => n.toString(16).padStart(2, "0");
 
-
     const r = rng(0, 256);
     const g = rng(0, 256);
     const b = rng(0, 256);

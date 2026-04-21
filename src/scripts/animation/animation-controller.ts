@@ -135,28 +135,28 @@ export class AnimationController {
     }
 
     public scrollRight(distance?: number) {
-    if (!distance) {
-        distance = this.scrollDistance("horizontal"); // in simulationUnits
-    }
-    this.viewController.scroll(new Vector2D(distance, 0));
+        if (!distance) {
+            distance = this.scrollDistance("horizontal"); // in simulationUnits
+        }
+        this.viewController.moveOrigin(new Vector2D(distance, 0));
     }
     public scrollLeft(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("horizontal"); // in simulationUnits
         }
-        this.viewController.scroll(new Vector2D(-distance, 0));
+        this.viewController.moveOrigin(new Vector2D(-distance, 0));
     }
     public scrollUp(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("vertical"); // in simulationUnits
         }
-        this.viewController.scroll(new Vector2D(0, distance));
+        this.viewController.moveOrigin(new Vector2D(0, distance));
     }
     public scrollDown(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("vertical"); // in simulationUnits
         }
-        this.viewController.scroll(new Vector2D(0, -distance));
+        this.viewController.moveOrigin(new Vector2D(0, -distance));
     }
     private scrollDistance(orientation: "horizontal" | "vertical", rate: number = DEFAULT_SCROLL_RATE): number {
         switch (orientation) {
@@ -196,6 +196,6 @@ export class AnimationController {
     }
     public scrollInCanvasUnits(movementOnCanvas: Vector2D){
         const movementInSimulationUnits = movementOnCanvas.scale(this.currentZoom);
-        this.viewController.scroll(movementInSimulationUnits.hadamardProduct(new Vector2D(-1, 1)));
+        this.viewController.moveOrigin(movementInSimulationUnits.hadamardProduct(new Vector2D(-1, 1)));
     }
 }

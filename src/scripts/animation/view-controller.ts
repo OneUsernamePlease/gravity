@@ -19,10 +19,11 @@ export class ViewController {
         return this.canvasSpace.currentZoom;
     }
 
-    public scroll(displacement: Vector2D) {
-        this.moveOrigin(displacement);
+    public moveOrigin(displacement: Vector2D) {
+        const originPosition = this.canvasSpace.origin;
+        const newOrigin = originPosition.add(displacement);
+        this.setOrigin(newOrigin);
     }
-
     public zoomToFactor(factor: number, zoomCenter: Vector2D): number {
         if (factor <= 0) return this.currentZoom;
         
@@ -32,7 +33,6 @@ export class ViewController {
 
         return this.zoomByStep(zoomCenter, zoomDelta)
     }
-
     /**
      * Zoom is measured in simulationUnits (meter) per canvasUnit (pixel)
      * @param zoomCenter this point stays fixed while zooming
@@ -55,16 +55,10 @@ export class ViewController {
 
         return newZoom;
     }
-    private moveOrigin(displacement: Vector2D) {
-        const originPosition = this.canvasSpace.origin;
-        const newOrigin = originPosition.add(displacement);
-        this.setOrigin(newOrigin);
-    }
     /**
      * Origin {x:0,y:0} is at the top-left
      */
     private setOrigin(newOrigin: Vector2D) {
         this.canvasSpace.origin = newOrigin;
     }
-
 }
