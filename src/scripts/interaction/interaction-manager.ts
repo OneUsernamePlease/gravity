@@ -4,6 +4,7 @@ import * as util from "../util/util.js";
 import { App } from "../app/app.js";
 import * as tfm from "../util/transformations.js";
 import { Body2d } from "../simulation/body2d.js";
+import { ContextMenu } from "./ui/contextMenu.js";
 
 export class InteractionManager {
 //#region properties
@@ -17,19 +18,20 @@ export class InteractionManager {
         secondary: { state: ButtonState.Up },
         wheel: { state: ButtonState.Up }
     };
+    private contextMenu = new ContextMenu();
 //#endregion
 //#region get, set
     get touchAction(): TouchAction {
         return this._touchAction;
     }
-    set touchAction(action: TouchAction) {
+    private set touchAction(action: TouchAction) {
         this._touchAction = action;
     }
 
     get activeTouches(): Map<number, Vector2D> {
         return this._activeTouches;
     }
-    set activeTouches(touches: Map<number, Vector2D>) {
+    private set activeTouches(touches: Map<number, Vector2D>) {
         this._activeTouches = touches;
     }
 
@@ -37,21 +39,21 @@ export class InteractionManager {
         return this._lastSingleTouchPos;
     }
 
-    set lastSingleTouchPos(pos: Vector2D | null) {
+    private set lastSingleTouchPos(pos: Vector2D | null) {
         this._lastSingleTouchPos = pos;
     }
     
     get previousTouchesMid(): Vector2D | null {
         return this._previousTouchesMid;
     }
-    set previousTouchesMid(mid: Vector2D | null) {
+    private set previousTouchesMid(mid: Vector2D | null) {
         this._previousTouchesMid = mid;
     }
 
     get previousTouchesDist(): number | null {
         return this._previousTouchesDist;
     }
-    set previousTouchesDist(dist: number | null) {
+    private set previousTouchesDist(dist: number | null) {
         this._previousTouchesDist = dist;
     }
 
@@ -66,9 +68,24 @@ export class InteractionManager {
         canvas.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
         canvas.addEventListener("contextmenu",   (ev) => { ev.preventDefault() });
         canvas.addEventListener("touchend",      (ev) => { ev.preventDefault() }, { passive: false });   // prevent touch-triggered MouseUp
+        canvas.addEventListener('contextmenu',   (ev) => {
+            ev.preventDefault();
+            this.contextMenu.open(
+                new Vector2D(ev.clientX, ev.clientY), [
+                    {
+                        label: 'Test1',
+                        action: () => { console.log('test1')},
+                    }
+                ]
+            )
+        })
     }
 //#region primary interaction
     private canvasPointerDown(ev: PointerEvent) {
+        if (this.contextMenu.isOpen) {
+            this.contextMenu.close();
+            return;
+        }
         if (ev.pointerType === "mouse") {
             // handled in its own eventListener. PointerDown only fires for presses while no other button is down.
             return;
@@ -205,7 +222,6 @@ export class InteractionManager {
             this.touchAction = TouchAction.AddBody;
             this.lastSingleTouchPos = touch;
             
-            
             const positionVector = new Vector2D(ev.clientX, ev.clientY);
             const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionVector, this.app.canvasSpace);
             this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
@@ -270,9 +286,12 @@ export class InteractionManager {
             default:
                 break;
         }
-                
     }
     private canvasMouseDown(ev: MouseEvent) {
+        if (this.contextMenu.isOpen) {
+            this.contextMenu.close();
+            return;
+        }
         const absolutePointerPosition: Vector2D = new Vector2D(ev.clientX, ev.clientY);
         switch (ev.button) {
             case MouseButtons.Main:
@@ -336,7 +355,7 @@ export class InteractionManager {
 
         return { first, second, midpoint, distance };
     }
-    public reset(): void {
+    reset(): void {
         this.touchAction = TouchAction.None;
         this.activeTouches.clear();
         this.previousTouchesMid = null;

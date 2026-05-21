@@ -96,29 +96,9 @@ export interface RadioButtonGroup {
     name: string;
     buttons: HTMLInputElement[];
 }
-export interface UIElements {
-    statusBar: StatusBar;
-    // top menu
-    resetButton: HTMLElement;
-    playPauseButton: HTMLElement;
-    stepButton: HTMLElement;
-    repositoryLink: HTMLElement;
-
-    // main menu
-    zoomInButton: HTMLElement;
-    zoomOutButton: HTMLElement;
-    scrollUpButton: HTMLElement;
-    scrollDownButton: HTMLElement;
-    scrollLeftButton: HTMLElement;
-    scrollRightButton: HTMLElement;
-
-    displayVectorsCheckbox: HTMLInputElement;
-
-    collisionDetectionCheckbox: HTMLInputElement;
-    elasticCollisionsCheckbox: HTMLInputElement;
-    gravitationalConstantInput: HTMLInputElement;
-
-    clickAction: HTMLSelectElement | RadioButtonGroup;
-    massInput: HTMLInputElement;
-    movableCheckbox: HTMLInputElement;
+export interface ContextMenuItem {
+    label: string 
+    action: () => void
+    disabled?: boolean
+    highlighted?: boolean
 }
