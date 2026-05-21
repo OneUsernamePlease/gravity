@@ -1,4 +1,5 @@
 # TODO:
+    - dragging into the canvas sometimes triggers a new body, even if pointerDown happened off the canvas.
     - improve the UI
         - split ui.ts further into its components (top menu, controlBar, footer/statusBar)
         - small controlBar using icons, which opens floating panels containing the controls
@@ -18,12 +19,9 @@
     - Testing: set the context such that CSS can be used (> body.ts) (works in browser context but not in node) - sadly, *environment: 'jsdom',* presents new problems
 
 # bugs
-    - interaction-manager does not consistently use tfm.relativePosition(...). if the canvas is not at (0,0), bodies get added w/ velocity, when adding by a simple touch
-    - adding body with velocity, while zooming: when adding a body, at mouseDown store the pointer's simulation position, currently the positions will be wrong when zooming while dragging for adding a body
-    - mobile view (or just narrow width)
     - elastic collisions (that should be 100% elastic) are not
     - in theory a body can move at above c so introduce a limit we shall
-    - when Display Vectors is active, the displayed acceleration vector for a given body is actually the vector from the previous tick.
+    - when Display Vectors is active, the displayed vectors for a given body are actually the vectors from the previous tick.
         - for a given simulationState, immediately calculate force/acceleration rather than calculating it when advancing to the next tick
     - add small epsilon for Vector2d.lineIntersection()
 
