@@ -68,16 +68,6 @@ export class InteractionManager {
         canvas.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
         canvas.addEventListener("touchend",      (ev) => { ev.preventDefault() }, { passive: false });   // prevent touch-triggered MouseUp
         canvas.addEventListener('contextmenu',   (ev) => { ev.preventDefault() });
-        //canvas.addEventListener('contextmenu',   (ev) => {
-        //    
-        //    
-        //    
-        //    
-        //    
-        //    
-        //    
-        //    
-        //})
     }
 //#region primary interaction
     private canvasPointerDown(ev: PointerEvent) {
@@ -266,6 +256,7 @@ export class InteractionManager {
         const absolutePointerPosition = new Vector2D(util.getAbsolutePointerPosition(ev));
         switch (ev.button) {
             case MouseButtons.Main:
+                if (this.pointer.main.state === ButtonState.Up) { return; }
                 this.canvasMainMouseUp(absolutePointerPosition);
                 this.pointer.main.state = ButtonState.Up;
                 break;
@@ -323,9 +314,6 @@ export class InteractionManager {
             case MouseAction.None:
                 break;
             case MouseAction.AddBody:
-                if (this.pointer.main.state === ButtonState.Up) {
-                   return;
-                }
                 this.addBodyAtPointer(tfm.relativePosition(absoluteMousePosition, this.canvas));
                 break;
             default:
