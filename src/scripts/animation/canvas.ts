@@ -45,7 +45,7 @@ export class Canvas {
     public drawVector(position: Vector2D, direction: Vector2D, color: string = "white") {
         // optionally normalize the direction and scale later
         let endPosition: Vector2D = position.add(direction);
-        if (!this.isLineVisible(position, endPosition)) {
+        if (!this.isLinePotentiallyVisible(position, endPosition)) {
             return;
         }
         this.visibleCanvasContext.beginPath();
@@ -76,6 +76,17 @@ export class Canvas {
         const inBoundsTop = position.y + radius >= 0;
         const inBoundsBottom = position.y - radius <= this.visibleCanvas.height;
         return inBoundsLeft && inBoundsRight && inBoundsTop && inBoundsBottom;
+    }
+    private isLinePotentiallyVisible(startPoint: Vector2D, endPoint: Vector2D) :boolean {
+        const w = this.visibleCanvas.width;
+        const h = this.visibleCanvas.height;
+
+        const minX = startPoint.x < endPoint.x ? startPoint.x : endPoint.x;
+        const maxX = startPoint.x > endPoint.x ? startPoint.x : endPoint.x;
+        const minY = startPoint.y < endPoint.y ? startPoint.y : endPoint.y;
+        const maxY = startPoint.y > endPoint.y ? startPoint.y : endPoint.y;
+
+        return !(maxX < 0 || minX > w || maxY < 0 || minY > h);
     }
     private isLineVisible(startPoint: Vector2D, endPoint: Vector2D): boolean {
         // if the startPoint or endPoint is in the canvas, return true
