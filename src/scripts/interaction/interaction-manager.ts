@@ -62,7 +62,7 @@ export class InteractionManager {
         canvas.addEventListener("pointerdown",   (ev) => this.canvasPointerDown(ev as PointerEvent));
         canvas.addEventListener("pointerup",     (ev) => this.canvasPointerUp(ev as PointerEvent));
         canvas.addEventListener("pointermove",   (ev) => this.canvasPointerMoving(ev as PointerEvent));
-        canvas.addEventListener("pointercancel", (ev) => this.reset());
+        canvas.addEventListener("pointercancel", (ev) => this.cancelAndClearTouches());
         canvas.addEventListener("mousedown",     (ev) => this.canvasMouseDown(ev as MouseEvent));    // pointerEvents only fire when the first button is pressed, and the last button is released
         canvas.addEventListener("mouseup",       (ev) => this.canvasMouseUp(ev as MouseEvent));      // so we need mouse events to catch all button interactions
         canvas.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
@@ -267,7 +267,9 @@ export class InteractionManager {
                 ev.preventDefault();
                 break;
             case MouseButtons.Secondary:
-                this.openContextMenu(new Vector2D(ev.clientX, ev.clientY));
+                // okay I implemented this and i don' t event need it yet
+                // this.openContextMenu(new Vector2D(ev.clientX, ev.clientY));
+
                 this.pointer.secondary.state = ButtonState.Up;
                 break;
             default:
@@ -356,7 +358,7 @@ export class InteractionManager {
 
         return { first, second, midpoint, distance };
     }
-    reset(): void {
+    private cancelAndClearTouches(): void {
         this.touchAction = TouchAction.None;
         this.activeTouches.clear();
         this.previousTouchesMid = null;
