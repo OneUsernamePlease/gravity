@@ -1,5 +1,5 @@
-import { ContextMenuItem } from "../../types/types.js";
-import { Vector2D } from "../../util/vector2d.js";
+import { ContextMenuItem } from "../types/types.js";
+import { Vector2D } from "../util/vector2d.js";
 
 export class ContextMenu {
     private element: HTMLDivElement;
@@ -23,10 +23,7 @@ export class ContextMenu {
             text-sm text-zinc-100
             hidden
         `
-        document.body.appendChild(this.element)
-
-        //window.addEventListener('click', this.handleOutsideClick);
-        window.addEventListener('keydown', this.handleEscape);
+        document.body.appendChild(this.element);
     }
     open(absolutePosition: Vector2D,
          entries: ({ label: string; action: () => void; })[]
@@ -71,14 +68,6 @@ export class ContextMenu {
         this.element.classList.add('hidden');
         this.isOpen = false;
     }
-
-    destroy() {
-        this.element.remove();
-
-        window.removeEventListener('click', this.handleOutsideClick);
-        window.removeEventListener('keydown', this.handleEscape);
-    }
-
     private clearEntries() {
         this.element.innerHTML = '';
     }
@@ -106,19 +95,4 @@ export class ContextMenu {
         this.element.appendChild(button);
         }
     }
-
-    private handleOutsideClick(e: MouseEvent) {
-        if (!this.isOpen) return;
-
-        if (!this.element.contains(e.target as Node)) {
-            this.close();
-        }
-    }
-
-    private handleEscape(e: KeyboardEvent) {
-        if (e.key === 'Escape') {
-            this.close();
-        }
-    }
-
 }

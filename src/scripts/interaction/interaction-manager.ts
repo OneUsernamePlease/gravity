@@ -4,7 +4,7 @@ import * as util from "../util/util.js";
 import { App } from "../app/app.js";
 import * as tfm from "../util/transformations.js";
 import { Body2d } from "../simulation/body2d.js";
-import { ContextMenu } from "./ui/contextMenu.js";
+import { ContextMenu } from "./contextMenu.js";
 
 export class InteractionManager {
 //#region properties
@@ -66,26 +66,21 @@ export class InteractionManager {
         canvas.addEventListener("mousedown",     (ev) => this.canvasMouseDown(ev as MouseEvent));    // pointerEvents only fire when the first button is pressed, and the last button is released
         canvas.addEventListener("mouseup",       (ev) => this.canvasMouseUp(ev as MouseEvent));      // so we need mouse events to catch all button interactions
         canvas.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
-        canvas.addEventListener("contextmenu",   (ev) => { ev.preventDefault() });
         canvas.addEventListener("touchend",      (ev) => { ev.preventDefault() }, { passive: false });   // prevent touch-triggered MouseUp
-        canvas.addEventListener('contextmenu',   (ev) => {
-            ev.preventDefault();
-            this.contextMenu.open(
-                new Vector2D(ev.clientX, ev.clientY), [
-                    {
-                        label: 'Test1',
-                        action: () => { console.log('test1')},
-                    }
-                ]
-            )
-        })
+        canvas.addEventListener('contextmenu',   (ev) => { ev.preventDefault() });
+        //canvas.addEventListener('contextmenu',   (ev) => {
+        //    
+        //    
+        //    
+        //    
+        //    
+        //    
+        //    
+        //    
+        //})
     }
 //#region primary interaction
     private canvasPointerDown(ev: PointerEvent) {
-        if (this.contextMenu.isOpen) {
-            this.contextMenu.close();
-            return;
-        }
         if (ev.pointerType === "mouse") {
             // handled in its own eventListener. PointerDown only fires for presses while no other button is down.
             return;
@@ -271,8 +266,8 @@ export class InteractionManager {
         const absolutePointerPosition = new Vector2D(util.getAbsolutePointerPosition(ev));
         switch (ev.button) {
             case MouseButtons.Main:
-                this.pointer.main.state = ButtonState.Up;
                 this.canvasMainMouseUp(absolutePointerPosition);
+                this.pointer.main.state = ButtonState.Up;
                 break;
             case MouseButtons.Wheel:
                 this.pointer.wheel.state = ButtonState.Up;
@@ -281,6 +276,7 @@ export class InteractionManager {
                 ev.preventDefault();
                 break;
             case MouseButtons.Secondary:
+                this.openContextMenu(new Vector2D(ev.clientX, ev.clientY));
                 this.pointer.secondary.state = ButtonState.Up;
                 break;
             default:
@@ -289,7 +285,7 @@ export class InteractionManager {
     }
     private canvasMouseDown(ev: MouseEvent) {
         if (this.contextMenu.isOpen) {
-            this.contextMenu.close();
+            this.closeContextMenu();
             return;
         }
         const absolutePointerPosition: Vector2D = new Vector2D(ev.clientX, ev.clientY);
@@ -327,11 +323,28 @@ export class InteractionManager {
             case MouseAction.None:
                 break;
             case MouseAction.AddBody:
+                if (this.pointer.main.state === ButtonState.Up) {
+                   return;
+                }
                 this.addBodyAtPointer(tfm.relativePosition(absoluteMousePosition, this.canvas));
                 break;
             default:
                 break;
         }
+    }
+    private openContextMenu(position: Vector2D) {
+        this.contextMenu.open(
+            position,
+            [
+                {
+                    label: 'Test1',
+                    action: () => { console.log('test1')},
+                }
+            ]
+        )
+    }
+    private closeContextMenu() {
+        this.contextMenu.close();
     }
 //#endregion
 //#region manage interactions
