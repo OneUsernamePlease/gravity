@@ -8,12 +8,14 @@
         - at every change (body placed, g changed)
         - suggestion: change the PAUSE to MOVEMENT-DISABLED, -> keep calculating but don't update positions.
     - rendering optimizations:
-        - batch all bodies of the same color (ie. all w/ mass<100, mass>1000000)
-        - batch all acc vectors
-        - batch all vel vectors
-        - draw in batches
-            - ctx.beginPath() -> draw a batch (same stroke/fill style)
-    - canvas layers
+        - canvas layers
+        - animationFrames
+        - batches
+            - batch all bodies of the same color (ie. all w/ mass<100, mass>1000000)
+            - batch all acc vectors
+            - batch all vel vectors
+            - draw in batches
+                - ctx.beginPath() -> draw a batch (same stroke/fill style)
     - mobile / responsive
     - workers and offscreen canvas
     - choose gravityLowerBounds (gravity.ts) dynamically depending on mass or whatever
