@@ -1,21 +1,22 @@
 # TODO:
-    - dragging into the canvas sometimes triggers a new body, even if pointerDown happened off the canvas.
     - improve the UI
-        - split ui.ts further into its components (top menu, controlBar, footer/statusBar)
         - small controlBar using icons, which opens floating panels containing the controls
         - improve the status bar
             - maxN -> status bar can have between 1 and N fields.
             - only show when display is wide enough and only what needs to be shown
     - don't just calculate forces only before advancing a tick  
         - at every change (body placed, g changed)
+        - suggestion: change the PAUSE to MOVEMENT-DISABLED, -> keep calculating but don't update positions.
+    - rendering optimizations:
+        - batch all bodies of the same color (ie. all w/ mass<100, mass>1000000)
+        - batch all acc vectors
+        - batch all vel vectors
+        - draw in batches
+            - ctx.beginPath() -> draw a batch (same stroke/fill style)
     - canvas layers
     - mobile / responsive
     - workers and offscreen canvas
     - choose gravityLowerBounds (gravity.ts) dynamically depending on mass or whatever
-    - color for bodies
-        - let user choose
-        - randomize
-        - mass-dependant 
     - Testing: set the context such that CSS can be used (> body.ts) (works in browser context but not in node) - sadly, *environment: 'jsdom',* presents new problems
 
 # bugs
@@ -23,11 +24,8 @@
     - in theory a body can move at above c so introduce a limit we shall
     - when Display Vectors is active, the displayed vectors for a given body are actually the vectors from the previous tick.
         - for a given simulationState, immediately calculate force/acceleration rather than calculating it when advancing to the next tick
-    - add small epsilon for Vector2d.lineIntersection()
 
 # feets/refactors/improvements:
-- use pointer events instead of mouse&touch
-- move with middle mouse, select bodies with right (secondary) mouse
 - have a list of all bodies, to edit their properties
 - immovable bodies should have a different color
 
