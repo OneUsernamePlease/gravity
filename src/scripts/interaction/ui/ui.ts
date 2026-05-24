@@ -1,4 +1,3 @@
-import * as util from "../../util/util.js";
 import { UIAnimationSettings, SimulationSettings } from "../../types/types.js";
 import { App } from "../../app/app.js";
 import { StatusBar } from "./statusBar.js";
@@ -11,7 +10,6 @@ export class UI {
     private statusBar: StatusBar;
     private topMenu: TopMenu;
     private controlBar: ControlBar;
-    
 //#endregion
 //#region get, set
     // get all the values
@@ -36,7 +34,6 @@ export class UI {
     get selectedClickAction() {
         return this.controlBar.selectedClickAction;
     }
-
     get animationSettings(): UIAnimationSettings {
         return {
             displayVectors: this.displayVectors,
@@ -67,7 +64,10 @@ export class UI {
         this.statusBar.displayVectorMessage(this.displayVectors)
         this.statusBar.updateCanvasDimensions(width, height);
 
-        
+        const isNarrow = window.matchMedia("(max-width: 768px)").matches;
+        if (isNarrow) {
+            this.controlBar.collapse();
+        }
     }
 //#endregion
     public toggleControlBar() {
@@ -81,7 +81,7 @@ export class UI {
         this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.length);
     }
 
-    //#region StatusBar
+//#region StatusBar
     public displayVectorMessage(display: boolean) {
         this.statusBar.displayVectorMessage(display);
     }
@@ -94,5 +94,5 @@ export class UI {
     public updateStatusBarAnimationInfo() {
         this.statusBar.updateAnimationInfo(this.app.currentZoom)
     }
-    //#endregion
+//#endregion
 }

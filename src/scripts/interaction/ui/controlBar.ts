@@ -30,22 +30,22 @@ export class ControlBar {
 
 //#region get, set
     // get all the values
-    public get collisionDetection() {
+    get collisionDetection() {
         return this.collisionDetectionCheckbox.checked;
     }
-    public get elasticCollisions() {
+    get elasticCollisions() {
         return this.elasticCollisionsCheckbox.checked;
     }
-    public get gravitationalConstant() {
+    get gravitationalConstant() {
         return util.getInputNumber(this.gravitationalConstantInput);
     }
-    public get displayVectors() {
+    get displayVectors() {
         return this.displayVectorsCheckbox.checked;
     }
-    public get mass() {
+    get mass() {
         return util.getInputNumber(this.massInput);
     }
-    public get movable() {
+    get movable() {
         return this.movableCheckbox.checked;
     }
     get selectedClickAction() {
@@ -115,12 +115,22 @@ export class ControlBar {
         this.toggleControlBarButton.addEventListener("click", () => this.toggle())
     }
     
-    public toggle() {
+    toggle() {
         this.isControlBarCollapsed = !this.isControlBarCollapsed;
         this.controlBar.classList.toggle("translate-x-full");
         this.toggleControlBarButton.textContent = this.isControlBarCollapsed ? "❮" : "❯";
     }
-    public getSelectedValue(group: RadioButtonGroup): string | null {
+    expand() {
+        this.isControlBarCollapsed = false;
+        this.controlBar.classList.remove("translate-x-full")
+        this.toggleControlBarButton.textContent = "❯";
+    }
+    collapse() {
+        this.isControlBarCollapsed = true;
+        this.controlBar.classList.add("translate-x-full")
+        this.toggleControlBarButton.textContent = "❮";
+    }
+    getSelectedValue(group: RadioButtonGroup): string | null {
         const selected = group.buttons.find(btn => btn.checked);
         return selected?.value ?? null;
     }
@@ -132,43 +142,43 @@ export class ControlBar {
         let step = 10 ** (Math.floor(Math.log10(this.mass)) - 1);
         return step < 1 ? "1" : step.toString();
     }
-    public numberInputGChanged() {
+    numberInputGChanged() {
         const newG: string = this.gravitationalConstantInput.value;
         this.gravitationalConstantRangeInput.value = newG;
         this.app.applySimulationSettings({gravitationalConstant: Number(newG) });
     }
-    public rangeInputGChanged() {
+    rangeInputGChanged() {
         const newG: string = this.gravitationalConstantRangeInput.value;
         if (this.gravitationalConstantInput.value !== newG) {
             this.gravitationalConstantInput.value = newG;
             this.app.applySimulationSettings({gravitationalConstant: Number(newG) });
         }
     }
-    public updateSelectedMass() {
+    updateSelectedMass() {
         this.massInput.step = this.calculateMassInputStep();
     }
-    public zoomInClicked() {
+    zoomInClicked() {
         this.app.zoomIn();
     }
-    public zoomOutClicked() {
+    zoomOutClicked() {
         this.app.zoomOut();
     }
-    public scrollUpClicked() {
+    scrollUpClicked() {
         this.app.scrollUp();
     }
-    public scrollDownClicked() {
+    scrollDownClicked() {
         this.app.scrollDown();
     }
-    public scrollLeftClicked() {
+    scrollLeftClicked() {
         this.app.scrollLeft();
     }
-    public scrollRightClicked() {
+    scrollRightClicked() {
         this.app.scrollRight();
     }
-    public cbxDisplayVectorsChanged() {
+    cbxDisplayVectorsChanged() {
         this.app.setDisplayVectors(this.displayVectors);
     }
-    public cbxCollisionsChanged() {
+    cbxCollisionsChanged() {
         const checked = this.collisionDetectionCheckbox.checked;
         const elasticChecked = this.elasticCollisionsCheckbox.checked;
         
