@@ -50,9 +50,11 @@ export class App {
 //#endregion
 //#region initialize
     constructor() {
-        const canvasElement = document.getElementById("theCanvas") as HTMLCanvasElement;
-        if (!canvasElement) throw new Error("canvasElement not found");
-        const canvas = new Canvas(canvasElement);
+        const wrapper = document.getElementById("canvasWrapper") as HTMLDivElement;
+        if (!wrapper) {
+            throw new Error("canvasWrapper not found");
+        }
+        const canvas = new Canvas(wrapper);
 
         this._gravity = new Gravity();        
         this._animation = new AnimationController(canvas, this);        

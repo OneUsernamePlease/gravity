@@ -6,9 +6,11 @@ export class Canvas {
 //#region properties
     // let offscreenCanvas: OffscreenCanvas; // use this in a worker thread to render or draw on, then transfer content to the visible html-canvas
     // let offscreenCanvasCtx: OffscreenCanvasRenderingContext2D;
+    private _visibleCanvas: HTMLCanvasElement;
     private _visibleCanvasContext: CanvasRenderingContext2D;
-    constructor(private _visibleCanvas: HTMLCanvasElement) {
-        this._visibleCanvasContext = _visibleCanvas.getContext("2d", { alpha: false })!;
+    constructor(private _canvasParent: HTMLDivElement) {
+        this._visibleCanvas = this.createLayer("z-0");
+        this._visibleCanvasContext = this._visibleCanvas.getContext("2d", { alpha: false })!;
     }
 //#endregion
 //#region get, set
@@ -26,6 +28,17 @@ export class Canvas {
         return this.visibleCanvas.height;
     }
 //#endregion
+    public createLayer(zIndexClass: string): HTMLCanvasElement {
+        if (!(/^z-0$|^z-[1-9]\d*$/.test(zIndexClass))) {
+            throw new Error("zIndex has to be a valid tailwind z-value (eg. 'z-0' or 'z-123'");
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.className = `absolute inset-0 w-full h-full touch-none ${zIndexClass}`;
+        this._canvasParent.appendChild(canvas);
+
+        return canvas;
+    }
     public resize(width: number, height: number) {
         this.visibleCanvas.width = width;
         this.visibleCanvas.height = height;
