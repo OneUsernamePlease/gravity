@@ -74,14 +74,9 @@ export class AnimationController {
         this._running = false;
     }
     initialize(width: number, height: number, animationSettings: UIAnimationSettings) {
-        this.canvas.visibleCanvas.width = width;
-        this.canvas.visibleCanvas.height = height;
-
-        // REFACTOR ME: apply settings after initialization
+        this.resizeCanvas(width, height);
+        this.canvas.fillBackground();
         this.animationSettings.displayVectors = animationSettings.displayVectors;
-        
-        // offscreenCanvas = new OffscreenCanvas(visibleCanvas.clientWidth, visibleCanvas.clientHeight);
-        // offscreenCanvasCtx = offscreenCanvas.getContext("2d")!;
     }
     run() {
         if (this.running) {
@@ -110,8 +105,7 @@ export class AnimationController {
         this.canvas.drawCircle(position, visibleRadius, body.color);
     }
     redrawSimulationState(objectStates: ObjectState[], animationSettings: AnimationSettings) {
-        this.canvas.clear();
-        this.canvas.fillCanvas(BACKGROUND_COLOR);
+        this.canvas.clearSimulation();
         this.drawBodies(objectStates);
         if (animationSettings.displayVectors) {
             this.drawVectors(objectStates);

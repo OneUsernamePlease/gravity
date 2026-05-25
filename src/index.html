@@ -12,7 +12,7 @@
         <div id="canvasWrapper"  class="relative inset-0 w-full h-full">
         </div>
 
-        <div class="flex flex-row justify-center absolute top-0 left-0 w-full z-10 whitespace-nowrap overflow-x-auto bg-gray-600/60">
+        <div class="flex flex-row justify-center absolute top-0 left-0 w-full whitespace-nowrap overflow-x-auto bg-gray-600/60 z-100">
             <button id="btnResetSim" class="button">Reset</button>
             <button id="btnToggleSim" class="button">Play</button>
             <button id="btnNextStep" class="button">Next Step</button>
@@ -21,11 +21,11 @@
             </a>
         </div>
 
-        <button id="toggleControlBarBtn" class="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-blue-800/80 text-white px-1.5 py-3 rounded-l-lg">
+        <button id="toggleControlBarBtn" class="absolute right-0 top-1/2 -translate-y-1/2 bg-blue-800/80 text-white px-1.5 py-3 rounded-l-lg z-110">
             ❯
         </button>
 
-        <div id="controlBar" class="panel w-56 max-h-[90vh] overflow-y-auto absolute right-0 top-1/2 -translate-y-1/2 transition-transform duration-300">
+        <div id="controlBar" class="panel w-56 max-h-[90vh] overflow-y-auto absolute right-0 top-1/2 -translate-y-1/2 transition-transform duration-300 z-100">
             
            <!-- View -->
             <div>
@@ -105,7 +105,7 @@
             </div>
         </div>
 
-        <div id="footer" class="absolute bottom-0 left-0 w-full z-10 bg-gray-600/60 text-white">
+        <div id="footer" class="absolute bottom-0 left-0 w-full bg-gray-600/60 text-white z-100">
             <div class="overflow-x-auto">
                 <div id="statusBar" class="flex w-max mx-auto whitespace-nowrap divide-x divide-white/40">
                     <span id="statusText1" class="px-2">Status message</span>

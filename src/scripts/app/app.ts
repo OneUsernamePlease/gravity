@@ -59,7 +59,7 @@ export class App {
         this._gravity = new Gravity();        
         this._animation = new AnimationController(canvas, this);        
         this._ui = new UI(this);
-        this._interaction = new InteractionManager(canvas.visibleCanvas, this);
+        this._interaction = new InteractionManager(canvas.interactionCanvas, this);
         this.initialize();
     }
     private initialize() {
