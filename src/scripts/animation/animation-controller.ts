@@ -73,17 +73,12 @@ export class AnimationController {
         this._viewController = new ViewController(this);
         this._running = false;
     }
-    public initialize(width: number, height: number, animationSettings: UIAnimationSettings) {
-        this.canvas.visibleCanvas.width = width;
-        this.canvas.visibleCanvas.height = height;
-
-        // REFACTOR ME: apply settings after initialization
+    initialize(width: number, height: number, animationSettings: UIAnimationSettings) {
+        this.resizeCanvas(width, height);
+        this.canvas.fillBackground();
         this.animationSettings.displayVectors = animationSettings.displayVectors;
-        
-        // offscreenCanvas = new OffscreenCanvas(visibleCanvas.clientWidth, visibleCanvas.clientHeight);
-        // offscreenCanvasCtx = offscreenCanvas.getContext("2d")!;
     }
-    public run() {
+    run() {
         if (this.running) {
             return;
         }
@@ -97,7 +92,7 @@ export class AnimationController {
         };
         loop();
     }
-    public stop() {
+    stop() {
         this.running = false;
     }
     private drawBodies(objectStates: ObjectState[]) {
@@ -109,9 +104,8 @@ export class AnimationController {
         let visibleRadius = Math.max(body.radius / this.currentZoom, MIN_DISPLAYED_RADIUS);
         this.canvas.drawCircle(position, visibleRadius, body.color);
     }
-    public redrawSimulationState(objectStates: ObjectState[], animationSettings: AnimationSettings) {
-        this.canvas.clear();
-        this.canvas.fillCanvas(BACKGROUND_COLOR);
+    redrawSimulationState(objectStates: ObjectState[], animationSettings: AnimationSettings) {
+        this.canvas.clearSimulation();
         this.drawBodies(objectStates);
         if (animationSettings.displayVectors) {
             this.drawVectors(objectStates);
@@ -127,32 +121,32 @@ export class AnimationController {
             this.canvas.drawVector(positionOnCanvas, velocityOnCanvas, VECTOR_COLORS.get("velocity")?.hex);
         });
     }
-    public setDisplayVectors(display: boolean) {
+    setDisplayVectors(display: boolean) {
         this.animationSettings.displayVectors = display;
     }
-    public resizeCanvas(width: number, height: number) {
+    resizeCanvas(width: number, height: number) {
         this.canvas.resize(width, height);
     }
 
-    public scrollRight(distance?: number) {
+    scrollRight(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("horizontal"); // in simulationUnits
         }
         this.viewController.moveOrigin(new Vector2D(distance, 0));
     }
-    public scrollLeft(distance?: number) {
+    scrollLeft(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("horizontal"); // in simulationUnits
         }
         this.viewController.moveOrigin(new Vector2D(-distance, 0));
     }
-    public scrollUp(distance?: number) {
+    scrollUp(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("vertical"); // in simulationUnits
         }
         this.viewController.moveOrigin(new Vector2D(0, distance));
     }
-    public scrollDown(distance?: number) {
+    scrollDown(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("vertical"); // in simulationUnits
         }
@@ -166,14 +160,14 @@ export class AnimationController {
                 return this.height * rate * this.canvasSpace.currentZoom;
         }
     }
-    public zoomIn(
+    zoomIn(
         zoomCenter: Vector2D = new Vector2D(this.width / 2, this.height / 2),
         factor: number = DEFAULT_ZOOM_FACTOR, 
     ): number {
 
         return this.zoomToFactor(1 - factor, zoomCenter);
     }
-    public zoomOut(
+    zoomOut(
         zoomCenter: Vector2D = new Vector2D(this.width / 2, this.height / 2),
         factor: number = DEFAULT_ZOOM_FACTOR, 
     ): number {
@@ -187,14 +181,14 @@ export class AnimationController {
      * @param zoomCenter 
      * @returns the new zoom level (in meter/pixel).
      */
-    public zoomToFactor(factor: number, zoomCenter?: Vector2D): number {
+    zoomToFactor(factor: number, zoomCenter?: Vector2D): number {
         if (!zoomCenter) zoomCenter = new Vector2D(this.width / 2, this.height / 2);
         
         this.app.updateStatusBarAnimationInfo();
         
         return this.viewController.zoomToFactor(factor, zoomCenter);
     }
-    public scrollInCanvasUnits(movementOnCanvas: Vector2D){
+    scrollInCanvasUnits(movementOnCanvas: Vector2D){
         const movementInSimulationUnits = movementOnCanvas.scale(this.currentZoom);
         this.viewController.moveOrigin(movementInSimulationUnits.hadamardProduct(new Vector2D(-1, 1)));
     }
