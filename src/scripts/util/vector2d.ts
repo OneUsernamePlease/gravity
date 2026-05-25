@@ -1,6 +1,6 @@
 export class Vector2D {
-    public x: number;
-    public y: number;
+    x: number;
+    y: number;
     constructor()
     constructor(pos: Vector2D)
     constructor(x: number, y: number)
@@ -13,10 +13,10 @@ export class Vector2D {
             this.y = b ?? 0;
         }
     }
-    public toString() {
+    toString() {
         return `x: ${this.x}, y: ${this.y}`;
     }
-    public add(...vectors: Vector2D[]): Vector2D {
+    add(...vectors: Vector2D[]): Vector2D {
         const result = vectors.reduce((previous, current) => {
             return { x: (previous.x + current.x), y: (previous.y + current.y) };
         }, {x: this.x, y: this.y});
@@ -25,19 +25,19 @@ export class Vector2D {
     /**
      * @returns this - v
      */
-    public subtract(v: Vector2D): Vector2D {
+    subtract(v: Vector2D): Vector2D {
         return new Vector2D(this.x - v.x, this.y - v.y);
     }
-    public scale(scalar: number): Vector2D {
+    scale(scalar: number): Vector2D {
         return new Vector2D(this.x * scalar, this.y * scalar);
     }
-    public dotProduct(v: Vector2D): number {
+    dotProduct(v: Vector2D): number {
         return this.x * v.x + this.y * v.y;
     }
-    public magnitude(): number {
+    magnitude(): number {
         return Math.hypot(this.x, this.y);
     }
-    public normalize(): Vector2D {
+    normalize(): Vector2D {
         const magnitude = this.magnitude();
         if (magnitude === 0) {
             return new Vector2D(0, 0);
@@ -49,29 +49,29 @@ export class Vector2D {
      * @param v Vector2D
      * @returns Distance to v
      */
-    public distance(v: Vector2D): number {
+    distance(v: Vector2D): number {
         return Math.hypot(v.x - this.x, v.y - this.y);
     }
     /**
      * returns a vector pointing from this to v
      */
-    public displacementVector(v: Vector2D) {
+    displacementVector(v: Vector2D) {
         return v.subtract(this);
     }
-    public hadamardProduct(v: Vector2D) {
+    hadamardProduct(v: Vector2D) {
         return new Vector2D(this.x * v.x, this.y * v.y);
     }
     /**
      * @returns an array of two normalized vectors, both normal to this, both pointing in opposite directions
      */
-    public normalVectors(): Vector2D[] {
+    normalVectors(): Vector2D[] {
         const array: Vector2D[] = [];
         const v = this.normalize();
         array.push(new Vector2D(-v.y, v.x));
         array.push(new Vector2D(v.y, -v.x));
         return array;
     }
-    public midpoint(p2: Vector2D): Vector2D {
+    midpoint(p2: Vector2D): Vector2D {
         return new Vector2D((this.x + p2.x) / 2, (this.y + p2.y) / 2);
     }
     /**
@@ -79,7 +79,7 @@ export class Vector2D {
      * @param reflectionSurface acts as a mirror
      * @returns The reflected vector
      */
-    public reflect(reflectionSurface: Vector2D): Vector2D {
+    reflect(reflectionSurface: Vector2D): Vector2D {
         reflectionSurface = reflectionSurface.normalize();
         const axis = reflectionSurface.normalVectors()[0];
         const dotAxis = this.dotProduct(axis);
@@ -94,7 +94,7 @@ export class Vector2D {
      * @returns The intersection of the two lines: a point, null if they don't intersect, or a line (defined by two points) if they are identical, or collinear and overlapping.
      * https://stackoverflow.com/a/565282/97076991 - authored by ai.
      */
-    public static linesIntersecting(line1: [p1: Vector2D, p2: Vector2D], line2: [q1: Vector2D, q2: Vector2D], strict = false): Vector2D | null | [Vector2D, Vector2D] {
+    static linesIntersecting(line1: [p1: Vector2D, p2: Vector2D], line2: [q1: Vector2D, q2: Vector2D], strict = false): Vector2D | null | [Vector2D, Vector2D] {
         const [p1, p2] = line1;
         const [q1, q2] = line2;
         
@@ -151,10 +151,10 @@ export class Vector2D {
         const intersection = p1.add(r.scale(t));
         return intersection;
     }
-    public static midpoint(v1: Vector2D, v2: Vector2D): Vector2D {
+    static midpoint(v1: Vector2D, v2: Vector2D): Vector2D {
         return new Vector2D((v1.x + v2.x) / 2, (v1.y + v2.y) / 2);
     }
-    public static simpleLineIntersection(line1: [p1: Vector2D, p2: Vector2D], line2: [q1: Vector2D, q2: Vector2D]): Vector2D | null {
+    static simpleLineIntersection(line1: [p1: Vector2D, p2: Vector2D], line2: [q1: Vector2D, q2: Vector2D]): Vector2D | null {
         // make sure lines are strictly defined (p1 != p2, same for line2)
         
         // check for general intersection
@@ -177,7 +177,7 @@ export class Vector2D {
      * @param epsilon 
      * @returns 
      */
-    public static linesIntersectingButBetter(
+    static linesIntersectingButBetter(
         line1: [p1: Vector2D, p2: Vector2D],
         line2: [q1: Vector2D, q2: Vector2D],
         strict = false,

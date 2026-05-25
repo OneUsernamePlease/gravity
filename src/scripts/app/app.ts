@@ -74,71 +74,71 @@ export class App {
     }
 //#endregion
 // sim controls
-    public run() {
+    run() {
         this.gravity.run();
         this.ui.simulationResumed();
     }
-    public stop() {
+    stop() {
         this.gravity.stop();
         this.ui.simulationStopped();
     }
-    public advanceOneTick() {
+    advanceOneTick() {
         this.gravity.advanceTick();
         this.ui.updateStatusBarSimulationInfo();
     }
-    public resetSimulation() {
+    resetSimulation() {
         this.gravity.reset();
         this.ui.updateStatusBarSimulationInfo();
     }
-    public applySimulationSettings(simulationSettings: SimulationSettings) {
+    applySimulationSettings(simulationSettings: SimulationSettings) {
         this.gravity.applySettings(simulationSettings);
     }    
-    public addObject(objectState: ObjectState) {
+    addObject(objectState: ObjectState) {
         return this.gravity.addObject(objectState);
     }
 // animation controls    
-    public zoomToFactor(zoomFactor: number, zoomCenterCanvas?: Vector2D) {
+    zoomToFactor(zoomFactor: number, zoomCenterCanvas?: Vector2D) {
         this.animation.zoomToFactor(zoomFactor, zoomCenterCanvas);
     }
-    public zoomIn(zoomCenter?: Vector2D, factor?: number) {
+    zoomIn(zoomCenter?: Vector2D, factor?: number) {
         this.animation.zoomIn(zoomCenter, factor);
         this.ui.updateStatusBarAnimationInfo();
     }
-    public zoomOut(zoomCenter?: Vector2D, factor?: number) {
+    zoomOut(zoomCenter?: Vector2D, factor?: number) {
         this.animation.zoomOut(zoomCenter, factor);
         this.ui.updateStatusBarAnimationInfo();
     }
-    public scrollInCanvasUnits(scroll: Vector2D) {
+    scrollInCanvasUnits(scroll: Vector2D) {
         this.animation.scrollInCanvasUnits(scroll);
     }
-    public scrollUp() {
+    scrollUp() {
         this.animation.scrollUp();
     }
-    public scrollDown() {
+    scrollDown() {
         this.animation.scrollDown();
     }
-    public scrollLeft() {
+    scrollLeft() {
         this.animation.scrollLeft();
     }
-    public scrollRight() {
+    scrollRight() {
         this.animation.scrollRight();
     }
-    public resizeCanvas(windowWidth: number, windowHeight: number) {
+    resizeCanvas(windowWidth: number, windowHeight: number) {
         this.animation.resizeCanvas(windowWidth, windowHeight);
         this.ui.updateStatusBarCanvasDimensions(windowWidth, windowHeight);
     }
-    public setDisplayVectors(display: boolean) {
+    setDisplayVectors(display: boolean) {
         this.animation.setDisplayVectors(display);
         this.ui.displayVectorMessage(display);
     }
 // UI related
-    public updateStatusBarAnimationInfo() {
+    updateStatusBarAnimationInfo() {
         this.ui.updateStatusBarAnimationInfo();
     }
-    public updateStatusBarSimulationInfo() {
+    updateStatusBarSimulationInfo() {
         this.ui.updateStatusBarSimulationInfo();
     }
-    public body2dFromUi(): Body2d {
+    body2dFromUi(): Body2d {
         const bodyInfo = this.ui.bodyInformation;
         return new Body2d(bodyInfo.mass, bodyInfo.movable);
     }

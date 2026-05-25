@@ -19,12 +19,12 @@ export class ViewController {
         return this.canvasSpace.currentZoom;
     }
 
-    public moveOrigin(displacement: Vector2D) {
+    moveOrigin(displacement: Vector2D) {
         const originPosition = this.canvasSpace.origin;
         const newOrigin = originPosition.add(displacement);
         this.setOrigin(newOrigin);
     }
-    public zoomToFactor(factor: number, zoomCenter: Vector2D): number {
+    zoomToFactor(factor: number, zoomCenter: Vector2D): number {
         if (factor <= 0) return this.currentZoom;
         
         const oldZoom = this.currentZoom;
@@ -39,7 +39,7 @@ export class ViewController {
      * @param zoomStep the change in meter per pixel. positive = zoom in, negative = zoom out
      * @returns the new zoom level
      */
-    public zoomByStep(zoomCenter: Vector2D, zoomStep: number): number {
+    zoomByStep(zoomCenter: Vector2D, zoomStep: number): number {
         let newZoom = this.canvasSpace.currentZoom - zoomStep;
         if (newZoom < MIN_ZOOM) {
             newZoom = MIN_ZOOM;

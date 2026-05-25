@@ -25,27 +25,27 @@ export class TopMenu {
         this.stepButton.addEventListener("click", () => this.stepButtonClicked());
     }
 
-    public resetButtonClicked() {
+    resetButtonClicked() {
         this.app.resetSimulation()
         this.ui.updateStatusBarSimulationInfo();
     }
-    public playPauseClicked() {
+    playPauseClicked() {
         if (this.app.simulationRunning) {
             this.app.stop();
         } else {
             this.app.run();
         }
     }
-    public stepButtonClicked() {
+    stepButtonClicked() {
         this.app.advanceOneTick();
         this.ui.updateStatusBarSimulationInfo();
     }
 
-    public simulationStopped() {
+    simulationStopped() {
         this.playPauseButton.innerHTML = "&#9654;"; // play symbol
         this.stepButton.disabled = false;
     }
-    public simulationResumed() {
+    simulationResumed() {
         this.playPauseButton.innerHTML = "&#10074;&#10074;"; // pause symbol
         this.stepButton.disabled = true;
     }

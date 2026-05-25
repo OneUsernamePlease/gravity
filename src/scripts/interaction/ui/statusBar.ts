@@ -4,32 +4,32 @@
 import { VECTOR_COLORS } from "../../const/const.js";
 
 export class StatusBar {
-    public bar: HTMLDivElement
-    public fields: HTMLSpanElement[];
+    bar: HTMLDivElement
+    fields: HTMLSpanElement[];
 
     constructor() {
         this.bar    = document.getElementById("statusBar")! as HTMLDivElement;
         this.fields = Array.from((this.bar.querySelectorAll("span")) as NodeListOf<HTMLSpanElement>);
     }
 
-    public displayVectorMessage(display: boolean) {
+    displayVectorMessage(display: boolean) {
         if (display) {
             this.setStatusMessage(this.vectorMessage(), 3);
         } else {
             this.setStatusMessage("", 3);
         }
     }
-    public updateSimulationInfo(tick: number, bodyCount: number) {
+    updateSimulationInfo(tick: number, bodyCount: number) {
         this.updateTickCount(tick);
         this.updateBodyCount(bodyCount);
     }
-    public updateAnimationInfo(zoom: number) {
+    updateAnimationInfo(zoom: number) {
         this.updateZoom(zoom);
     }
-    public updateZoom(currentZoom: number, statusBarFieldIndex: number = 4) {
+    updateZoom(currentZoom: number, statusBarFieldIndex: number = 4) {
         this.setStatusMessage(`Zoom: ${currentZoom.toFixed(2)} (m per pixel)`, statusBarFieldIndex);
     }
-    public updateCanvasDimensions(width: number, height: number, statusBarFieldIndex: number = 5) {
+    updateCanvasDimensions(width: number, height: number, statusBarFieldIndex: number = 5) {
         this.setStatusMessage(`Canvas dimension: ${width} * ${height}`, statusBarFieldIndex);
     }
     private updateBodyCount(bodyCount: number, statusBarFieldIndex: number = 1) {

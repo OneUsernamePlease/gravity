@@ -60,7 +60,7 @@ export class UI {
         this.topMenu = new TopMenu(this, this.app);
     }
 
-    public initialize(width: number, height: number) {
+    initialize(width: number, height: number) {
         this.statusBar.displayVectorMessage(this.displayVectors)
         this.statusBar.updateCanvasDimensions(width, height);
 
@@ -70,28 +70,28 @@ export class UI {
         }
     }
 //#endregion
-    public toggleControlBar() {
+    toggleControlBar() {
         this.controlBar.toggle();
     }
-    public simulationStopped() {
+    simulationStopped() {
         this.topMenu.simulationStopped();
     }
-    public simulationResumed() {
+    simulationResumed() {
         this.topMenu.simulationResumed();
         this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.length);
     }
 
 //#region StatusBar
-    public displayVectorMessage(display: boolean) {
+    displayVectorMessage(display: boolean) {
         this.statusBar.displayVectorMessage(display);
     }
-    public updateStatusBarSimulationInfo() {
+    updateStatusBarSimulationInfo() {
         this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.length)
     }
-    public updateStatusBarCanvasDimensions(windowWidth: number, windowHeight: number) {
+    updateStatusBarCanvasDimensions(windowWidth: number, windowHeight: number) {
         this.statusBar.updateCanvasDimensions(windowWidth, windowHeight)
     }
-    public updateStatusBarAnimationInfo() {
+    updateStatusBarAnimationInfo() {
         this.statusBar.updateAnimationInfo(this.app.currentZoom)
     }
 //#endregion

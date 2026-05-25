@@ -8,25 +8,25 @@ export class Body2d {
     static defaultDensity = 1;
 //#endregion
 // #region get, set
-    public get mass() {
+    get mass() {
         return this._mass;
     }
-    public set mass(newMass: number) {
+    set mass(newMass: number) {
         this._mass = Math.max(newMass, 1);
     }
-    public get radius() {
+    get radius() {
         return this._radius;
     }
     private set radius(newRadius: number) {
         this._radius = Math.max(newRadius, 1);
     }
-    public get movable() {
+    get movable() {
         return this._movable;
     }
-    public set movable(movable: boolean) {
+    set movable(movable: boolean) {
         this._movable = movable
     }   
-    public get color() : string {
+    get color() : string {
         return this._color
     }
     private set color(c: string) {
@@ -48,7 +48,7 @@ export class Body2d {
     /**
      * returns the radius of a sphere based on mass and density
      */
-    public defaultRadius(mass?: number) {
+    defaultRadius(mass?: number) {
         if (!mass) {
             mass = this.mass;
         }
@@ -60,7 +60,7 @@ export class Body2d {
      * @param radius number
      * @param mass
      */
-    public setProperties(mass: number): void
+    setProperties(mass: number): void
     setProperties(mass: number, radius: number): void
     setProperties(mass: number, color: string): void
     setProperties(mass: number, radius: number, color: string): void
@@ -83,7 +83,7 @@ export class Body2d {
         
         this._mass = mass;
     }
-    public massDependentColor(mass: number): string {
+    massDependentColor(mass: number): string {
         const lowestColorMass = 50;
         const biggestColorMass = 100000000;
         const alpha = "ff";

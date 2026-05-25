@@ -28,7 +28,7 @@ export class Canvas {
         return this.visibleCanvas.height;
     }
 //#endregion
-    public createLayer(zIndexClass: string): HTMLCanvasElement {
+    createLayer(zIndexClass: string): HTMLCanvasElement {
         if (!(/^z-0$|^z-[1-9]\d*$/.test(zIndexClass))) {
             throw new Error("zIndex has to be a valid tailwind z-value (eg. 'z-0' or 'z-123'");
         }
@@ -39,15 +39,15 @@ export class Canvas {
 
         return canvas;
     }
-    public resize(width: number, height: number) {
+    resize(width: number, height: number) {
         this.visibleCanvas.width = width;
         this.visibleCanvas.height = height;
     }   
 //#region drawing stuff
-    public clear() {
+    clear() {
         this.visibleCanvasContext.clearRect(0, 0, this.width, this.height);
     }
-    public fillCanvas(color: string = "#000000") {
+    fillCanvas(color: string = "#000000") {
         this.visibleCanvasContext.fillStyle = color;
         this.visibleCanvasContext.fillRect(0, 0, this.width, this.height);
     }
@@ -55,7 +55,7 @@ export class Canvas {
      * @param position in canvas space
      * @param direction in canvas space
      */
-    public drawVector(position: Vector2D, direction: Vector2D, color: string = "white") {
+    drawVector(position: Vector2D, direction: Vector2D, color: string = "white") {
         // optionally normalize the direction and scale later
         let endPosition: Vector2D = position.add(direction);
         if (!this.isLinePotentiallyVisible(position, endPosition)) {
@@ -74,7 +74,7 @@ export class Canvas {
      * @param radius in canvas units
      * @param color default white
      */
-    public drawCircle(position: Vector2D, radius: number, color: string = "white") {
+    drawCircle(position: Vector2D, radius: number, color: string = "white") {
         if (!this.isCircleVisible(position, radius)) return;
         this.visibleCanvasContext.beginPath();
         this.visibleCanvasContext.arc(position.x, position.y, radius, 0, Math.PI * 2);
