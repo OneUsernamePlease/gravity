@@ -2,9 +2,7 @@ import { StatusBar } from "../interaction/ui/statusBar.js";
 import { Body2d } from "../simulation/body2d.js";
 import { Vector2D } from "../util/vector2d.js";
 
-//++++++++++++++++++++
-//+ pointer (touch, mouse)
-//++++++++++++++++++++
+//#region pointer (touch, mouse)
 export interface Pointer {
     main: {
         state: ButtonState;
@@ -52,10 +50,9 @@ export enum MouseButtons {
     Wheel = 1,
     Secondary = 2,
 }
+//#endregion
 
-//++++++++++++++++++++
-//+ view and animation
-//++++++++++++++++++++
+//#region view and animation
 export interface CanvasSpace {
     // use this to transform simulationSpace to canvasSpace and back
     origin: Vector2D, // the canvas' origin in simulation space
@@ -71,10 +68,14 @@ export interface UIAnimationSettings {
     displayVectors: boolean;
     tracePaths: boolean;
 }
+export interface CanvasLayer {
+    canvas: HTMLCanvasElement;
+    context: CanvasRenderingContext2D;
+}
+export type LayerName = 'background' | 'paths' | 'simulation' | 'interaction';
+//#endregion
 
-//++++++++++++++++++++
-//+ user-input-related
-//++++++++++++++++++++
+//#region user-input-related
 export interface SimulationSettings {
     collisionDetection?: boolean;
     elasticCollisions?: boolean;
@@ -87,11 +88,9 @@ export interface ObjectState {
     velocity: Vector2D, // simulationUnits (meter) per second
     acceleration: Vector2D
 }
+//#endregion
 
-//++++++++++++++++++++
-//+ UI
-//++++++++++++++++++++
-
+//#region UI
 export interface RadioButtonGroup {
     name: string;
     buttons: HTMLInputElement[];
@@ -102,3 +101,4 @@ export interface ContextMenuItem {
     disabled?: boolean
     highlighted?: boolean
 }
+//#endregion
