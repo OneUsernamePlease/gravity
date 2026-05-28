@@ -77,6 +77,7 @@ export class AnimationController {
         this.resizeCanvas(width, height);
         this.canvas.fillBackground();
         this.animationSettings.displayVectors = animationSettings.displayVectors;
+        this.animationSettings.tracePaths = animationSettings.tracePaths;
     }
     run() {
         if (this.running) {
@@ -87,7 +88,7 @@ export class AnimationController {
             if (this.running) {
                 setTimeout(loop, this.animationSettings.frameLength);
                 this.redrawSimulationState(this.app.currentSimulationState, this.animationSettings);
-                this._app.updateStatusBarSimulationInfo();
+                this.app.updateStatusBarSimulationInfo();
             }
         };
         loop();
@@ -110,6 +111,9 @@ export class AnimationController {
         if (animationSettings.displayVectors) {
             this.drawVectors(objectStates);
         }
+        if (animationSettings.tracePaths) {
+            this.tracePaths(objectStates);
+        }
     }
     private drawVectors(objectStates: ObjectState[]) {
         objectStates.forEach(objectState => {
@@ -121,8 +125,17 @@ export class AnimationController {
             this.canvas.drawVector(positionOnCanvas, velocityOnCanvas, VECTOR_COLORS.get("velocity")?.hex);
         });
     }
+    private tracePaths(objectStates: ObjectState[]) {
+        throw new Error("tracePaths not implemented");
+    }
     setDisplayVectors(display: boolean) {
         this.animationSettings.displayVectors = display;
+    }
+    setTracePaths(tracePaths: boolean) {
+        this.animationSettings.tracePaths = tracePaths;
+    }
+    resetPaths() {
+        this.canvas.resetPaths();
     }
     resizeCanvas(width: number, height: number) {
         this.canvas.resize(width, height);

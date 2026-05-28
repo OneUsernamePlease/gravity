@@ -16,6 +16,7 @@ export class ControlBar {
     private scrollLeftButton: HTMLInputElement;
     private scrollRightButton: HTMLInputElement;
     private displayVectorsCheckbox: HTMLInputElement;
+    private tracePathsCheckbox: HTMLInputElement;
     private collisionDetectionCheckbox: HTMLInputElement;
     private elasticCollisionsCheckbox: HTMLInputElement;
     private gravitationalConstantInput: HTMLInputElement;
@@ -42,6 +43,9 @@ export class ControlBar {
     get displayVectors() {
         return this.displayVectorsCheckbox.checked;
     }
+    get tracePaths() {
+        return this.tracePathsCheckbox.checked;
+    }
     get mass() {
         return util.getInputNumber(this.massInput);
     }
@@ -54,14 +58,15 @@ export class ControlBar {
     get animationSettings(): UIAnimationSettings {
         return {
             displayVectors: this.displayVectors,
-        };
+            tracePaths: this.tracePaths,
+        }
     }
     get simulationSettings(): SimulationSettings {
         return {
             collisionDetection: this.collisionDetection,
             elasticCollisions: this.elasticCollisions,
             gravitationalConstant: this.gravitationalConstant,
-        };
+        }
     }
     get bodyInformation() {
         return {
@@ -78,6 +83,7 @@ export class ControlBar {
         this.scrollLeftButton                   = document.getElementById("btnScrollLeft")! as HTMLInputElement;
         this.scrollRightButton                  = document.getElementById("btnScrollRight")! as HTMLInputElement;
         this.displayVectorsCheckbox             = document.getElementById("cbxDisplayVectors")! as HTMLInputElement;
+        this.tracePathsCheckbox                 = document.getElementById("cbxTracePaths")! as HTMLInputElement;
         this.collisionDetectionCheckbox         = document.getElementById("cbxCollisions")! as HTMLInputElement;
         this.elasticCollisionsCheckbox          = document.getElementById("cbxElasticCollisions")! as HTMLInputElement;
         this.gravitationalConstantInput         = document.getElementById("numberG")! as HTMLInputElement;
@@ -107,6 +113,7 @@ export class ControlBar {
         this.scrollLeftButton.addEventListener("click", () => this.scrollLeftClicked());
         this.scrollRightButton.addEventListener("click", () => this.scrollRightClicked());
         this.displayVectorsCheckbox.addEventListener("change", () => this.cbxDisplayVectorsChanged());
+        this.tracePathsCheckbox.addEventListener("change", () => this.cbxTracePathsChanged());
         this.collisionDetectionCheckbox.addEventListener("change", () => this.cbxCollisionsChanged());
         this.elasticCollisionsCheckbox.addEventListener("change", () => this.cbxCollisionsChanged());
         this.gravitationalConstantInput.addEventListener("change", () => this.numberInputGChanged());
@@ -114,7 +121,6 @@ export class ControlBar {
         this.massInput.addEventListener("change", () => this.updateSelectedMass());
         this.toggleControlBarButton.addEventListener("click", () => this.toggle())
     }
-    
     toggle() {
         this.isControlBarCollapsed = !this.isControlBarCollapsed;
         this.controlBar.classList.toggle("translate-x-full");
@@ -177,6 +183,9 @@ export class ControlBar {
     }
     cbxDisplayVectorsChanged() {
         this.app.setDisplayVectors(this.displayVectors);
+    }
+    cbxTracePathsChanged() {
+        this.app.setTracePaths(this.tracePaths);
     }
     cbxCollisionsChanged() {
         const checked = this.collisionDetectionCheckbox.checked;

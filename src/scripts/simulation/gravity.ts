@@ -57,7 +57,12 @@ export class Gravity implements SimulationAPI {
         if (settings.gravitationalConstant !== undefined)    this.g = settings.gravitationalConstant;
     }
     addBody(body: Body2d, position: Vector2D, velocity: Vector2D): number {
-        const objectState = { body, position, velocity, acceleration: new Vector2D(0, 0)};
+        const objectState = {
+            body,
+            position,
+            velocity,
+            acceleration: new Vector2D(0, 0)
+        };
         return this.addObject(objectState);
     }    
     addObject(objectState: ObjectState): number  {
