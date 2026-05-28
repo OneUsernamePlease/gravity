@@ -96,7 +96,7 @@ export class AnimationController {
     stop() {
         this.running = false;
     }
-    private drawBodies(objectStates: ObjectState[]) {
+    private drawBodies(objectStates: Map<number, ObjectState>) {
         objectStates.forEach(object => {
             this.drawBody(object.body, tfm.pointFromSimulationToCanvas(object.position, this.canvasSpace));
         });
@@ -105,7 +105,7 @@ export class AnimationController {
         let visibleRadius = Math.max(body.radius / this.currentZoom, MIN_DISPLAYED_RADIUS);
         this.canvas.drawCircle(position, visibleRadius, body.color);
     }
-    redrawSimulationState(objectStates: ObjectState[], animationSettings: AnimationSettings) {
+    redrawSimulationState(objectStates: Map<number, ObjectState>, animationSettings: AnimationSettings) {
         this.canvas.clearSimulation();
         this.drawBodies(objectStates);
         if (animationSettings.displayVectors) {
@@ -115,7 +115,7 @@ export class AnimationController {
             this.tracePaths(objectStates);
         }
     }
-    private drawVectors(objectStates: ObjectState[]) {
+    private drawVectors(objectStates: Map<number, ObjectState>) {
         objectStates.forEach(objectState => {
             const positionOnCanvas = tfm.pointFromSimulationToCanvas(objectState.position, this.canvasSpace);
             const accelerationOnCanvas = tfm.directionFromSimulationToCanvas(objectState.acceleration, this.canvasSpace);
@@ -125,7 +125,7 @@ export class AnimationController {
             this.canvas.drawVector(positionOnCanvas, velocityOnCanvas, VECTOR_COLORS.get("velocity")?.hex);
         });
     }
-    private tracePaths(objectStates: ObjectState[]) {
+    private tracePaths(objectStates: Map<number, ObjectState>) {
         throw new Error("tracePaths not implemented");
     }
     setDisplayVectors(display: boolean) {

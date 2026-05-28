@@ -10,7 +10,7 @@ export interface SimulationAPI {
     applySettings: (settings: SimulationSettings) => void,
 
     get g(): number,
-    get simulationState(): ObjectState[],
+    get simulationState(): Map<number, ObjectState>,
     get running(): boolean,
     get tick(): number,
 }

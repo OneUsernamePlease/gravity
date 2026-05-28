@@ -82,7 +82,7 @@ export class UI {
     }
     simulationResumed() {
         this.topMenu.simulationResumed();
-        this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.length);
+        this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.size);
     }
 
 //#region StatusBar
@@ -90,7 +90,7 @@ export class UI {
         this.statusBar.displayVectorMessage(display);
     }
     updateStatusBarSimulationInfo() {
-        this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.length)
+        this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.size)
     }
     updateStatusBarCanvasDimensions(windowWidth: number, windowHeight: number) {
         this.statusBar.updateCanvasDimensions(windowWidth, windowHeight)
