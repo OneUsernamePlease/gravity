@@ -1,64 +1,63 @@
 import { Vector2D } from "../util/vector2d.js";
 import * as essentials from "../util/util.js";
 import { BACKGROUND_COLOR, PATH_THICKNESS, VECTOR_THICKNESS } from "../const/const.js";
-import { ObjectState } from "../types/types.js";
+import { CanvasLayer, LayerName } from "../types/types.js";
 
 export class Canvas {
-//#region properties
-    
-    private _backgroundCanvas: HTMLCanvasElement;
-    private _backgroundContext: CanvasRenderingContext2D;
-
-    private _pathsCanvas: HTMLCanvasElement;
-    private _pathsContext: CanvasRenderingContext2D;
-
-    private _simulationCanvas: HTMLCanvasElement;
-    private _simulationContext: CanvasRenderingContext2D;
-
-    private _interactionCanvas: HTMLCanvasElement;
-    private _interactionContext: CanvasRenderingContext2D;
+    private _layers: Map<LayerName, CanvasLayer> = new Map();
     constructor(private _canvasParent: HTMLDivElement) {
-        this._backgroundCanvas = this.createLayer("z-0");
-        this._backgroundContext = this._backgroundCanvas.getContext("2d", { alpha: false })!;
+        const backgroundCanvas = this.createLayer("z-0");
+        this._layers.set("background", {
+            canvas: backgroundCanvas,
+            context: backgroundCanvas.getContext("2d", { alpha: false })!
+        });
         
-        this._pathsCanvas = this.createLayer("z-10");
-        this._pathsContext = this._pathsCanvas.getContext("2d")!;
+        const pathsCanvas = this.createLayer("z-10");
+        this._layers.set("paths", {
+            canvas: pathsCanvas,
+            context: pathsCanvas.getContext("2d")!
+        });
 
-        this._simulationCanvas = this.createLayer("z-20");
-        this._simulationContext = this._simulationCanvas.getContext("2d")!;
+        const simulationCanvas = this.createLayer("z-20");
+        this._layers.set("simulation", {
+            canvas: simulationCanvas,
+            context: simulationCanvas.getContext("2d")!
+        });
 
-        this._interactionCanvas = this.createLayer("z-30");
-        this._interactionContext = this._interactionCanvas.getContext("2d")!;
+        const interactionCanvas = this.createLayer("z-30");
+        this._layers.set("interaction", {
+            canvas: interactionCanvas,
+            context: interactionCanvas.getContext("2d")!
+        });
     }
-//#endregion
 //#region get, set
     get backgroundCanvas() {
-        return this._backgroundCanvas;
+        return this._layers.get("background")!.canvas;
     }
     get simulationCanvas() {
-        return this._simulationCanvas;
+        return this._layers.get("simulation")!.canvas;
     }
     get interactionCanvas() {
-        return this._interactionCanvas;
+        return this._layers.get("interaction")!.canvas;
     }
     get backgroundContext() {
-        return this._backgroundContext;
+        return this._layers.get("background")!.context;
     }
     get pathsContext() {
-        return this._pathsContext;
+        return this._layers.get("paths")!.context;
     }
     get simulationContext() {
-        return this._simulationContext;
+        return this._layers.get("simulation")!.context;
     }
     get interactionContext() {
-        return this._interactionContext;
+        return this._layers.get("interaction")!.context;
     }
     // additional getters
     get width(): number {
-        return this._backgroundCanvas.width;
+        return this._layers.get("background")!.canvas.width;
     }
     get height(): number {
-        return this._backgroundCanvas.height;
+        return this._layers.get("background")!.canvas.height;
     }
 //#endregion
     createLayer(zIndexClass: string): HTMLCanvasElement {
@@ -73,16 +72,9 @@ export class Canvas {
         return canvas;
     }
     resize(width: number, height: number) {
-        const canvases = [
-            this._backgroundCanvas,
-            this._simulationCanvas,
-            this._pathsCanvas,
-            this._interactionCanvas,
-        ];
-
-        for (const canvas of canvases) {
-            canvas.width = width;
-            canvas.height = height;
+        for (const layer of this._layers.values()) {
+            layer.canvas.width = width;
+            layer.canvas.height = height;
         }
 
         this.fillBackground();
@@ -92,13 +84,12 @@ export class Canvas {
         context.clearRect(0, 0, this.width, this.height);
     }
     clearAll() {
-        this.clear(this._backgroundContext);
-        this.clear(this._pathsContext);
-        this.clear(this._simulationContext);
-        this.clear(this._interactionContext);
+        for (const layer of this._layers.values()) {
+            this.clear(layer.context);
+        }
     }
     clearSimulation() {
-        this.clear(this._simulationContext);
+        this.clear(this.simulationContext);
     }
     fillBackground(
         color: string = BACKGROUND_COLOR
