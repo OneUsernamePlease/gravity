@@ -16,6 +16,7 @@ export class Gravity implements SimulationAPI {
     private _elasticCollisions: boolean;
     private _g: number; // gravitational constant
     private readonly gravityLowerBounds: number = 1; // force calculations for distances lower than this number are skipped
+    private _cachedIds: number[] = [];
 //#region get, set
     get simulationState() {
         return this._simulationState;
@@ -52,27 +53,20 @@ export class Gravity implements SimulationAPI {
         this._collisionDetection = false;
         this._elasticCollisions = false;
         this._g = c.DEFAULT_G;
+        this._cachedIds = [];
     }
     applySettings(settings: SimulationSettings): void {
         if (settings.collisionDetection !== undefined)       this.collisionDetection = settings.collisionDetection;
         if (settings.elasticCollisions !== undefined)        this.elasticCollisions = settings.elasticCollisions;
         if (settings.gravitationalConstant !== undefined)    this.g = settings.gravitationalConstant;
     }
-    addBody(body: Body2d, position: Vector2D, velocity: Vector2D): number {
-        const objectState = {
-            body,
-            position,
-            velocity,
-            acceleration: new Vector2D(0, 0)
-        };
-        return this.addObject(objectState);
-    }    
     addObject(objectState: ObjectState): number  {
         if (!objectState.body.movable) {
             objectState.velocity = new Vector2D(0, 0);
         }
         const id = this._nextId++;
         this.simulationState.set(id, objectState);
+        this._cachedIds = Array.from(this.simulationState.keys());
         return this.simulationState.size;
     }
     stop() {
@@ -107,9 +101,11 @@ export class Gravity implements SimulationAPI {
     private clearObjects() {
         this._simulationState.clear();
         this._nextId = 0;
+        this._cachedIds = [];
     }
     private removeFromObjectStates(id: number) {
         this.simulationState.delete(id);
+        this._cachedIds = Array.from(this.simulationState.keys());
     }
     private updateAccelerationVectors() {
         const forces: Map<number, Vector2D> = this.calculateForces();
@@ -122,11 +118,11 @@ export class Gravity implements SimulationAPI {
     }
     private calculateForces() {
         const forces: Map<number, Vector2D> = new Map();
-        const ids = Array.from(this.simulationState.keys());
+        const ids = this._cachedIds;
         
         for (let i = 0; i < ids.length; i++) {
+            const idI = ids[i];
             for (let j = i+1; j < ids.length; j++) {
-                const idI = ids[i];
                 const idJ = ids[j];
                 const forceOnI = this.calculateForceBetweenBodies(idI, idJ);
                 const forceOnJ = forceOnI.scale(-1);
@@ -168,7 +164,7 @@ export class Gravity implements SimulationAPI {
         return unitVectorIToJ.scale(netForceBetweenBodies);
     }
     private handleCollisions() {
-        const ids = Array.from(this.simulationState.keys());
+        const ids = this._cachedIds;
         for (let i = 0; i < ids.length; i++) {
             const idI = ids[i];
             const objectStateI = this.simulationState.get(idI)!;
