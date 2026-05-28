@@ -94,6 +94,7 @@ export class App {
     }
     resetSimulation() {
         this.gravity.reset();
+        this.animation.resetPaths();
         this.ui.updateStatusBarSimulationInfo();
     }
     applySimulationSettings(simulationSettings: SimulationSettings) {
@@ -136,6 +137,9 @@ export class App {
     setDisplayVectors(display: boolean) {
         this.animation.setDisplayVectors(display);
         this.ui.displayVectorMessage(display);
+    }
+    setTracePaths(tracePaths: boolean) {
+        this.animation.setTracePaths(tracePaths);
     }
 // UI related
     updateStatusBarAnimationInfo() {

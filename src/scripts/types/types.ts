@@ -69,7 +69,7 @@ export interface AnimationSettings {
 }
 export interface UIAnimationSettings {
     displayVectors: boolean;
-    //tracePaths: boolean;
+    tracePaths: boolean;
 }
 
 //++++++++++++++++++++

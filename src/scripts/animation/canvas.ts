@@ -1,12 +1,16 @@
 import { Vector2D } from "../util/vector2d.js";
 import * as essentials from "../util/util.js";
-import { BACKGROUND_COLOR, VECTOR_THICKNESS } from "../const/const.js";
+import { BACKGROUND_COLOR, PATH_THICKNESS, VECTOR_THICKNESS } from "../const/const.js";
+import { ObjectState } from "../types/types.js";
 
 export class Canvas {
 //#region properties
     
     private _backgroundCanvas: HTMLCanvasElement;
     private _backgroundContext: CanvasRenderingContext2D;
+
+    private _pathsCanvas: HTMLCanvasElement;
+    private _pathsContext: CanvasRenderingContext2D;
 
     private _simulationCanvas: HTMLCanvasElement;
     private _simulationContext: CanvasRenderingContext2D;
@@ -16,11 +20,14 @@ export class Canvas {
     constructor(private _canvasParent: HTMLDivElement) {
         this._backgroundCanvas = this.createLayer("z-0");
         this._backgroundContext = this._backgroundCanvas.getContext("2d", { alpha: false })!;
-
-        this._simulationCanvas = this.createLayer("z-10");
-        this._simulationContext = this._simulationCanvas.getContext("2d")!;
         
-        this._interactionCanvas = this.createLayer("z-20");
+        this._pathsCanvas = this.createLayer("z-10");
+        this._pathsContext = this._pathsCanvas.getContext("2d")!;
+
+        this._simulationCanvas = this.createLayer("z-20");
+        this._simulationContext = this._simulationCanvas.getContext("2d")!;
+
+        this._interactionCanvas = this.createLayer("z-30");
         this._interactionContext = this._interactionCanvas.getContext("2d")!;
     }
 //#endregion
@@ -36,6 +43,9 @@ export class Canvas {
     }
     get backgroundContext() {
         return this._backgroundContext;
+    }
+    get pathsContext() {
+        return this._pathsContext;
     }
     get simulationContext() {
         return this._simulationContext;
@@ -66,6 +76,7 @@ export class Canvas {
         const canvases = [
             this._backgroundCanvas,
             this._simulationCanvas,
+            this._pathsCanvas,
             this._interactionCanvas,
         ];
 
@@ -82,6 +93,7 @@ export class Canvas {
     }
     clearAll() {
         this.clear(this._backgroundContext);
+        this.clear(this._pathsContext);
         this.clear(this._simulationContext);
         this.clear(this._interactionContext);
     }
@@ -125,6 +137,19 @@ export class Canvas {
         context.fillStyle = color;
         context.fill();
 
+    }
+    drawPathSegment(from: Vector2D, to: Vector2D, color: string, context = this.pathsContext) {
+        context.strokeStyle = color;
+        context.lineWidth = PATH_THICKNESS;
+
+        context.beginPath();
+
+        context.moveTo(from.x, from.y);
+        context.lineTo(to.x, to.y)
+        context.stroke();
+    }
+    resetPaths(context = this.pathsContext) {
+        this.clear(context);
     }
     private isCircleVisible(position: Vector2D, radius: number): boolean {
         const inBoundsLeft = position.x + radius >= 0;

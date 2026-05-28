@@ -25,6 +25,9 @@ export class UI {
     private get displayVectors() {
         return this.controlBar.displayVectors;
     }
+    private get tracePaths() {
+        return this.controlBar.tracePaths;
+    }
     private get mass() {
         return this.controlBar.mass;
     }
@@ -37,6 +40,7 @@ export class UI {
     get animationSettings(): UIAnimationSettings {
         return {
             displayVectors: this.displayVectors,
+            tracePaths: this.tracePaths,
         };
     }
     get simulationSettings(): SimulationSettings {
