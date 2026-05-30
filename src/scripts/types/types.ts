@@ -102,3 +102,9 @@ export interface ContextMenuItem {
     disabled?: boolean
     highlighted?: boolean
 }
+
+
+export interface PerformanceInfo {
+    ticksLastSecond?: number,
+    averageTicksPerSecond?: number
+}

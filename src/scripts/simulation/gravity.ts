@@ -3,8 +3,7 @@ import { Vector2D } from "../util/vector2d.js";
 import * as c from "../const/const.js";
 import { SimulationAPI } from "../types/apis.js";
 import { clamp } from "../util/util.js";
-import { Body2d } from "./body2d.js";
-
+import { Stopwatch } from "../util/stopwatch.js";
 
 export class Gravity implements SimulationAPI {
     private _simulationState: ObjectState[]; // Insertion Order is not preserved (bc we delete bodies using swap & pop). Switch to map at some point
@@ -14,6 +13,10 @@ export class Gravity implements SimulationAPI {
     private _collisionDetection: boolean;
     private _elasticCollisions: boolean;
     private _g: number; // gravitational constant
+    private _stopwatch: Stopwatch = new Stopwatch();
+    private _lastSecondTicks: number = 0;
+    private _lastSecondTimeStamp: number = 0;
+    private _currentSecondTicks: number = 0;
     private readonly gravityLowerBounds: number = 1; // force calculations for distances lower than this number are skipped
 //#region get, set
     get simulationState() {
@@ -30,6 +33,21 @@ export class Gravity implements SimulationAPI {
     }
     get g(): number {
         return this._g;
+    }
+
+    /**
+     * Total time the simulation has been running for in milliseconds. Does not increase while the simulation is stopped.
+     */
+    get runningTime(): number {
+        return this._stopwatch.elapsed;
+    }
+    get ticksLastSecond() {
+        return this._lastSecondTicks;
+    }
+    get averageTicksPerSecond() {
+        if (this.runningTime === 0) return 0;
+        const elapsedSeconds = this.runningTime / 1000;
+        return this._tickCount / elapsedSeconds;
     }
 
     private set g(newG: number) {
@@ -56,10 +74,6 @@ export class Gravity implements SimulationAPI {
         if (settings.elasticCollisions !== undefined)        this.elasticCollisions = settings.elasticCollisions;
         if (settings.gravitationalConstant !== undefined)    this.g = settings.gravitationalConstant;
     }
-    addBody(body: Body2d, position: Vector2D, velocity: Vector2D): number {
-        const objectState = { body, position, velocity, acceleration: new Vector2D(0, 0)};
-        return this.addObject(objectState);
-    }    
     addObject(objectState: ObjectState): number  {
         if (!objectState.body.movable) {
             objectState.velocity = new Vector2D(0, 0);
@@ -68,30 +82,59 @@ export class Gravity implements SimulationAPI {
     }
     stop() {
         this._running = false;
+
+        // Performance metrics
+        this._stopwatch.stop();
+        this._currentSecondTicks = 0;
+        this._lastSecondTicks = 0;
+        this._lastSecondTimeStamp = 0;
     }
     run() {
         if (this._running) {
             return;
         }
         this._running = true;
-
+        
+        // Performance metrics
+        this._currentSecondTicks = 0;
+        this._lastSecondTicks = 0;
+        this._lastSecondTimeStamp = this.runningTime;
+        this._stopwatch.start();
+        
         const runSimulationStep = () => {
             if (this._running) {
                 setTimeout(runSimulationStep, this._tickLength);
                 this.advanceTick();
             }
         };
+        
         runSimulationStep();
     }
     reset() {
         this.clearObjects();
         this._tickCount = 0;
+        
+        // Performance metrics
+        this._currentSecondTicks = 0;
+        this._lastSecondTicks = 0;
+        this._lastSecondTimeStamp = 0;
+        this._stopwatch.reset();
+        if (this._running) this._stopwatch.start();
     }
     advanceTick() {
         this.updateAccelerationVectors();
         this.updateVelocitiesAndPositions();
         if (this._collisionDetection) {
             this.handleCollisions();
+        }
+        
+        // Performance metrics
+        this._currentSecondTicks++;
+        const elapsedSinceLastSecond = this.runningTime - this._lastSecondTimeStamp;
+        if (elapsedSinceLastSecond >= 1000) {
+            this._lastSecondTicks = (this._currentSecondTicks / elapsedSinceLastSecond ) * 1000;
+            this._currentSecondTicks = 0;
+            this._lastSecondTimeStamp = this.runningTime;
         }
         this._tickCount++;
     }

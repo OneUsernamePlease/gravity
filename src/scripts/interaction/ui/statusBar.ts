@@ -1,7 +1,5 @@
-// Status Bar at the bottom. Display some data using text.
-// Contains: Span-Elements with text
-
 import { VECTOR_COLORS } from "../../const/const.js";
+import { PerformanceInfo } from "../../types/types.js";
 
 export class StatusBar {
     bar: HTMLDivElement
@@ -19,24 +17,30 @@ export class StatusBar {
             this.setStatusMessage("", 3);
         }
     }
-    updateSimulationInfo(tick: number, bodyCount: number) {
-        this.updateTickCount(tick);
+    updateSimulationInfo(tick: number, bodyCount: number, performanceInfo?: PerformanceInfo) {
+        this.updateTickInfo(tick, performanceInfo);
         this.updateBodyCount(bodyCount);
     }
     updateAnimationInfo(zoom: number) {
         this.updateZoom(zoom);
     }
-    updateZoom(currentZoom: number, statusBarFieldIndex: number = 4) {
+    updateZoom(currentZoom: number) {
+        const statusBarFieldIndex = 4;
         this.setStatusMessage(`Zoom: ${currentZoom.toFixed(2)} (m per pixel)`, statusBarFieldIndex);
     }
-    updateCanvasDimensions(width: number, height: number, statusBarFieldIndex: number = 5) {
+    updateCanvasDimensions(width: number, height: number) {
+        const statusBarFieldIndex = 5;
         this.setStatusMessage(`Canvas dimension: ${width} * ${height}`, statusBarFieldIndex);
     }
-    private updateBodyCount(bodyCount: number, statusBarFieldIndex: number = 1) {
+    private updateBodyCount(bodyCount: number) {
+        const statusBarFieldIndex = 1;
         this.setStatusMessage(`Number of Bodies: ${bodyCount}`, statusBarFieldIndex);
     }
-    private updateTickCount(tickCount: number, statusBarFieldIndex: number = 2) {
-        this.setStatusMessage(`Simulation Tick: ${tickCount}`, statusBarFieldIndex);
+    private updateTickInfo( tickCount: number, performanceInfo?: PerformanceInfo ) {
+        const statusBarFieldIndex = 2;
+        let message = `Simulation Tick: ${tickCount}`;
+        message += performanceInfo?.ticksLastSecond ? `, Ticks last s: ${performanceInfo.ticksLastSecond.toFixed(1)}` : "";
+        this.setStatusMessage(message, statusBarFieldIndex);
     }
     private vectorMessage() {
         return `Acceleration: ${VECTOR_COLORS.get("acceleration")?.name} - Velocity: ${VECTOR_COLORS.get("velocity")?.name}`;
