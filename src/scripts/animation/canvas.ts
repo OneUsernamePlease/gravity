@@ -91,6 +91,9 @@ export class Canvas {
     clearSimulation() {
         this.clear(this.simulationContext);
     }
+    clearPaths() {
+        this.clear(this.pathsContext);
+    }
     fillBackground(
         color: string = BACKGROUND_COLOR
     ) {
@@ -120,7 +123,7 @@ export class Canvas {
      * @param radius in canvas units
      * @param color default white
      */
-    drawCircle(position: Vector2D, radius: number, color: string = "white", context = this.simulationContext) {
+    drawBody(position: Vector2D, radius: number, color: string = "white", context = this.simulationContext) {
         if (!this.isCircleVisible(position, radius)) return;
         context.beginPath();
         context.arc(position.x, position.y, radius, 0, Math.PI * 2);
@@ -128,6 +131,26 @@ export class Canvas {
         context.fillStyle = color;
         context.fill();
 
+    }
+    drawPaths(paths: Vector2D[][]) {
+        paths.forEach((path) => {
+            this.drawPath(path);
+        });
+    }
+    drawPath(path: Vector2D[], color = "orange", context = this.pathsContext) {
+        context.strokeStyle = color;
+        context.lineWidth = PATH_THICKNESS;
+
+        if (path.length <= 1) {
+            return;
+        }
+
+        context.beginPath();
+        context.moveTo(path[0].x, path[0].y);
+        for (let i = 1; i < path.length; i++) {
+            context.lineTo(path[i].x, path[i].y);
+        }
+        context.stroke();
     }
     drawPathSegment(from: Vector2D, to: Vector2D, color: string, context = this.pathsContext) {
         context.strokeStyle = color;

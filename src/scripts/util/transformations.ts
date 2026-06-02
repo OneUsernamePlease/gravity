@@ -53,3 +53,14 @@ export function directionFromSimulationToCanvas(direction: Vector2D, canvasSpace
     const scaled: Vector2D = flipped.scale(1 / canvasSpace.currentZoom);
     return scaled;
 }
+export function pathFromSimulationToCanvas(path: Vector2D[], canvasSpace: CanvasSpace): Vector2D[] {
+    const canvasPath = new Array<Vector2D>(path.length);
+
+    for (let i = 0; i < path.length; i++) {
+        const pointInSimulation = path[i];
+        const pointOnCanvas = pointFromSimulationToCanvas(pointInSimulation, canvasSpace);
+        canvasPath[i] = pointOnCanvas;
+    }
+
+    return canvasPath
+}
