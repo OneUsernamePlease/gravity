@@ -1,4 +1,8 @@
 # TODO:
+    - PATHS
+        - use RingBuffer to limit path lengths
+        - feet: clearPaths
+        - pausing path-tracing: end of old path connects to start of new path (for the same body)
     - improve the UI
         - small controlBar using icons, which opens floating panels containing the controls
         - improve the status bar
@@ -22,6 +26,7 @@
     - Testing: set the context such that CSS can be used (> body.ts) (works in browser context but not in node) - sadly, *environment: 'jsdom',* presents new problems
 
 # bugs
+
     - elastic collisions (that should be 100% elastic) are not
     - in theory a body can move at above c so introduce a limit we shall
     - when Display Vectors is active, the displayed vectors for a given body are actually the vectors from the previous tick.
