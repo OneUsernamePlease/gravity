@@ -1,4 +1,4 @@
-import { BACKGROUND_COLOR, DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM, VECTOR_COLORS } from "../const/const.js";
+import { DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, MIN_DISPLAYED_RADIUS, VECTOR_COLORS } from "../const/const.js";
 import { Canvas } from "./canvas.js";
 import { Body2d } from "../simulation/body2d.js";
 import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../types/types.js";
@@ -111,7 +111,7 @@ export class AnimationController {
     tracePaths(objectStates: Map<number, ObjectState>) {
         this._paths.addSegments(objectStates);
         const paths = Array.from(this._paths.pathArrays);
-        const pathsOnCanvas = new Array(paths.length);
+        const pathsOnCanvas: Vector2D[][] = new Array(paths.length);
         
         for (let i = 0; i < paths.length; i++) {
             const path = paths[i];
