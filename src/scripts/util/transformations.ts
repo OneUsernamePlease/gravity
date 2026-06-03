@@ -1,3 +1,4 @@
+import { Path } from "../animation/paths.js";
 import { CanvasSpace } from "../types/types.js";
 import { Vector2D } from "./vector2d.js";
 export function relativePosition(absolutePosition: Vector2D, element: HTMLElement): Vector2D {
@@ -53,14 +54,14 @@ export function directionFromSimulationToCanvas(direction: Vector2D, canvasSpace
     const scaled: Vector2D = flipped.scale(1 / canvasSpace.currentZoom);
     return scaled;
 }
-export function pathFromSimulationToCanvas(path: Vector2D[], canvasSpace: CanvasSpace): Vector2D[] {
-    const canvasPath = new Array<Vector2D>(path.length);
-
-    for (let i = 0; i < path.length; i++) {
-        const pointInSimulation = path[i];
+export function pathFromSimulationToCanvas(path: Path, canvasSpace: CanvasSpace): Vector2D[] {
+    const canvasPath = new Array<Vector2D>(path.currentSize);
+    let i = 0;
+    path.forEach((pathSegment) => {
+        const pointInSimulation = pathSegment.coordinate;
         const pointOnCanvas = pointFromSimulationToCanvas(pointInSimulation, canvasSpace);
-        canvasPath[i] = pointOnCanvas;
-    }
+        canvasPath[i++] = pointOnCanvas;
+    });
 
     return canvasPath
 }

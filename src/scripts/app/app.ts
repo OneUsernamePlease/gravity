@@ -140,6 +140,9 @@ export class App {
     }
     setTracePaths(tracePaths: boolean) {
         this.animation.setTracePaths(tracePaths);
+        if (!tracePaths) {
+            this.animation.resetPaths();
+        }
     }
 // UI related
     updateStatusBarAnimationInfo() {
