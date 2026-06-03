@@ -1,4 +1,9 @@
 # TODO:
+    - This architecture is beyond ass
+    - PATHS
+        - if a pathSegment (coordinate) is outside the screen - just ignore it
+        - tracing paths is insanely slow. kinda need to start caching the drawn paths.
+        - pausing path-tracing: end of old path connects to start of new path (for the same body)
     - improve the UI
         - small controlBar using icons, which opens floating panels containing the controls
         - improve the status bar
@@ -22,6 +27,7 @@
     - Testing: set the context such that CSS can be used (> body.ts) (works in browser context but not in node) - sadly, *environment: 'jsdom',* presents new problems
 
 # bugs
+    - handleCollisions() - objectStates are sometimes undefined - switched to using Map with cached Ids introduced this bug
     - elastic collisions (that should be 100% elastic) are not
     - in theory a body can move at above c so introduce a limit we shall
     - when Display Vectors is active, the displayed vectors for a given body are actually the vectors from the previous tick.
@@ -43,11 +49,6 @@
     - layers
 
 - use workers and offscreen canvas
-
-- trace paths
-    - ui cbx
-        - toggle on: record all positions every (sim or animation?) frame, connect them w/ lines
-        - toggle off: clear paths
 
 - better zoom
     - slider

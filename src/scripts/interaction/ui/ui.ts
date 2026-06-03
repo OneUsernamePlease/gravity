@@ -25,6 +25,9 @@ export class UI {
     private get displayVectors() {
         return this.controlBar.displayVectors;
     }
+    private get tracePaths() {
+        return this.controlBar.tracePaths;
+    }
     private get mass() {
         return this.controlBar.mass;
     }
@@ -37,6 +40,7 @@ export class UI {
     get animationSettings(): UIAnimationSettings {
         return {
             displayVectors: this.displayVectors,
+            tracePaths: this.tracePaths,
         };
     }
     get simulationSettings(): SimulationSettings {
@@ -85,7 +89,7 @@ export class UI {
         this.statusBar.displayVectorMessage(display);
     }
     updateStatusBarSimulationInfo() {
-        this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.length, this.app.simulationMetrics);
+        this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.size, this.app.simulationMetrics);
     }
     updateStatusBarCanvasDimensions(windowWidth: number, windowHeight: number) {
         this.statusBar.updateCanvasDimensions(windowWidth, windowHeight)

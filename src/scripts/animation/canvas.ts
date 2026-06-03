@@ -1,54 +1,63 @@
 import { Vector2D } from "../util/vector2d.js";
 import * as essentials from "../util/util.js";
-import { BACKGROUND_COLOR, VECTOR_THICKNESS } from "../const/const.js";
+import { BACKGROUND_COLOR, PATH_THICKNESS, VECTOR_THICKNESS } from "../const/const.js";
+import { CanvasLayer, LayerName } from "../types/types.js";
 
 export class Canvas {
-//#region properties
-    
-    private _backgroundCanvas: HTMLCanvasElement;
-    private _backgroundContext: CanvasRenderingContext2D;
-
-    private _simulationCanvas: HTMLCanvasElement;
-    private _simulationContext: CanvasRenderingContext2D;
-
-    private _interactionCanvas: HTMLCanvasElement;
-    private _interactionContext: CanvasRenderingContext2D;
+    private _layers: Map<LayerName, CanvasLayer> = new Map();
     constructor(private _canvasParent: HTMLDivElement) {
-        this._backgroundCanvas = this.createLayer("z-0");
-        this._backgroundContext = this._backgroundCanvas.getContext("2d", { alpha: false })!;
-
-        this._simulationCanvas = this.createLayer("z-10");
-        this._simulationContext = this._simulationCanvas.getContext("2d")!;
+        const backgroundCanvas = this.createLayer("z-0");
+        this._layers.set("background", {
+            canvas: backgroundCanvas,
+            context: backgroundCanvas.getContext("2d", { alpha: false })!
+        });
         
-        this._interactionCanvas = this.createLayer("z-20");
-        this._interactionContext = this._interactionCanvas.getContext("2d")!;
+        const pathsCanvas = this.createLayer("z-10");
+        this._layers.set("paths", {
+            canvas: pathsCanvas,
+            context: pathsCanvas.getContext("2d")!
+        });
+
+        const simulationCanvas = this.createLayer("z-20");
+        this._layers.set("simulation", {
+            canvas: simulationCanvas,
+            context: simulationCanvas.getContext("2d")!
+        });
+
+        const interactionCanvas = this.createLayer("z-30");
+        this._layers.set("interaction", {
+            canvas: interactionCanvas,
+            context: interactionCanvas.getContext("2d")!
+        });
     }
-//#endregion
 //#region get, set
     get backgroundCanvas() {
-        return this._backgroundCanvas;
+        return this._layers.get("background")!.canvas;
     }
     get simulationCanvas() {
-        return this._simulationCanvas;
+        return this._layers.get("simulation")!.canvas;
     }
     get interactionCanvas() {
-        return this._interactionCanvas;
+        return this._layers.get("interaction")!.canvas;
     }
     get backgroundContext() {
-        return this._backgroundContext;
+        return this._layers.get("background")!.context;
+    }
+    get pathsContext() {
+        return this._layers.get("paths")!.context;
     }
     get simulationContext() {
-        return this._simulationContext;
+        return this._layers.get("simulation")!.context;
     }
     get interactionContext() {
-        return this._interactionContext;
+        return this._layers.get("interaction")!.context;
     }
     // additional getters
     get width(): number {
-        return this._backgroundCanvas.width;
+        return this._layers.get("background")!.canvas.width;
     }
     get height(): number {
-        return this._backgroundCanvas.height;
+        return this._layers.get("background")!.canvas.height;
     }
 //#endregion
     createLayer(zIndexClass: string): HTMLCanvasElement {
@@ -63,15 +72,9 @@ export class Canvas {
         return canvas;
     }
     resize(width: number, height: number) {
-        const canvases = [
-            this._backgroundCanvas,
-            this._simulationCanvas,
-            this._interactionCanvas,
-        ];
-
-        for (const canvas of canvases) {
-            canvas.width = width;
-            canvas.height = height;
+        for (const layer of this._layers.values()) {
+            layer.canvas.width = width;
+            layer.canvas.height = height;
         }
 
         this.fillBackground();
@@ -81,12 +84,15 @@ export class Canvas {
         context.clearRect(0, 0, this.width, this.height);
     }
     clearAll() {
-        this.clear(this._backgroundContext);
-        this.clear(this._simulationContext);
-        this.clear(this._interactionContext);
+        for (const layer of this._layers.values()) {
+            this.clear(layer.context);
+        }
     }
     clearSimulation() {
-        this.clear(this._simulationContext);
+        this.clear(this.simulationContext);
+    }
+    clearPaths() {
+        this.clear(this.pathsContext);
     }
     fillBackground(
         color: string = BACKGROUND_COLOR
@@ -117,7 +123,7 @@ export class Canvas {
      * @param radius in canvas units
      * @param color default white
      */
-    drawCircle(position: Vector2D, radius: number, color: string = "white", context = this.simulationContext) {
+    drawBody(position: Vector2D, radius: number, color: string = "white", context = this.simulationContext) {
         if (!this.isCircleVisible(position, radius)) return;
         context.beginPath();
         context.arc(position.x, position.y, radius, 0, Math.PI * 2);
@@ -125,6 +131,39 @@ export class Canvas {
         context.fillStyle = color;
         context.fill();
 
+    }
+    drawPaths(paths: Vector2D[][]) {
+        paths.forEach((path) => {
+            this.drawPath(path);
+        });
+    }
+    drawPath(path: Vector2D[], color = "orange", context = this.pathsContext) {
+        context.strokeStyle = color;
+        context.lineWidth = PATH_THICKNESS;
+
+        if (path.length <= 1) {
+            return;
+        }
+
+        context.beginPath();
+        context.moveTo(path[0].x, path[0].y);
+        for (let i = 1; i < path.length; i++) {
+            context.lineTo(path[i].x, path[i].y);
+        }
+        context.stroke();
+    }
+    drawPathSegment(from: Vector2D, to: Vector2D, color: string, context = this.pathsContext) {
+        context.strokeStyle = color;
+        context.lineWidth = PATH_THICKNESS;
+
+        context.beginPath();
+
+        context.moveTo(from.x, from.y);
+        context.lineTo(to.x, to.y)
+        context.stroke();
+    }
+    resetPaths(context = this.pathsContext) {
+        this.clear(context);
     }
     private isCircleVisible(position: Vector2D, radius: number): boolean {
         const inBoundsLeft = position.x + radius >= 0;

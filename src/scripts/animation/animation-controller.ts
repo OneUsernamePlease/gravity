@@ -1,4 +1,4 @@
-import { BACKGROUND_COLOR, DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, MAX_ZOOM, MIN_DISPLAYED_RADIUS, MIN_ZOOM, VECTOR_COLORS } from "../const/const.js";
+import { DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, MIN_DISPLAYED_RADIUS, VECTOR_COLORS } from "../const/const.js";
 import { Canvas } from "./canvas.js";
 import { Body2d } from "../simulation/body2d.js";
 import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../types/types.js";
@@ -6,6 +6,7 @@ import { Vector2D } from "../util/vector2d.js";
 import * as tfm from "../util/transformations.js";
 import { ViewController } from "./view-controller.js";
 import { App } from "../app/app.js";
+import { Paths } from "./paths.js";
 
 /**
  * This class deals with everything animation related.
@@ -16,6 +17,7 @@ export class AnimationController {
     private _animationSettings: AnimationSettings;
     private _viewController: ViewController;
     private _running: boolean;
+    private _paths: Paths;
 //#endregion
 //#region get, set
     private get canvas(): Canvas {
@@ -71,12 +73,14 @@ export class AnimationController {
         this._animationSettings = { frameLength: 25, displayVectors: true, tracePaths: true };
         this._canvasSpace = {origin: new Vector2D(0, 0), currentZoom: 1, orientationY: -1};
         this._viewController = new ViewController(this);
+        this._paths = new Paths(this);
         this._running = false;
     }
     initialize(width: number, height: number, animationSettings: UIAnimationSettings) {
         this.resizeCanvas(width, height);
         this.canvas.fillBackground();
         this.animationSettings.displayVectors = animationSettings.displayVectors;
+        this.animationSettings.tracePaths = animationSettings.tracePaths;
     }
     run() {
         if (this.running) {
@@ -87,7 +91,7 @@ export class AnimationController {
             if (this.running) {
                 setTimeout(loop, this.animationSettings.frameLength);
                 this.redrawSimulationState(this.app.currentSimulationState, this.animationSettings);
-                this._app.updateStatusBarSimulationInfo();
+                this.app.updateStatusBarSimulationInfo();
             }
         };
         loop();
@@ -95,23 +99,40 @@ export class AnimationController {
     stop() {
         this.running = false;
     }
-    private drawBodies(objectStates: ObjectState[]) {
+    private drawBodies(objectStates: Map<number, ObjectState>) {
         objectStates.forEach(object => {
             this.drawBody(object.body, tfm.pointFromSimulationToCanvas(object.position, this.canvasSpace));
         });
     }
     private drawBody(body: Body2d, position: Vector2D) {
         let visibleRadius = Math.max(body.radius / this.currentZoom, MIN_DISPLAYED_RADIUS);
-        this.canvas.drawCircle(position, visibleRadius, body.color);
+        this.canvas.drawBody(position, visibleRadius, body.color);
     }
-    redrawSimulationState(objectStates: ObjectState[], animationSettings: AnimationSettings) {
+    tracePaths(objectStates: Map<number, ObjectState>) {
+        this._paths.addSegments(objectStates);
+        const paths = Array.from(this._paths.pathArrays);
+        const pathsOnCanvas: Vector2D[][] = new Array(paths.length);
+        
+        for (let i = 0; i < paths.length; i++) {
+            const path = paths[i];
+            const pathOnCanvas = tfm.pathFromSimulationToCanvas(path, this.canvasSpace)
+            pathsOnCanvas[i] = pathOnCanvas;
+        }
+
+        this.canvas.drawPaths(pathsOnCanvas);
+    }
+    redrawSimulationState(objectStates: Map<number, ObjectState>, animationSettings: AnimationSettings) {
         this.canvas.clearSimulation();
         this.drawBodies(objectStates);
         if (animationSettings.displayVectors) {
             this.drawVectors(objectStates);
         }
+        if (animationSettings.tracePaths) {
+            this.canvas.clearPaths();
+            this.tracePaths(objectStates);
+        }
     }
-    private drawVectors(objectStates: ObjectState[]) {
+    private drawVectors(objectStates: Map<number, ObjectState>) {
         objectStates.forEach(objectState => {
             const positionOnCanvas = tfm.pointFromSimulationToCanvas(objectState.position, this.canvasSpace);
             const accelerationOnCanvas = tfm.directionFromSimulationToCanvas(objectState.acceleration, this.canvasSpace);
@@ -123,6 +144,13 @@ export class AnimationController {
     }
     setDisplayVectors(display: boolean) {
         this.animationSettings.displayVectors = display;
+    }
+    setTracePaths(tracePaths: boolean) {
+        this.animationSettings.tracePaths = tracePaths;
+    }
+    resetPaths() {
+        this._paths.clear();
+        this.canvas.clearPaths();
     }
     resizeCanvas(width: number, height: number) {
         this.canvas.resize(width, height);

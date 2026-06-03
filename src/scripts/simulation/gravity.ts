@@ -6,7 +6,8 @@ import { clamp } from "../util/util.js";
 import { Stopwatch } from "../util/stopwatch.js";
 
 export class Gravity implements SimulationAPI {
-    private _simulationState: ObjectState[]; // Insertion Order is not preserved (bc we delete bodies using swap & pop). Switch to map at some point
+    private _simulationState: Map<number, ObjectState>;
+    private _nextId: number = 0;
     private _running: boolean;
     private _tickCount: number;
     private _tickLength: number;
@@ -18,6 +19,7 @@ export class Gravity implements SimulationAPI {
     private _lastSecondTimeStamp: number = 0;
     private _currentSecondTicks: number = 0;
     private readonly gravityLowerBounds: number = 1; // force calculations for distances lower than this number are skipped
+    private _cachedIds: number[] = [];
 //#region get, set
     get simulationState() {
         return this._simulationState;
@@ -61,13 +63,15 @@ export class Gravity implements SimulationAPI {
     }
 // #endregion
     constructor() { 
-        this._simulationState = [];
+        this._simulationState = new Map();
+        this._nextId = 0;
         this._running = false;
         this._tickCount = 0;
         this._tickLength = 10; // ms
         this._collisionDetection = false;
         this._elasticCollisions = false;
         this._g = c.DEFAULT_G;
+        this._cachedIds = [];
     }
     applySettings(settings: SimulationSettings): void {
         if (settings.collisionDetection !== undefined)       this.collisionDetection = settings.collisionDetection;
@@ -78,7 +82,10 @@ export class Gravity implements SimulationAPI {
         if (!objectState.body.movable) {
             objectState.velocity = new Vector2D(0, 0);
         }
-        return this.simulationState.push(objectState);
+        const id = this._nextId++;
+        this.simulationState.set(id, objectState);
+        this._cachedIds = Array.from(this.simulationState.keys());
+        return this.simulationState.size;
     }
     stop() {
         this._running = false;
@@ -139,31 +146,36 @@ export class Gravity implements SimulationAPI {
         this._tickCount++;
     }
     private clearObjects() {
-        this._simulationState = [];
+        this._simulationState.clear();
+        this._nextId = 0;
+        this._cachedIds = [];
     }
-    private removeFromObjectStates(index: number) {
-        this.simulationState[index] = this.simulationState[this.simulationState.length - 1];
-        this.simulationState.pop();
+    private removeFromObjectStates(id: number) {
+        this.simulationState.delete(id);
+        this._cachedIds = Array.from(this.simulationState.keys());
     }
     private updateAccelerationVectors() {
         const forces: Map<number, Vector2D> = this.calculateForces();
 
-        this.simulationState.forEach((objectState, index) => {
-            const totalForceOnBody = forces.get(index) || (new Vector2D(0, 0));
+        this.simulationState.forEach((objectState, id) => {
+            const totalForceOnBody = forces.get(id) || (new Vector2D(0, 0));
             const newAcceleration = totalForceOnBody.scale(1 / objectState.body.mass);
             objectState.acceleration = newAcceleration;
         });
     }
     private calculateForces() {
         const forces: Map<number, Vector2D> = new Map();
+        const ids = this._cachedIds;
         
-        for (let i = 0; i < this.simulationState.length; i++) {
-            for (let j = i+1; j < this.simulationState.length; j++) {
-                const forceOnI = this.calculateForceBetweenBodies(i, j);
+        for (let i = 0; i < ids.length; i++) {
+            const idI = ids[i];
+            for (let j = i+1; j < ids.length; j++) {
+                const idJ = ids[j];
+                const forceOnI = this.calculateForceBetweenBodies(idI, idJ);
                 const forceOnJ = forceOnI.scale(-1);
 
-                forces.set(i, (forces.get(i) || new Vector2D(0, 0)).add(forceOnI));
-                forces.set(j, (forces.get(j) || new Vector2D(0, 0)).add(forceOnJ));
+                forces.set(idI, (forces.get(idI) || new Vector2D(0, 0)).add(forceOnI));
+                forces.set(idJ, (forces.get(idJ) || new Vector2D(0, 0)).add(forceOnJ));
             }
         }
         return forces;
@@ -184,12 +196,12 @@ export class Gravity implements SimulationAPI {
         });
     }
     /**
-     * Calculates the force-vector between the bodies in objectStates at index [i] and [j]
-     * @returns a vector representing the force applied ***to*** body at ***objectStates[i]***
+     * Calculates the force-vector between the bodies with the given ids
+     * @returns a vector representing the force applied ***to*** body with id i
      */
-    private calculateForceBetweenBodies(i: number, j: number): Vector2D {
-        const objectStateI = this.simulationState[i];
-        const objectStateJ = this.simulationState[j];
+    private calculateForceBetweenBodies(idI: number, idJ: number): Vector2D {
+        const objectStateI = this.simulationState.get(idI)!;
+        const objectStateJ = this.simulationState.get(idJ)!;
 
         const distance = objectStateI.position.distance(objectStateJ.position);
         if (distance < this.gravityLowerBounds || distance === 0) // if the bodies are too close, skip the calculation
@@ -199,15 +211,18 @@ export class Gravity implements SimulationAPI {
         return unitVectorIToJ.scale(netForceBetweenBodies);
     }
     private handleCollisions() {
-        for (let i = 0; i < this.simulationState.length; i++) {
-            const objectStateI = this.simulationState[i];
-            for (let j = i+1; j < this.simulationState.length; j++) {
-                const objectStateJ = this.simulationState[j];
+        const ids = this._cachedIds;
+        for (let i = 0; i < ids.length; i++) {
+            const idI = ids[i];
+            const objectStateI = this.simulationState.get(idI)!;
+            for (let j = i+1; j < ids.length; j++) {
+                const idJ = ids[j];
+                const objectStateJ = this.simulationState.get(idJ)!;
                 const distanceIJ = objectStateI.position.distance(objectStateJ.position);
                 const collision = distanceIJ <= objectStateI.body.radius + objectStateJ.body.radius;
                 if (collision) {
                     if (distanceIJ <= objectStateI.body.radius || distanceIJ <= objectStateJ.body.radius) { 
-                        this.mergeBodies(i, j);
+                        this.mergeBodies(idI, idJ);
                     } else if (this._elasticCollisions) {
                         this.elasticCollision(objectStateI, objectStateJ);
                     }
@@ -216,23 +231,23 @@ export class Gravity implements SimulationAPI {
         }
     }
     /**
-     * Merges the two bodies at indices in objectStates into one. The lighter body is merged into the heavier one. Momentum is preserved.
+     * Merges the two bodies with the given ids into one. The lighter body is merged into the heavier one. Momentum is preserved.
      */
-    private mergeBodies(index1: number, index2: number) {
-        const state1: ObjectState = this.simulationState[index1];
-        const state2: ObjectState = this.simulationState[index2];
+    private mergeBodies(id1: number, id2: number) {
+        const state1: ObjectState = this.simulationState.get(id1)!;
+        const state2: ObjectState = this.simulationState.get(id2)!;
         const totalMomentum = state1.velocity.scale(state1.body.mass).add(state2.velocity.scale(state2.body.mass));
         const totalMass = state1.body.mass + state2.body.mass;
         const resultingVelocity = totalMomentum.scale(1 / totalMass);
         let changeObject: ObjectState;
-        let removeIndex: number;
+        let removeId: number;
 
         if (state2.body.mass > state1.body.mass) {
             changeObject = state2;
-            removeIndex = index1;
+            removeId = id1;
         } else {
             changeObject = state1;
-            removeIndex = index2;
+            removeId = id2;
         }
         changeObject.velocity = resultingVelocity;
         changeObject.body.setProperties(totalMass);
@@ -241,7 +256,7 @@ export class Gravity implements SimulationAPI {
         if (!changeObject.body.movable) {
             changeObject.velocity = new Vector2D(0, 0);
         }
-        this.removeFromObjectStates(removeIndex);
+        this.removeFromObjectStates(removeId);
     }
     /**
     * @param restitution number between 0 (perfectly inelastic) and 1 (perfectly elastic)
