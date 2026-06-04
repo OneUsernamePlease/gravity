@@ -138,18 +138,31 @@ export class Canvas {
         });
     }
     drawPath(path: Vector2D[], color = "orange", context = this.pathsContext) {
+        if (path.length <= 1) return;
+
         context.strokeStyle = color;
         context.lineWidth = PATH_THICKNESS;
-
-        if (path.length <= 1) {
-            return;
-        }
-
+        
         context.beginPath();
-        context.moveTo(path[0].x, path[0].y);
-        for (let i = 1; i < path.length; i++) {
-            context.lineTo(path[i].x, path[i].y);
+
+        let drawing = false;
+
+        for (let i = 0; i < path.length; i++) {
+            const p = path[i];
+            const visible = this.isOnscreen(p.x, p.y);
+
+            if (visible) {
+                if (!drawing) {
+                    context.moveTo(p.x, p.y);
+                    drawing = true;
+                } else {
+                    context.lineTo(p.x, p.y);
+                }
+            } else {
+                drawing = false;
+            }
         }
+
         context.stroke();
     }
     drawPathSegment(from: Vector2D, to: Vector2D, color: string, context = this.pathsContext) {
@@ -165,6 +178,17 @@ export class Canvas {
     resetPaths(context = this.pathsContext) {
         this.clear(context);
     }
+    /**
+     * @param position
+     * Whether position (in the canvas coordinate-system) is visible on the canvas.
+     */
+    private isOnscreen(x: number, y: number): boolean {
+        const inBoundsLeft      = x >= 0;
+        const inBoundsRight     = x <= this.width;
+        const inBoundsTop       = y >= 0;
+        const inBoundsBottom    = y <= this.height;
+        return inBoundsLeft && inBoundsRight && inBoundsTop && inBoundsBottom;
+    }
     private isCircleVisible(position: Vector2D, radius: number): boolean {
         const inBoundsLeft = position.x + radius >= 0;
         const inBoundsRight = position.x - radius <= this.width;
@@ -179,23 +203,6 @@ export class Canvas {
         const maxY = startPoint.y > endPoint.y ? startPoint.y : endPoint.y;
 
         return !(maxX < 0 || minX > this.width || maxY < 0 || minY > this.height);
-    }
-    private isLineVisible(startPoint: Vector2D, endPoint: Vector2D): boolean {
-        // if the startPoint or endPoint is in the canvas, return true
-        if ((essentials.isInRange(startPoint.x, 0, this.width) && essentials.isInRange(startPoint.y, 0, this.height)) ||
-            (essentials.isInRange(endPoint.x, 0, this.width) && essentials.isInRange(endPoint.y, 0, this.height))) 
-            {
-            return true;
-        }
-        // if both points are outside the canvas, check if the line intersects with any of the canvas edges
-        if (Vector2D.linesIntersecting([startPoint, endPoint], [new Vector2D(0, 0), new Vector2D(this.width, 0)], true) ||
-            Vector2D.linesIntersecting([startPoint, endPoint], [new Vector2D(this.width, 0), new Vector2D(this.width, this.height)], true) ||
-            Vector2D.linesIntersecting([startPoint, endPoint], [new Vector2D(this.width, this.height), new Vector2D(0, this.height)], true) ||
-            Vector2D.linesIntersecting([startPoint, endPoint], [new Vector2D(0, this.height), new Vector2D(0, 0)], true)) 
-            {
-            return true;
-        }
-        return false;
     }
 //#endregion
 }
