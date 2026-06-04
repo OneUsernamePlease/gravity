@@ -1,9 +1,17 @@
 # TODO:
     - This architecture is beyond ass
+    - use context.setTransform instead of my current transformations - should be much  (MUCH) faster
     - PATHS
-        - if a pathSegment (coordinate) is outside the screen - just ignore it
+        - draw paths to an offscreen canvas, use Path2d, context.drawImage, .setTransform , .translate, .scale, .save/.restore, .
+        - paths use distance/animationFrame - animation runs when sim is stopped - paths disappear when paused
+        - if a pathSegment (coordinate) is outside the screen - just ignore it (when drawing)
         - tracing paths is insanely slow. kinda need to start caching the drawn paths.
         - pausing path-tracing: end of old path connects to start of new path (for the same body)
+        - let user change bufferSize
+        - OPTIMIZATIONS:
+            - cache path-bounds
+            - split a path into segments
+            - simplify paths (level-of-detail, douglas-peucker)
     - improve the UI
         - small controlBar using icons, which opens floating panels containing the controls
         - improve the status bar
