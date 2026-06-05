@@ -10,18 +10,22 @@ export function relativePosition(absolutePosition: Vector2D, element: HTMLElemen
 /**
  * A cartesian transformation of a point on a canvas, which is defined by canvasSpace (zoom (scale), origin (translation), alignment of y-axis (compared to the target coordinate system, eg. -1 if they point in opposite directions), no rotation), to the coordinate system the canvasSpace is defined in.
  * @param direction *Vector2d* representing a coordinate.
- * @param canvasSpace 
+ * @param context: CanvasRenderinContext2d 
  * @returns the transformed Vector2D
  */
-export function pointFromCanvasToSimulation(point: Vector2D, canvasSpace: CanvasSpace): Vector2D {
+export function pointFromCanvasToSimulation(point: Vector2D, context: CanvasRenderingContext2D): Vector2D {
     // transformation:
     // 1. scale (canvasVector * zoom in simulationUnits/canvasUnit)
     // 2. flip (y axis are in opposite directions)
     // 3. shift (scaledAndFlippedPoint + Origin of C in SimSpace)
-    const scaled = point.scale(canvasSpace.currentZoom);
-    const flipped = scaled.hadamardProduct(new Vector2D(1, canvasSpace.orientationY));
-    const shifted = flipped.add(canvasSpace.origin);
-    return shifted;
+    // const scaled = point.scale(canvasSpace.currentZoom);
+    // const flipped = scaled.hadamardProduct(new Vector2D(1, canvasSpace.orientationY));
+    // const shifted = flipped.add(canvasSpace.origin);
+    const contextTransformation = context.getTransform();
+    const inverse = contextTransformation.inverse();
+    const pointInSimulation = inverse.transformPoint(new DOMPoint(point.x, point.y));
+
+    return new Vector2D(pointInSimulation);
 }
 
 /**

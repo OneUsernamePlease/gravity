@@ -2,9 +2,9 @@ export class Vector2D {
     x: number;
     y: number;
     constructor()
-    constructor(pos: Vector2D)
+    constructor(coordinate: {x: number, y: number})
     constructor(x: number, y: number)
-    constructor(a?: number | Vector2D, b?: number) {
+    constructor(a?: number | {x: number, y: number}, b?: number) {
         if (typeof a === "object") {
             this.x = a.x;
             this.y = a.y;

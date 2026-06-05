@@ -14,6 +14,7 @@ export class App {
     private _animation: AnimationController;
     private _interaction: InteractionManager;
     private _ui: UI;
+    private _canvasSpace: CanvasSpace;
 //#endregion
 //#region get
     private get gravity() {
@@ -60,12 +61,12 @@ export class App {
         if (!wrapper) {
             throw new Error("canvasWrapper not found");
         }
-        const canvas = new Canvas(wrapper);
-
+        this._canvasSpace = {origin: new Vector2D(0, 0), currentZoom: 1, orientationY: -1}
+        const canvas = new Canvas(wrapper, this._canvasSpace);
         this._gravity = new Gravity();        
-        this._animation = new AnimationController(canvas, this);        
+        this._animation = new AnimationController(canvas, this, this._canvasSpace);        
         this._ui = new UI(this);
-        this._interaction = new InteractionManager(canvas.interactionCanvas, this);
+        this._interaction = new InteractionManager(canvas, this);
         this.initialize();
     }
     private initialize() {

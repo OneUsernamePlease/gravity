@@ -5,6 +5,7 @@ import { App } from "../app/app.js";
 import * as tfm from "../util/transformations.js";
 import { Body2d } from "../simulation/body2d.js";
 import { ContextMenu } from "./contextMenu.js";
+import { Canvas } from "../animation/canvas.js";
 
 export class InteractionManager {
 //#region properties
@@ -13,6 +14,8 @@ export class InteractionManager {
     private _previousTouchesMid: Vector2D | null = null;
     private _previousTouchesDist: number | null = null;
     private _lastSingleTouchPos: Vector2D | null = null;
+    private _canvasContext: CanvasRenderingContext2D;
+    private _canvasElement: HTMLCanvasElement;
     private pointer: Pointer = {
         main: { state: ButtonState.Up, downCoordinatesInSimSpace: undefined },
         secondary: { state: ButtonState.Up },
@@ -58,16 +61,19 @@ export class InteractionManager {
     }
 
 //#endregion
-    constructor(private canvas: HTMLCanvasElement, private app: App) {
-        canvas.addEventListener("pointerdown",   (ev) => this.canvasPointerDown(ev as PointerEvent));
-        canvas.addEventListener("pointerup",     (ev) => this.canvasPointerUp(ev as PointerEvent));
-        canvas.addEventListener("pointermove",   (ev) => this.canvasPointerMoving(ev as PointerEvent));
-        canvas.addEventListener("pointercancel", (ev) => this.cancelAndClearTouches());
-        canvas.addEventListener("mousedown",     (ev) => this.canvasMouseDown(ev as MouseEvent));    // pointerEvents only fire when the first button is pressed, and the last button is released
-        canvas.addEventListener("mouseup",       (ev) => this.canvasMouseUp(ev as MouseEvent));      // so we need mouse events to catch all button interactions
-        canvas.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
-        canvas.addEventListener("touchend",      (ev) => { ev.preventDefault() }, { passive: false });   // prevent touch-triggered MouseUp
-        canvas.addEventListener('contextmenu',   (ev) => { ev.preventDefault() });
+    constructor(private canvas: Canvas, private app: App) {
+        const canvasElement = canvas.interactionCanvas;
+        this._canvasElement = canvasElement;
+        this._canvasContext = canvas.interactionContext;
+        canvasElement.addEventListener("pointerdown",   (ev) => this.canvasPointerDown(ev as PointerEvent));
+        canvasElement.addEventListener("pointerup",     (ev) => this.canvasPointerUp(ev as PointerEvent));
+        canvasElement.addEventListener("pointermove",   (ev) => this.canvasPointerMoving(ev as PointerEvent));
+        canvasElement.addEventListener("pointercancel", (ev) => this.cancelAndClearTouches());
+        canvasElement.addEventListener("mousedown",     (ev) => this.canvasMouseDown(ev as MouseEvent));    // pointerEvents only fire when the first button is pressed, and the last button is released
+        canvasElement.addEventListener("mouseup",       (ev) => this.canvasMouseUp(ev as MouseEvent));      // so we need mouse events to catch all button interactions
+        canvasElement.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
+        canvasElement.addEventListener("touchend",      (ev) => { ev.preventDefault() }, { passive: false });   // prevent touch-triggered MouseUp
+        canvasElement.addEventListener('contextmenu',   (ev) => { ev.preventDefault() });
     }
 //#region primary interaction
     private canvasPointerDown(ev: PointerEvent) {
@@ -75,7 +81,7 @@ export class InteractionManager {
             // handled in its own eventListener. PointerDown only fires for presses while no other button is down.
             return;
         }
-        this.canvas.setPointerCapture(ev.pointerId);
+        this._canvasElement.setPointerCapture(ev.pointerId);
         switch (ev.pointerType) {
             case "pen":
             case "touch":
@@ -92,7 +98,7 @@ export class InteractionManager {
             // handled in its own eventListener. PointerUp only fires when the last button is released.
             return;
         }
-        this.canvas.releasePointerCapture(ev.pointerId);
+        this._canvasElement.releasePointerCapture(ev.pointerId);
         switch (ev.pointerType) {
             case "pen":
             case "touch":
@@ -164,7 +170,7 @@ export class InteractionManager {
                             }
 
                             const zoomFactor = this.previousTouchesDist / touchesDistance;
-                            const zoomCenterCanvas = tfm.relativePosition(touchesMidpoint, this.canvas);
+                            const zoomCenterCanvas = tfm.relativePosition(touchesMidpoint, this._canvasElement);
                             const scroll = touchesMidpoint.subtract(this.previousTouchesMid);
                             this.app.zoomToFactor(zoomFactor, zoomCenterCanvas);
                             this.app.scrollInCanvasUnits(scroll);
@@ -190,7 +196,7 @@ export class InteractionManager {
         ev.preventDefault();
         
         const cursorPos = new Vector2D(util.getAbsolutePointerPosition(ev));
-        const posOnCanvas = tfm.relativePosition(cursorPos, this.canvas);
+        const posOnCanvas = tfm.relativePosition(cursorPos, this._canvasElement);
 
         if (ev.deltaY < 0) {
             this.app.zoomIn(posOnCanvas);
@@ -208,7 +214,7 @@ export class InteractionManager {
             this.lastSingleTouchPos = touch;
             
             const positionVector = new Vector2D(ev.clientX, ev.clientY);
-            const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionVector, this.app.canvasSpace);
+            const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionVector, this._canvasContext);
             this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
 
         } else if (this.activeTouches.size === 2) {
@@ -230,7 +236,7 @@ export class InteractionManager {
         switch (this.touchAction) {
             case TouchAction.AddBody:
                 const absPos = new Vector2D(util.getAbsolutePointerPosition(ev));
-                this.addBodyAtPointer(tfm.relativePosition(absPos, this.canvas));
+                this.addBodyAtPointer(tfm.relativePosition(absPos, this._canvasElement));
                 this.touchAction = TouchAction.None;
                 break;
 
@@ -254,10 +260,11 @@ export class InteractionManager {
     }
     private canvasMouseUp(ev: MouseEvent) {
         const absolutePointerPosition = new Vector2D(util.getAbsolutePointerPosition(ev));
+        const positionOnCanvas = tfm.relativePosition(absolutePointerPosition, this._canvasElement)
         switch (ev.button) {
             case MouseButtons.Main:
                 if (this.pointer.main.state === ButtonState.Up) { return; }
-                this.canvasMainMouseUp(absolutePointerPosition);
+                this.canvasMainMouseUp(positionOnCanvas);
                 this.pointer.main.state = ButtonState.Up;
                 break;
             case MouseButtons.Wheel:
@@ -282,10 +289,11 @@ export class InteractionManager {
             return;
         }
         const absolutePointerPosition: Vector2D = new Vector2D(ev.clientX, ev.clientY);
+        const positionOnCanvas = tfm.relativePosition(absolutePointerPosition, this._canvasElement)
         switch (ev.button) {
             case MouseButtons.Main:
                 this.pointer.main.state = ButtonState.Down;
-                this.canvasMainMouseDown(absolutePointerPosition);
+                this.canvasMainMouseDown(positionOnCanvas);
                 break;
             case MouseButtons.Wheel:
                 this.pointer.wheel.state = ButtonState.Down;
@@ -298,25 +306,23 @@ export class InteractionManager {
                 break;
         }
     }
-    private canvasMainMouseDown(absoluteMousePosition: Vector2D) {
+    private canvasMainMouseDown(positionOnCanvas: Vector2D) {
         switch (MouseAction[this.app.selectedClickAction as keyof typeof MouseAction]) {
             case MouseAction.None:
                 break;
             case MouseAction.AddBody:
-                const positionOnCanvas = tfm.relativePosition(absoluteMousePosition, this.canvas)
-                const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionOnCanvas, this.app.canvasSpace);
-                this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
+                this.pointer.main.downCoordinatesInSimSpace = tfm.pointFromCanvasToSimulation(positionOnCanvas, this._canvasContext);;
                 break;
             default:
                 break;
         }
     }
-    private canvasMainMouseUp(absoluteMousePosition: Vector2D) {
+    private canvasMainMouseUp(positionOnCanvas: Vector2D) {
         switch (MouseAction[this.app.selectedClickAction as keyof typeof MouseAction]) {
             case MouseAction.None:
                 break;
             case MouseAction.AddBody:
-                this.addBodyAtPointer(tfm.relativePosition(absoluteMousePosition, this.canvas));
+                this.addBodyAtPointer(positionOnCanvas);
                 break;
             default:
                 break;
@@ -368,7 +374,7 @@ export class InteractionManager {
 //#endregion
 //#region do stuff
     private canvasToSimulation(positionOnCanvas: Vector2D): Vector2D {
-        return tfm.pointFromCanvasToSimulation(positionOnCanvas, this.app.canvasSpace);
+        return tfm.pointFromCanvasToSimulation(positionOnCanvas, this._canvasContext);
     }
     /**
      * @returns the distance, from the coordinate, where the button was pressed (in the simulation), to the current position (in the simulation).
@@ -384,8 +390,8 @@ export class InteractionManager {
     }
     private objectStateFromUiAndInteraction(pointerPositionOnCanvas: Vector2D): ObjectState {
         const body: Body2d = this.app.body2dFromUi();
-        const position: Vector2D = this.canvasToSimulation(pointerPositionOnCanvas);
-        const velocity: Vector2D = this.pointer.main.downCoordinatesInSimSpace ? util.calculateVelocityBetweenPoints(this.pointer.main.downCoordinatesInSimSpace, position) : new Vector2D;
+        const position: Vector2D = pointerPositionOnCanvas;
+        const velocity: Vector2D = this.pointer.main.downCoordinatesInSimSpace ? util.calculateVelocityBetweenPoints(this.pointer.main.downCoordinatesInSimSpace, position) : new Vector2D();
     
         const objectState: ObjectState = {
             body,

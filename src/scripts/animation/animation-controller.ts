@@ -13,7 +13,6 @@ import { Paths } from "./paths.js";
  */
 export class AnimationController {
 //#region properties
-    private _canvasSpace: CanvasSpace;
     private _animationSettings: AnimationSettings;
     private _viewController: ViewController;
     private _running: boolean;
@@ -68,10 +67,10 @@ export class AnimationController {
 //#endregion
     constructor(
         private _canvas: Canvas, 
-        private _app: App
+        private _app: App,
+        private _canvasSpace: CanvasSpace,
     ) {
         this._animationSettings = { frameLength: 25, displayVectors: true, tracePaths: true };
-        this._canvasSpace = {origin: new Vector2D(0, 0), currentZoom: 1, orientationY: -1};
         this._viewController = new ViewController(this);
         this._paths = new Paths(this);
         this._running = false;
@@ -101,12 +100,15 @@ export class AnimationController {
     }
     private drawBodies(objectStates: Map<number, ObjectState>) {
         objectStates.forEach(object => {
-            this.drawBody(object.body, tfm.pointFromSimulationToCanvas(object.position, this.canvasSpace));
+            this.drawBody(object);
         });
     }
-    private drawBody(body: Body2d, position: Vector2D) {
-        let visibleRadius = Math.max(body.radius / this.currentZoom, MIN_DISPLAYED_RADIUS);
-        this.canvas.drawBody(position, visibleRadius, body.color);
+    private drawBody(objectState: ObjectState) {
+        //.body, tfm.pointFromSimulationToCanvas(object.position, this.canvasSpace)
+        const body = objectState.body;
+        //const visibleRadius = Math.max(body.radius / this.currentZoom, MIN_DISPLAYED_RADIUS);
+        //this.canvas.drawBody(position, visibleRadius, body.color);
+        this.canvas.drawBody(objectState.position, body.radius, body.color);
     }
     tracePaths(objectStates: Map<number, ObjectState>) {
         this._paths.addSegments(objectStates);
@@ -115,8 +117,7 @@ export class AnimationController {
         
         for (let i = 0; i < paths.length; i++) {
             const path = paths[i];
-            const pathOnCanvas = tfm.pathFromSimulationToCanvas(path, this.canvasSpace)
-            pathsOnCanvas[i] = pathOnCanvas;
+            pathsOnCanvas[i] = path.toVectorArray();
         }
 
         this.canvas.drawPaths(pathsOnCanvas);

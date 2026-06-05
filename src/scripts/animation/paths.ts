@@ -13,6 +13,14 @@ export class Path extends RingBuffer<PathSegment> {
     ) { 
         super(_maxLength);
     }
+    toVectorArray(): Vector2D[] {
+        const segmentArray = super.toArray();
+        const vectorArray = new Array<Vector2D>(segmentArray.length)
+        for (let i = 0; i < segmentArray.length; i++) {
+            vectorArray[i] = segmentArray[i].coordinate;
+        }
+        return vectorArray;
+    }
 }
 export class Paths {
     private _paths: Map<number, Path> = new Map();

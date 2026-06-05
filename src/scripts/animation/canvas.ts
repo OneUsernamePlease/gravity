@@ -1,11 +1,11 @@
 import { Vector2D } from "../util/vector2d.js";
 import * as essentials from "../util/util.js";
 import { BACKGROUND_COLOR, PATH_THICKNESS, VECTOR_THICKNESS } from "../const/const.js";
-import { CanvasLayer, LayerName } from "../types/types.js";
+import { CanvasLayer, CanvasSpace, LayerName } from "../types/types.js";
 
 export class Canvas {
     private _layers: Map<LayerName, CanvasLayer> = new Map();
-    constructor(private _canvasParent: HTMLDivElement) {
+    constructor(private _canvasParent: HTMLDivElement, private _canvasSpace: CanvasSpace) {
         const backgroundCanvas = this.createLayer("z-0");
         this._layers.set("background", {
             canvas: backgroundCanvas,
@@ -29,6 +29,8 @@ export class Canvas {
             canvas: interactionCanvas,
             context: interactionCanvas.getContext("2d")!
         });
+
+        this.initializeContextTransformations();
     }
 //#region get, set
     get backgroundCanvas() {
@@ -60,6 +62,19 @@ export class Canvas {
         return this._layers.get("background")!.canvas.height;
     }
 //#endregion
+    private initializeContextTransformations() {
+        this._layers.forEach(layer => {
+            const context = layer.context;
+            const zoom = this._canvasSpace.currentZoom;
+            const orientationY = this._canvasSpace.orientationY;
+            const originX = this._canvasSpace.origin.x;
+            const originY = this._canvasSpace.origin.y;
+            
+            context.translate(this.width / 2, this.height / 2); // set the origin at the center
+            context.scale(1 / zoom, orientationY / zoom);
+            context.translate(-originX, -originY);
+        });
+    }
     createLayer(zIndexClass: string): HTMLCanvasElement {
         if (!(/^z-0$|^z-[1-9]\d*$/.test(zIndexClass))) {
             throw new Error("zIndex has to be a valid tailwind z-value (eg. 'z-0' or 'z-123'");
