@@ -214,10 +214,16 @@ export class Gravity implements SimulationAPI {
         const ids = this._cachedIds;
         for (let i = 0; i < ids.length; i++) {
             const idI = ids[i];
-            const objectStateI = this.simulationState.get(idI)!;
+            const objectStateI = this.simulationState.get(idI);
+            if (!objectStateI) {
+                continue; // elements in ids shift as bodies merge. just incrementing does not account for that
+            }
             for (let j = i+1; j < ids.length; j++) {
                 const idJ = ids[j];
-                const objectStateJ = this.simulationState.get(idJ)!;
+                const objectStateJ = this.simulationState.get(idJ);
+                if (!objectStateJ) {
+                    continue; // ...still works in >99% of cases (collision last >1 frame). but it's not nice.
+                }
                 const distanceIJ = objectStateI.position.distance(objectStateJ.position);
                 const collision = distanceIJ <= objectStateI.body.radius + objectStateJ.body.radius;
                 if (collision) {
