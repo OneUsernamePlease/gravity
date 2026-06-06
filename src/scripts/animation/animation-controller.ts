@@ -86,15 +86,7 @@ export class AnimationController {
     }
     tracePaths(objectStates: Map<number, ObjectState>) {
         this._paths.addSegments(objectStates);
-        const paths = Array.from(this._paths.pathArrays);
-        const pathsOnCanvas: Vector2D[][] = new Array(paths.length);
-        
-        for (let i = 0; i < paths.length; i++) {
-            const path = paths[i];
-            pathsOnCanvas[i] = path.toVectorArray();
-        }
-
-        this.canvas.drawPaths(pathsOnCanvas);
+        this.canvas.drawPaths(this._paths);
     }
     redrawSimulationState(objectStates: Map<number, ObjectState>, animationSettings: AnimationSettings) {
         this.canvas.clearSimulation();
@@ -164,10 +156,10 @@ export class AnimationController {
         }
     }
     zoomIn(zoomCenter: Vector2D, factor: number): number {
-        return this.zoomToFactor(1 + factor, zoomCenter);
+        return this.zoomToFactor(1 - factor, zoomCenter);
     }
     zoomOut(zoomCenter: Vector2D, factor: number): number {
-        return this.zoomToFactor(1 - factor, zoomCenter);
+        return this.zoomToFactor(1 + factor, zoomCenter);
     }
     /**
      * 
@@ -177,16 +169,7 @@ export class AnimationController {
      */
     zoomToFactor(factor: number, zoomCenter?: Vector2D): number {
         if (!zoomCenter) zoomCenter = new Vector2D(this.width / 2, this.height / 2);
-        
-        //this.app.updateStatusBarAnimationInfo();
-        //return this.viewController.zoomToFactor(factor, zoomCenter);
-
-        this._canvas.zoom(factor, zoomCenter)
-
-        return 0;
-    
+        const newZoom = this._canvas.zoomToFactor(factor, zoomCenter);
+        return newZoom;    
     }
-    //scrollInCanvasUnits(movementOnCanvas: Vector2D) {
-    //    this.canvas.move(movementOnCanvas);
-    //}
 }

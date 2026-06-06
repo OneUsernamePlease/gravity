@@ -1,11 +1,15 @@
 import { Vector2D } from "../util/vector2d.js";
-import * as essentials from "../util/util.js";
 import { BACKGROUND_COLOR, PATH_THICKNESS, VECTOR_THICKNESS } from "../const/const.js";
 import { CanvasLayer, CanvasSpace, LayerName } from "../types/types.js";
+import { Path, Paths } from "./paths.js";
 
 export class Canvas {
     private _layers: Map<LayerName, CanvasLayer> = new Map();
-    constructor(private _canvasParent: HTMLDivElement, private _canvasSpace: CanvasSpace = {origin: new Vector2D(0, 0), currentZoom: 1 /*, orientationY: -1 */}) {
+    private _canvasSpace: CanvasSpace = {
+        origin: new Vector2D(0, 0),
+        currentZoom: 1
+    }
+    constructor(private _canvasParent: HTMLDivElement) {
         const backgroundCanvas = this.createLayer("z-0");
         this._layers.set("background", {
             canvas: backgroundCanvas,
@@ -29,8 +33,6 @@ export class Canvas {
             canvas: interactionCanvas,
             context: interactionCanvas.getContext("2d")!
         });
-
-        this.initializeContextTransformations();
     }
 //#region get, set
     get backgroundCanvas() {
@@ -94,18 +96,23 @@ export class Canvas {
 
         this.applyTransformation();
     }
-    zoom(factor: number, centerOnCanvas: Vector2D) {
+    zoomToFactor(factor: number, centerOnCanvas: Vector2D) {
         const oldZoom = this._canvasSpace.currentZoom;
-        const newZoom = oldZoom / factor;
+        const newZoom = oldZoom * factor;
         
         this._canvasSpace.origin.x += centerOnCanvas.x * (oldZoom - newZoom);
         this._canvasSpace.origin.y += centerOnCanvas.y * (oldZoom - newZoom);
         this._canvasSpace.currentZoom = newZoom;
 
         this.applyTransformation();
+
+        return newZoom;
     }
     private applyTransformation() {
-        this._layers.forEach(layer => {
+        this._layers.forEach((layer, name) => {
+            if (name === "background") {
+                return
+            }
             const context = layer.context;
             const zoom = this._canvasSpace.currentZoom;
             const origin = this._canvasSpace.origin;
@@ -115,17 +122,6 @@ export class Canvas {
             )
         });
     }
-    private initializeContextTransformations() {
-        this._layers.forEach(layer => {
-            const context = layer.context;
-            const zoom = this._canvasSpace.currentZoom;
-            const originX = this._canvasSpace.origin.x;
-            const originY = this._canvasSpace.origin.y;
-            
-            context.scale(1 / zoom, 1 / zoom);
-            context.translate(-originX, -originY);
-        });
-    }
 //#endregion
 //#region drawing stuff
     private clear(context: CanvasRenderingContext2D) {
@@ -133,11 +129,6 @@ export class Canvas {
         context.resetTransform();
         context.clearRect(0, 0, this.width, this.height);
         context.restore();
-    }
-    clearAll() {
-        for (const layer of this._layers.values()) {
-            this.clear(layer.context);
-        }
     }
     clearSimulation() {
         this.clear(this.simulationContext);
@@ -183,36 +174,28 @@ export class Canvas {
         context.fill();
 
     }
-    drawPaths(paths: Vector2D[][]) {
-        paths.forEach((path) => {
+    drawPaths(paths: Paths) {
+        paths.paths.forEach((path) => {
             this.drawPath(path);
         });
     }
-    drawPath(path: Vector2D[], color = "orange", context = this.pathsContext) {
-        if (path.length <= 1) return;
+    drawPath(path: Path, color = "orange", context = this.pathsContext) {
+        if (path.currentSize <= 1) return;
 
         context.strokeStyle = color;
-        context.lineWidth = PATH_THICKNESS;
+        context.lineWidth = PATH_THICKNESS * this._canvasSpace.currentZoom;
         
         context.beginPath();
 
-        let drawing = false;
-
-        for (let i = 0; i < path.length; i++) {
-            const p = path[i];
-            //const visible = this.isOnscreen(p.x, p.y);
-
-            //if (visible) {
-                if (!drawing) {
-                    context.moveTo(p.x, p.y);
-                    drawing = true;
-                } else {
-                    context.lineTo(p.x, p.y);
-                }
-            // } else {
-            //     drawing = false;
-            // }
-        }
+        let first = true;
+        path.forEach((segment) => {
+            if (first) {
+                context.moveTo(segment.coordinate.x, segment.coordinate.y);
+            } else {
+                context.lineTo(segment.coordinate.x, segment.coordinate.y);
+            }
+            first = false;
+        });
 
         context.stroke();
     }
