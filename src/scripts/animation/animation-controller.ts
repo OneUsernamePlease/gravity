@@ -1,9 +1,7 @@
-import { DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, MIN_DISPLAYED_RADIUS, VECTOR_COLORS } from "../const/const.js";
+import { DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, VECTOR_COLORS } from "../const/const.js";
 import { Canvas } from "./canvas.js";
-import { Body2d } from "../simulation/body2d.js";
 import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../types/types.js";
 import { Vector2D } from "../util/vector2d.js";
-import * as tfm from "../util/transformations.js";
 import { ViewController } from "./view-controller.js";
 import { App } from "../app/app.js";
 import { Paths } from "./paths.js";
@@ -99,16 +97,10 @@ export class AnimationController {
         this.running = false;
     }
     private drawBodies(objectStates: Map<number, ObjectState>) {
-        objectStates.forEach(object => {
-            this.drawBody(object);
+        objectStates.forEach(objectState => {
+            const body = objectState.body;
+            this.canvas.drawBody(objectState.position, body.radius, body.color);
         });
-    }
-    private drawBody(objectState: ObjectState) {
-        //.body, tfm.pointFromSimulationToCanvas(object.position, this.canvasSpace)
-        const body = objectState.body;
-        //const visibleRadius = Math.max(body.radius / this.currentZoom, MIN_DISPLAYED_RADIUS);
-        //this.canvas.drawBody(position, visibleRadius, body.color);
-        this.canvas.drawBody(objectState.position, body.radius, body.color);
     }
     tracePaths(objectStates: Map<number, ObjectState>) {
         this._paths.addSegments(objectStates);
@@ -135,12 +127,12 @@ export class AnimationController {
     }
     private drawVectors(objectStates: Map<number, ObjectState>) {
         objectStates.forEach(objectState => {
-            const positionOnCanvas = tfm.pointFromSimulationToCanvas(objectState.position, this.canvasSpace);
-            const accelerationOnCanvas = tfm.directionFromSimulationToCanvas(objectState.acceleration, this.canvasSpace);
-            const velocityOnCanvas = tfm.directionFromSimulationToCanvas(objectState.velocity, this.canvasSpace);
-            
-            this.canvas.drawVector(positionOnCanvas, accelerationOnCanvas, VECTOR_COLORS.get("acceleration")?.hex);
-            this.canvas.drawVector(positionOnCanvas, velocityOnCanvas, VECTOR_COLORS.get("velocity")?.hex);
+            const position = objectState.position;
+            const acceleration = objectState.acceleration;
+            const velocity = objectState.velocity;
+
+            this.canvas.drawVector(position, acceleration, VECTOR_COLORS.get("acceleration")?.hex);
+            this.canvas.drawVector(position, velocity, VECTOR_COLORS.get("velocity")?.hex);
         });
     }
     setDisplayVectors(display: boolean) {
@@ -193,16 +185,13 @@ export class AnimationController {
         zoomCenter: Vector2D = new Vector2D(this.width / 2, this.height / 2),
         factor: number = DEFAULT_ZOOM_FACTOR, 
     ): number {
-
         return this.zoomToFactor(1 - factor, zoomCenter);
     }
     zoomOut(
         zoomCenter: Vector2D = new Vector2D(this.width / 2, this.height / 2),
         factor: number = DEFAULT_ZOOM_FACTOR, 
     ): number {
-
         return this.zoomToFactor(1 + factor, zoomCenter);
-
     }
     /**
      * 
@@ -217,7 +206,7 @@ export class AnimationController {
         
         return this.viewController.zoomToFactor(factor, zoomCenter);
     }
-    scrollInCanvasUnits(movementOnCanvas: Vector2D){
+    scrollInCanvasUnits(movementOnCanvas: Vector2D) {
         const movementInSimulationUnits = movementOnCanvas.scale(this.currentZoom);
         this.viewController.moveOrigin(movementInSimulationUnits.hadamardProduct(new Vector2D(-1, 1)));
     }
