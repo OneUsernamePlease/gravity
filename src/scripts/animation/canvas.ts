@@ -1,7 +1,8 @@
 import { Vector2D } from "../util/vector2d.js";
-import { BACKGROUND_COLOR, PATH_THICKNESS, VECTOR_THICKNESS } from "../const/const.js";
+import { BACKGROUND_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_THICKNESS, VECTOR_THICKNESS } from "../const/const.js";
 import { CanvasLayer, CanvasSpace, LayerName } from "../types/types.js";
 import { Path, Paths } from "./paths.js";
+import { clamp } from "../util/util.js";
 
 export class Canvas {
     private _layers: Map<LayerName, CanvasLayer> = new Map();
@@ -98,8 +99,9 @@ export class Canvas {
     }
     zoomToFactor(factor: number, centerOnCanvas: Vector2D) {
         const oldZoom = this._canvasSpace.currentZoom;
-        const newZoom = oldZoom * factor;
-        
+        let newZoom = oldZoom * factor;
+        newZoom = clamp(newZoom, MIN_ZOOM, MAX_ZOOM);
+                
         this._canvasSpace.origin.x += centerOnCanvas.x * (oldZoom - newZoom);
         this._canvasSpace.origin.y += centerOnCanvas.y * (oldZoom - newZoom);
         this._canvasSpace.currentZoom = newZoom;
@@ -153,7 +155,7 @@ export class Canvas {
         //    return;
         //}
         context.beginPath();
-        context.lineWidth = VECTOR_THICKNESS;
+        context.lineWidth = VECTOR_THICKNESS * this._canvasSpace.currentZoom;
         context.strokeStyle = color;
         context.moveTo(position.x, position.y);
         context.lineTo(endPosition.x, endPosition.y);
@@ -201,7 +203,7 @@ export class Canvas {
     }
     drawPathSegment(from: Vector2D, to: Vector2D, color: string, context = this.pathsContext) {
         context.strokeStyle = color;
-        context.lineWidth = PATH_THICKNESS;
+        context.lineWidth = PATH_THICKNESS * this._canvasSpace.currentZoom;
 
         context.beginPath();
 
