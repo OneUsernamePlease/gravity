@@ -61,10 +61,10 @@ export class InteractionManager {
     }
 
 //#endregion
-    constructor(private canvas: Canvas, private app: App) {
-        const canvasElement = canvas.interactionCanvas;
+    constructor(private _canvas: Canvas, private app: App) {
+        const canvasElement = _canvas.interactionCanvas;
         this._canvasElement = canvasElement;
-        this._canvasContext = canvas.interactionContext;
+        this._canvasContext = _canvas.interactionContext;
         canvasElement.addEventListener("pointerdown",   (ev) => this.canvasPointerDown(ev as PointerEvent));
         canvasElement.addEventListener("pointerup",     (ev) => this.canvasPointerUp(ev as PointerEvent));
         canvasElement.addEventListener("pointermove",   (ev) => this.canvasPointerMoving(ev as PointerEvent));
@@ -117,7 +117,7 @@ export class InteractionManager {
             case "mouse":
                 if (this.pointer.wheel.state === ButtonState.Down) {
                     ev.preventDefault(); // prevent scroll-symbol
-                    this.app.scrollInCanvasUnits(currentMovement);
+                    this._canvas.move(currentMovement);
                 }
                 break;
 
@@ -145,7 +145,7 @@ export class InteractionManager {
                                 const dx = currentTouchPosition.x - this.lastSingleTouchPos.x;
                                 const dy = currentTouchPosition.y - this.lastSingleTouchPos.y;
 
-                                this.app.scrollInCanvasUnits(new Vector2D(dx, dy));
+                                this._canvas.move(new Vector2D(dx, dy));
                             }
 
                             this.lastSingleTouchPos = new Vector2D(currentTouchPosition.x, currentTouchPosition.y);
@@ -173,7 +173,7 @@ export class InteractionManager {
                             const zoomCenterCanvas = tfm.relativePosition(touchesMidpoint, this._canvasElement);
                             const scroll = touchesMidpoint.subtract(this.previousTouchesMid);
                             this.app.zoomToFactor(zoomFactor, zoomCenterCanvas);
-                            this.app.scrollInCanvasUnits(scroll);
+                            this._canvas.move(scroll);
 
                             this.previousTouchesMid = touchesMidpoint;
                             this.previousTouchesDist = touchesDistance;
@@ -213,8 +213,8 @@ export class InteractionManager {
             this.touchAction = TouchAction.AddBody;
             this.lastSingleTouchPos = touch;
             
-            const positionVector = new Vector2D(ev.clientX, ev.clientY);
-            const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionVector, this._canvasContext);
+            const positionOnCanvas = tfm.relativePosition(touch, this._canvasElement);
+            const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionOnCanvas, this._canvasContext);
             this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
 
         } else if (this.activeTouches.size === 2) {
@@ -311,7 +311,7 @@ export class InteractionManager {
             case MouseAction.None:
                 break;
             case MouseAction.AddBody:
-                this.pointer.main.downCoordinatesInSimSpace = tfm.pointFromCanvasToSimulation(positionOnCanvas, this._canvasContext);;
+                this.pointer.main.downCoordinatesInSimSpace = tfm.pointFromCanvasToSimulation(positionOnCanvas, this._canvasContext);
                 break;
             default:
                 break;
@@ -373,15 +373,12 @@ export class InteractionManager {
     }
 //#endregion
 //#region do stuff
-    private canvasToSimulation(positionOnCanvas: Vector2D): Vector2D {
-        return tfm.pointFromCanvasToSimulation(positionOnCanvas, this._canvasContext);
-    }
     /**
      * @returns the distance, from the coordinate, where the button was pressed (in the simulation), to the current position (in the simulation).
      */
     private getPointerDragDistanceInSimulation(pointerPositionOnCanvas: Vector2D, button = this.pointer.main): Vector2D | null {
         if (!button.downCoordinatesInSimSpace) return null;
-        const currentPositionInSimulation = this.canvasToSimulation(pointerPositionOnCanvas);
+        const currentPositionInSimulation = tfm.pointFromCanvasToSimulation(pointerPositionOnCanvas, this._canvasContext);
         return currentPositionInSimulation.displacementVector(button.downCoordinatesInSimSpace);
     }
     private addBodyAtPointer(pointerPositionOnCanvas: Vector2D) {
@@ -390,7 +387,7 @@ export class InteractionManager {
     }
     private objectStateFromUiAndInteraction(pointerPositionOnCanvas: Vector2D): ObjectState {
         const body: Body2d = this.app.body2dFromUi();
-        const position: Vector2D = pointerPositionOnCanvas;
+        const position: Vector2D = tfm.pointFromCanvasToSimulation(pointerPositionOnCanvas, this._canvasContext);
         const velocity: Vector2D = this.pointer.main.downCoordinatesInSimSpace ? util.calculateVelocityBetweenPoints(this.pointer.main.downCoordinatesInSimSpace, position) : new Vector2D();
     
         const objectState: ObjectState = {

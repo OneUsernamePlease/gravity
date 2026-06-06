@@ -6,9 +6,6 @@ import { ViewController } from "./view-controller.js";
 import { App } from "../app/app.js";
 import { Paths } from "./paths.js";
 
-/**
- * This class deals with everything animation related.
- */
 export class AnimationController {
 //#region properties
     private _animationSettings: AnimationSettings;
@@ -37,9 +34,6 @@ export class AnimationController {
 
     get canvasSpace() {
         return this._canvasSpace;
-    }
-    private set canvasSpace(canvasSpace: CanvasSpace) {
-        this._canvasSpace = canvasSpace;
     }
 
     private get app() {
@@ -151,47 +145,41 @@ export class AnimationController {
 
     scrollRight(distance?: number) {
         if (!distance) {
-            distance = this.scrollDistance("horizontal"); // in simulationUnits
+            distance = this.scrollDistance("horizontal");
         }
-        this.viewController.moveOrigin(new Vector2D(distance, 0));
+        this.canvas.move(new Vector2D(-distance, 0));
     }
     scrollLeft(distance?: number) {
         if (!distance) {
-            distance = this.scrollDistance("horizontal"); // in simulationUnits
+            distance = this.scrollDistance("horizontal");
         }
-        this.viewController.moveOrigin(new Vector2D(-distance, 0));
+        this.canvas.move(new Vector2D(distance, 0));
     }
     scrollUp(distance?: number) {
         if (!distance) {
-            distance = this.scrollDistance("vertical"); // in simulationUnits
+            distance = this.scrollDistance("vertical");
         }
-        this.viewController.moveOrigin(new Vector2D(0, distance));
+        this.canvas.move(new Vector2D(0, distance));
     }
     scrollDown(distance?: number) {
         if (!distance) {
-            distance = this.scrollDistance("vertical"); // in simulationUnits
+            distance = this.scrollDistance("vertical");
         }
-        this.viewController.moveOrigin(new Vector2D(0, -distance));
+        this.canvas.move(new Vector2D(0, -distance));
     }
     private scrollDistance(orientation: "horizontal" | "vertical", rate: number = DEFAULT_SCROLL_RATE): number {
         switch (orientation) {
             case "horizontal":
-                return this.width * rate * this.canvasSpace.currentZoom;
+                return this.width * rate;
             case "vertical":
-                return this.height * rate * this.canvasSpace.currentZoom;
+                return this.height * rate;
         }
     }
-    zoomIn(
-        zoomCenter: Vector2D = new Vector2D(this.width / 2, this.height / 2),
-        factor: number = DEFAULT_ZOOM_FACTOR, 
-    ): number {
-        return this.zoomToFactor(1 - factor, zoomCenter);
-    }
-    zoomOut(
-        zoomCenter: Vector2D = new Vector2D(this.width / 2, this.height / 2),
-        factor: number = DEFAULT_ZOOM_FACTOR, 
-    ): number {
+    zoomIn(zoomCenter: Vector2D, factor: number): number {
         return this.zoomToFactor(1 + factor, zoomCenter);
+    }
+    zoomOut(zoomCenter: Vector2D, factor: number): number {
+        return this.zoomToFactor(1 - factor, zoomCenter);
     }
     /**
      * 
@@ -202,12 +190,15 @@ export class AnimationController {
     zoomToFactor(factor: number, zoomCenter?: Vector2D): number {
         if (!zoomCenter) zoomCenter = new Vector2D(this.width / 2, this.height / 2);
         
-        this.app.updateStatusBarAnimationInfo();
-        
-        return this.viewController.zoomToFactor(factor, zoomCenter);
+        //this.app.updateStatusBarAnimationInfo();
+        //return this.viewController.zoomToFactor(factor, zoomCenter);
+
+        this._canvas.zoom(factor, zoomCenter)
+
+        return 0;
+    
     }
-    scrollInCanvasUnits(movementOnCanvas: Vector2D) {
-        const movementInSimulationUnits = movementOnCanvas.scale(this.currentZoom);
-        this.viewController.moveOrigin(movementInSimulationUnits.hadamardProduct(new Vector2D(-1, 1)));
-    }
+    //scrollInCanvasUnits(movementOnCanvas: Vector2D) {
+    //    this.canvas.move(movementOnCanvas);
+    //}
 }

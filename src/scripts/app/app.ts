@@ -6,6 +6,7 @@ import { Canvas } from "../animation/canvas.js";
 import { CanvasSpace, ObjectState, PerformanceInfo, SimulationSettings } from "../types/types.js";
 import { Vector2D } from "../util/vector2d.js";
 import { Body2d } from "../simulation/body2d.js";
+import { DEFAULT_ZOOM_FACTOR } from "../const/const.js";
 
 export class App {
 
@@ -54,6 +55,12 @@ export class App {
             averageTicksPerSecond: this.gravity.averageTicksPerSecond,
         }
     }
+    get canvasWidth() {
+        return this._animation.width;
+    }
+    get canvasHeight() {
+        return this._animation.height;
+    }
 //#endregion
 //#region initialize
     constructor() {
@@ -61,7 +68,7 @@ export class App {
         if (!wrapper) {
             throw new Error("canvasWrapper not found");
         }
-        this._canvasSpace = {origin: new Vector2D(0, 0), currentZoom: 1, orientationY: -1}
+        this._canvasSpace = {origin: new Vector2D(0, 0), currentZoom: 1 /*, orientationY: -1 */}
         const canvas = new Canvas(wrapper, this._canvasSpace);
         this._gravity = new Gravity();        
         this._animation = new AnimationController(canvas, this, this._canvasSpace);        
@@ -108,16 +115,13 @@ export class App {
     zoomToFactor(zoomFactor: number, zoomCenterCanvas?: Vector2D) {
         this.animation.zoomToFactor(zoomFactor, zoomCenterCanvas);
     }
-    zoomIn(zoomCenter?: Vector2D, factor?: number) {
+    zoomIn(zoomCenter = new Vector2D(this.canvasWidth / 2, this.canvasHeight / 2), factor = DEFAULT_ZOOM_FACTOR) {
         this.animation.zoomIn(zoomCenter, factor);
         this.ui.updateStatusBarAnimationInfo();
     }
-    zoomOut(zoomCenter?: Vector2D, factor?: number) {
+    zoomOut(zoomCenter = new Vector2D(this.canvasWidth / 2, this.canvasHeight / 2), factor = DEFAULT_ZOOM_FACTOR) {
         this.animation.zoomOut(zoomCenter, factor);
         this.ui.updateStatusBarAnimationInfo();
-    }
-    scrollInCanvasUnits(scroll: Vector2D) {
-        this.animation.scrollInCanvasUnits(scroll);
     }
     scrollUp() {
         this.animation.scrollUp();

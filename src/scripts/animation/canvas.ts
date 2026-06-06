@@ -62,19 +62,6 @@ export class Canvas {
         return this._layers.get("background")!.canvas.height;
     }
 //#endregion
-    private initializeContextTransformations() {
-        this._layers.forEach(layer => {
-            const context = layer.context;
-            const zoom = this._canvasSpace.currentZoom;
-            const orientationY = this._canvasSpace.orientationY;
-            const originX = this._canvasSpace.origin.x;
-            const originY = this._canvasSpace.origin.y;
-            
-            context.translate(this.width / 2, this.height / 2); // set the origin at the center
-            context.scale(1 / zoom, orientationY / zoom);
-            context.translate(-originX, -originY);
-        });
-    }
     createLayer(zIndexClass: string): HTMLCanvasElement {
         if (!(/^z-0$|^z-[1-9]\d*$/.test(zIndexClass))) {
             throw new Error("zIndex has to be a valid tailwind z-value (eg. 'z-0' or 'z-123'");
@@ -92,11 +79,57 @@ export class Canvas {
             layer.canvas.height = height;
         }
 
+        this.applyTransformation();
         this.fillBackground();
     }   
+//#region View-transformations
+    move(displacement: Vector2D) {
+        const zoom = this._canvasSpace.currentZoom;
+
+        this._canvasSpace.origin.x -= displacement.x * zoom;
+        this._canvasSpace.origin.y -= displacement.y * zoom;
+
+        this.applyTransformation();
+    }
+    zoom(factor: number, centerOnCanvas: Vector2D) {
+        const oldZoom = this._canvasSpace.currentZoom;
+        const newZoom = oldZoom / factor;
+        
+        this._canvasSpace.origin.x += centerOnCanvas.x * (oldZoom - newZoom);
+        this._canvasSpace.origin.y += centerOnCanvas.y * (oldZoom - newZoom);
+        this._canvasSpace.currentZoom = newZoom;
+
+        this.applyTransformation();
+    }
+    private applyTransformation() {
+        this._layers.forEach(layer => {
+            const context = layer.context;
+            const zoom = this._canvasSpace.currentZoom;
+            const origin = this._canvasSpace.origin;
+            context.setTransform(
+                1 / zoom, 0, 0,
+                1 / zoom, -origin.x / zoom, -origin.y / zoom
+            )
+        });
+    }
+    private initializeContextTransformations() {
+        this._layers.forEach(layer => {
+            const context = layer.context;
+            const zoom = this._canvasSpace.currentZoom;
+            const originX = this._canvasSpace.origin.x;
+            const originY = this._canvasSpace.origin.y;
+            
+            context.scale(1 / zoom, 1 / zoom);
+            context.translate(-originX, -originY);
+        });
+    }
+//#endregion
 //#region drawing stuff
     private clear(context: CanvasRenderingContext2D) {
+        context.save();
+        context.resetTransform();
         context.clearRect(0, 0, this.width, this.height);
+        context.restore();
     }
     clearAll() {
         for (const layer of this._layers.values()) {
@@ -122,9 +155,9 @@ export class Canvas {
     drawVector(position: Vector2D, direction: Vector2D, color = "white", context = this.simulationContext) {
         // optionally normalize the direction and scale later
         let endPosition: Vector2D = position.add(direction);
-        if (!this.isLinePotentiallyVisible(position, endPosition)) {
-            return;
-        }
+        //if (!this.isLinePotentiallyVisible(position, endPosition)) {
+        //    return;
+        //}
         context.beginPath();
         context.lineWidth = VECTOR_THICKNESS;
         context.strokeStyle = color;
@@ -139,7 +172,7 @@ export class Canvas {
      * @param color default white
      */
     drawBody(position: Vector2D, radius: number, color: string = "white", context = this.simulationContext) {
-        if (!this.isCircleVisible(position, radius)) return;
+        //if (!this.isCircleVisible(position, radius)) return;
         context.beginPath();
         context.arc(position.x, position.y, radius, 0, Math.PI * 2);
         context.closePath();
@@ -164,18 +197,18 @@ export class Canvas {
 
         for (let i = 0; i < path.length; i++) {
             const p = path[i];
-            const visible = this.isOnscreen(p.x, p.y);
+            //const visible = this.isOnscreen(p.x, p.y);
 
-            if (visible) {
+            //if (visible) {
                 if (!drawing) {
                     context.moveTo(p.x, p.y);
                     drawing = true;
                 } else {
                     context.lineTo(p.x, p.y);
                 }
-            } else {
-                drawing = false;
-            }
+            // } else {
+            //     drawing = false;
+            // }
         }
 
         context.stroke();

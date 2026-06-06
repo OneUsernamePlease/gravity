@@ -57,7 +57,6 @@ export interface CanvasSpace {
     // use this to transform simulationSpace to canvasSpace and back
     origin: Vector2D, // the canvas' origin in simulation space
     currentZoom: number, // simulationUnits (meter) per canvasUnit
-    orientationY: number; // in practice this is -1, as the y-axis of the canvas points in the opposite direction of the simulation
 }
 export interface AnimationSettings {
     frameLength: number; // ms

@@ -1,13 +1,7 @@
 import * as util from "../../util/util.js";
-
-// Controlling the simulation.
-// Contains controls for:
-//  View, Animation, Physics, Tools
-
 import { RadioButtonGroup, SimulationSettings, UIAnimationSettings } from "../../types/types.js";
 import { App } from "../../app/app.js";
 import { UI } from "./ui.js";
-
 export class ControlBar {
     private zoomInButton: HTMLInputElement;
     private zoomOutButton: HTMLInputElement;
