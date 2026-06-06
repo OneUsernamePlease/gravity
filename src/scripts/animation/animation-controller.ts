@@ -1,15 +1,13 @@
-import { DEFAULT_SCROLL_RATE, DEFAULT_ZOOM_FACTOR, VECTOR_COLORS } from "../const/const.js";
+import { DEFAULT_SCROLL_RATE, VECTOR_COLORS } from "../const/const.js";
 import { Canvas } from "./canvas.js";
-import { AnimationSettings, CanvasSpace, ObjectState, UIAnimationSettings } from "../types/types.js";
+import { AnimationSettings, ObjectState, UIAnimationSettings } from "../types/types.js";
 import { Vector2D } from "../util/vector2d.js";
-import { ViewController } from "./view-controller.js";
 import { App } from "../app/app.js";
 import { Paths } from "./paths.js";
 
 export class AnimationController {
 //#region properties
     private _animationSettings: AnimationSettings;
-    private _viewController: ViewController;
     private _running: boolean;
     private _paths: Paths;
 //#endregion
@@ -21,19 +19,11 @@ export class AnimationController {
         this._canvas = canvas;
     }
 
-    private get viewController() {
-        return this._viewController;
-    }
-
     get animationSettings(): AnimationSettings {
         return this._animationSettings;
     }
     set animationSettings(animationSettings: AnimationSettings) {
         this._animationSettings = animationSettings;
-    }
-
-    get canvasSpace() {
-        return this._canvasSpace;
     }
 
     private get app() {
@@ -48,7 +38,7 @@ export class AnimationController {
     }
     // additional getters
     get currentZoom(): number {
-        return this.canvasSpace.currentZoom;
+        return this.canvas.currentZoom;
     }
     get width(): number {
         return this.canvas.width;
@@ -60,10 +50,8 @@ export class AnimationController {
     constructor(
         private _canvas: Canvas, 
         private _app: App,
-        private _canvasSpace: CanvasSpace,
     ) {
         this._animationSettings = { frameLength: 25, displayVectors: true, tracePaths: true };
-        this._viewController = new ViewController(this);
         this._paths = new Paths(this);
         this._running = false;
     }

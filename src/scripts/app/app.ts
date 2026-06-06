@@ -3,7 +3,7 @@ import { Gravity } from "../simulation/gravity.js";
 import { AnimationController } from "../animation/animation-controller.js";
 import { InteractionManager } from "../interaction/interaction-manager.js";
 import { Canvas } from "../animation/canvas.js";
-import { CanvasSpace, ObjectState, PerformanceInfo, SimulationSettings } from "../types/types.js";
+import { ObjectState, PerformanceInfo, SimulationSettings } from "../types/types.js";
 import { Vector2D } from "../util/vector2d.js";
 import { Body2d } from "../simulation/body2d.js";
 import { DEFAULT_ZOOM_FACTOR } from "../const/const.js";
@@ -15,7 +15,6 @@ export class App {
     private _animation: AnimationController;
     private _interaction: InteractionManager;
     private _ui: UI;
-    private _canvasSpace: CanvasSpace;
 //#endregion
 //#region get
     private get gravity() {
@@ -43,9 +42,6 @@ export class App {
     get currentZoom(): number {
         return this.animation.currentZoom;
     }
-    get canvasSpace(): CanvasSpace {
-        return this.animation.canvasSpace;
-    }
     get selectedClickAction(): string {
         return this.ui.selectedClickAction;
     }
@@ -68,10 +64,9 @@ export class App {
         if (!wrapper) {
             throw new Error("canvasWrapper not found");
         }
-        this._canvasSpace = {origin: new Vector2D(0, 0), currentZoom: 1 /*, orientationY: -1 */}
-        const canvas = new Canvas(wrapper, this._canvasSpace);
+        const canvas = new Canvas(wrapper);
         this._gravity = new Gravity();        
-        this._animation = new AnimationController(canvas, this, this._canvasSpace);        
+        this._animation = new AnimationController(canvas, this);        
         this._ui = new UI(this);
         this._interaction = new InteractionManager(canvas, this);
         this.initialize();

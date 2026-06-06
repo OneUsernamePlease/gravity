@@ -5,7 +5,7 @@ import { CanvasLayer, CanvasSpace, LayerName } from "../types/types.js";
 
 export class Canvas {
     private _layers: Map<LayerName, CanvasLayer> = new Map();
-    constructor(private _canvasParent: HTMLDivElement, private _canvasSpace: CanvasSpace) {
+    constructor(private _canvasParent: HTMLDivElement, private _canvasSpace: CanvasSpace = {origin: new Vector2D(0, 0), currentZoom: 1 /*, orientationY: -1 */}) {
         const backgroundCanvas = this.createLayer("z-0");
         this._layers.set("background", {
             canvas: backgroundCanvas,
@@ -60,6 +60,9 @@ export class Canvas {
     }
     get height(): number {
         return this._layers.get("background")!.canvas.height;
+    }
+    get currentZoom(): number {
+        return this._canvasSpace.currentZoom;
     }
 //#endregion
     createLayer(zIndexClass: string): HTMLCanvasElement {
