@@ -177,7 +177,7 @@ export class Canvas {
 
     }
     drawPaths(paths: Paths) {
-        paths.paths.forEach((path) => {
+        paths.forEach((path) => {
             this.drawPath(path);
         });
     }

@@ -22,18 +22,15 @@ export class Path extends RingBuffer<PathSegment> {
         return vectorArray;
     }
 }
-export class Paths {
-    private _paths: Map<number, Path> = new Map();
-    private _redraw: boolean = false;
-    get paths() {
-        return this._paths;
-    }
+export class Paths extends Map<number, Path> {
     get pathArrays(): Path[] {
-        return Array.from(this._paths.values());
+        return Array.from(this.values());
     }
     constructor(
         private _animation: AnimationController
-    ) { }
+    ) {
+        super();
+    }
 
     addSegments(objectStates: Map<number, ObjectState>) {
         objectStates.forEach((objectState, id) => {
@@ -41,18 +38,15 @@ export class Paths {
                 return;
             }
 
-            let path = this._paths.get(id);
+            let path = this.get(id);
             if (!path) {
                 path = new Path(PATH_LENGTH);
-                this._paths.set(id, path);
+                this.set(id, path);
             }
             path.add({
                 coordinate: objectState.position,
                 color: objectState.body.color
             });
         });
-    }
-    clear() {
-        this._paths.clear();
     }
 }
