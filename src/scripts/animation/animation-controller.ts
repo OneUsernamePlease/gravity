@@ -85,7 +85,9 @@ export class AnimationController {
         });
     }
     tracePaths(objectStates: Map<number, ObjectState>) {
-        this._paths.addSegments(objectStates);
+        if (this.app.simulationRunning) {
+            this._paths.addSegments(objectStates);
+        }
         this.canvas.drawPaths(this._paths);
     }
     redrawSimulationState(objectStates: Map<number, ObjectState>, animationSettings: AnimationSettings) {
