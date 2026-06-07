@@ -203,7 +203,6 @@ export class InteractionManager {
         } else if (ev.deltaY > 0) {
             this.app.zoomOut(posOnCanvas);
         }
-        this.app.updateStatusBarAnimationInfo();
     }
     private canvasTouchStart(ev: PointerEvent) {
         const touch = new Vector2D(ev.clientX, ev.clientY);

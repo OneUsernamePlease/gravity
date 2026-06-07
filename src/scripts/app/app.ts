@@ -109,6 +109,7 @@ export class App {
 // animation controls    
     zoomToFactor(zoomFactor: number, zoomCenterCanvas?: Vector2D) {
         this.animation.zoomToFactor(zoomFactor, zoomCenterCanvas);
+        this.ui.updateStatusBarAnimationInfo();
     }
     zoomIn(zoomCenter = new Vector2D(this.canvasWidth / 2, this.canvasHeight / 2), factor = DEFAULT_ZOOM_FACTOR) {
         this.animation.zoomIn(zoomCenter, factor);
