@@ -9,7 +9,6 @@ export class AnimationController {
 //#region properties
     private _animationSettings: AnimationSettings;
     private _running: boolean;
-    private _paths: Paths;
 //#endregion
 //#region get, set
     private get canvas(): Canvas {
@@ -52,7 +51,6 @@ export class AnimationController {
         private _app: App,
     ) {
         this._animationSettings = { frameLength: 25, displayVectors: true, tracePaths: true };
-        this._paths = new Paths(this);
         this._running = false;
     }
     initialize(width: number, height: number, animationSettings: UIAnimationSettings) {
@@ -85,10 +83,7 @@ export class AnimationController {
         });
     }
     tracePaths(objectStates: Map<number, ObjectState>) {
-        if (this.app.simulationRunning) {
-            this._paths.addSegments(objectStates);
-        }
-        this.canvas.drawPaths(this._paths);
+        this.canvas.addPathSegments(objectStates);
     }
     redrawSimulationState(objectStates: Map<number, ObjectState>, animationSettings: AnimationSettings) {
         this.canvas.clearSimulation();
@@ -97,7 +92,7 @@ export class AnimationController {
             this.drawVectors(objectStates);
         }
         if (animationSettings.tracePaths) {
-            this.canvas.clearPaths();
+            this.canvas.clearPathContext();
             this.tracePaths(objectStates);
         }
     }
@@ -118,8 +113,7 @@ export class AnimationController {
         this.animationSettings.tracePaths = tracePaths;
     }
     resetPaths() {
-        this._paths.clear();
-        this.canvas.clearPaths();
+        this.canvas.clearPathContext();
     }
     resizeCanvas(width: number, height: number) {
         this.canvas.resize(width, height);

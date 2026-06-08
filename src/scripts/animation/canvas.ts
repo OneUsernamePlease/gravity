@@ -1,6 +1,6 @@
 import { Vector2D } from "../util/vector2d.js";
 import { BACKGROUND_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_THICKNESS, VECTOR_THICKNESS } from "../const/const.js";
-import { CanvasLayer, CanvasSpace, LayerName } from "../types/types.js";
+import { CanvasLayer, CanvasSpace, LayerName, ObjectState } from "../types/types.js";
 import { Path, Paths } from "./paths.js";
 import { clamp } from "../util/util.js";
 
@@ -10,6 +10,7 @@ export class Canvas {
         origin: new Vector2D(0, 0),
         currentZoom: 1
     }
+    private _paths: Paths;
     constructor(private _canvasParent: HTMLDivElement) {
         const backgroundCanvas = this.createLayer("z-0");
         this._layers.set("background", {
@@ -33,7 +34,8 @@ export class Canvas {
         this._layers.set("interaction", {
             canvas: interactionCanvas,
             context: interactionCanvas.getContext("2d")!
-        });
+        });        
+        this._paths = new Paths(this, this.width, this.height);
     }
 //#region get, set
     get backgroundCanvas() {
@@ -135,7 +137,7 @@ export class Canvas {
     clearSimulation() {
         this.clear(this.simulationContext);
     }
-    clearPaths() {
+    clearPathContext() {
         this.clear(this.pathsContext);
     }
     fillBackground(
@@ -174,32 +176,18 @@ export class Canvas {
         context.closePath();
         context.fillStyle = color;
         context.fill();
-
     }
-    drawPaths(paths: Paths) {
+    drawPaths(paths: Paths, color = "orange", context = this.pathsContext) {
+        // !!! DRAW THE CONTENT OF THE PATHS-CANVAS !!!
+        // context.drawImage(paths.offscreenCanvas, 0, 0);
+
+        const combinedPath = new Path2D();
         paths.forEach((path) => {
-            this.drawPath(path);
+            combinedPath.addPath(path);
         });
-    }
-    drawPath(path: Path, color = "orange", context = this.pathsContext) {
-        if (path.currentSize <= 1) return;
-
         context.strokeStyle = color;
         context.lineWidth = PATH_THICKNESS * this._canvasSpace.currentZoom;
-        
-        context.beginPath();
-
-        let first = true;
-        path.forEach((segment) => {
-            if (first) {
-                context.moveTo(segment.coordinate.x, segment.coordinate.y);
-            } else {
-                context.lineTo(segment.coordinate.x, segment.coordinate.y);
-            }
-            first = false;
-        });
-
-        context.stroke();
+        context.stroke(combinedPath);
     }
     drawPathSegment(from: Vector2D, to: Vector2D, color: string, context = this.pathsContext) {
         context.strokeStyle = color;
@@ -210,6 +198,10 @@ export class Canvas {
         context.moveTo(from.x, from.y);
         context.lineTo(to.x, to.y)
         context.stroke();
+    }
+    addPathSegments(objectStates: Map<number, ObjectState>) {
+        this._paths.addSegments(objectStates);
+        this.drawPaths(this._paths);
     }
     resetPaths(context = this.pathsContext) {
         this.clear(context);
