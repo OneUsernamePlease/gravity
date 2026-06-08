@@ -13,6 +13,12 @@ export class Vector2D {
             this.y = b ?? 0;
         }
     }
+    equals(v: Vector2D, epsilon = 0): boolean {
+            return (
+                Math.abs(v.x - this.x) <= epsilon &&
+                Math.abs(v.y - this.y) <= epsilon
+            );
+    }
     toString() {
         return `x: ${this.x}, y: ${this.y}`;
     }
