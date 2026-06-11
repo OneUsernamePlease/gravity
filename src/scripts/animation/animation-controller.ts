@@ -35,6 +35,7 @@ export class AnimationController {
     private set running(running: boolean) {
         this._running = running;
     }
+
     // additional getters
     get currentZoom(): number {
         return this.canvas.currentZoom;
@@ -79,7 +80,7 @@ export class AnimationController {
     private drawBodies(objectStates: Map<number, ObjectState>) {
         objectStates.forEach(objectState => {
             const body = objectState.body;
-            this.canvas.drawBody(objectState.position, body.radius, body.color);
+            this.canvas.drawCircle(objectState.position, body.radius, body.color);
         });
     }
     tracePaths(objectStates: Map<number, ObjectState>) {
@@ -88,11 +89,12 @@ export class AnimationController {
     redrawSimulationState(objectStates: Map<number, ObjectState>, animationSettings: AnimationSettings) {
         this.canvas.clearSimulation();
         this.drawBodies(objectStates);
+        
         if (animationSettings.displayVectors) {
             this.drawVectors(objectStates);
         }
+        
         if (animationSettings.tracePaths) {
-            this.canvas.clearPathContext();
             this.tracePaths(objectStates);
         }
     }
@@ -102,8 +104,8 @@ export class AnimationController {
             const acceleration = objectState.acceleration;
             const velocity = objectState.velocity;
 
-            this.canvas.drawVector(position, acceleration, VECTOR_COLORS.get("acceleration")?.hex);
-            this.canvas.drawVector(position, velocity, VECTOR_COLORS.get("velocity")?.hex);
+            this.canvas.drawLine(position, acceleration, VECTOR_COLORS.get("acceleration")?.hex);
+            this.canvas.drawLine(position, velocity, VECTOR_COLORS.get("velocity")?.hex);
         });
     }
     setDisplayVectors(display: boolean) {
@@ -113,7 +115,7 @@ export class AnimationController {
         this.animationSettings.tracePaths = tracePaths;
     }
     resetPaths() {
-        this.canvas.clearPathContext();
+        this.canvas.resetPaths();
     }
     resizeCanvas(width: number, height: number) {
         this.canvas.resize(width, height);

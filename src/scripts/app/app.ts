@@ -64,7 +64,7 @@ export class App {
         if (!wrapper) {
             throw new Error("canvasWrapper not found");
         }
-        const canvas = new Canvas(wrapper);
+        const canvas = new Canvas(wrapper, this);
         this._gravity = new Gravity();        
         this._animation = new AnimationController(canvas, this);        
         this._ui = new UI(this);

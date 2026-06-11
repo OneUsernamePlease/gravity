@@ -8,6 +8,12 @@ interface PathSegment {
     coordinate: Vector2D,
     color: string,
 }
+interface BoundingBox {
+    left: number,
+    right:number,
+    top:number,
+    bottom:number,
+}
 export class Path extends Path2D {
     private _lengthInSegments = 0;
     private _lastPosition: Vector2D | null = null;
@@ -37,29 +43,16 @@ export class Path extends Path2D {
     }
 }
 export class Paths extends Map<number, Path> {
-    private _offscreenCanvas: OffscreenCanvas;
-    private _offscreenContext: OffscreenCanvasRenderingContext2D;
+    private _pathEnds: Map<number, Vector2D> = new Map();
     get zoom() {
         return this._canvas.currentZoom;
     }
-    get offscreenCanvas() {
-        return this._offscreenCanvas;
-    }
     constructor(
         private _canvas: Canvas,
-        width: number,
-        height: number
     ) {
         super();
-        this._offscreenCanvas = new OffscreenCanvas(width, height);
-        const offscreenContext = this._offscreenCanvas.getContext("2d");
-        if (offscreenContext) {
-            this._offscreenContext = offscreenContext;
-        } else {
-            throw new Error("Could not get OffscreenCanvasRenderingContext2D.");
-        }
     }
-    drawSegment(lastPosition: Vector2D, position: Vector2D, color: string) {
+    /* drawSegment(lastPosition: Vector2D, position: Vector2D, color: string) {
         this._offscreenContext.strokeStyle = color;
         this._offscreenContext.lineWidth = PATH_THICKNESS * this.zoom;
 
@@ -68,7 +61,7 @@ export class Paths extends Map<number, Path> {
         this._offscreenContext.moveTo(lastPosition.x, lastPosition.y);
         this._offscreenContext.lineTo(position.x, position.y)
         this._offscreenContext.stroke();
-    }
+    } */
     addSegments(objectStates: Map<number, ObjectState>) {
         objectStates.forEach((objectState, id) => {
             if (!objectState.body.movable) {
@@ -81,19 +74,22 @@ export class Paths extends Map<number, Path> {
             if (!path) {
                 path = new Path();
                 this.set(id, path);
+
+                this._pathEnds.set(id, position);
+
                 path.addSegment(position, color);
-                //this.drawSegment(position, color, true);
             } else {
                 const lastPosition = path.lastPosition!;
                 if (!position.equals(lastPosition, 0.5)) {
-                    this.drawSegment(lastPosition, position, color);
+                    this._pathEnds.set(id, position);
+                    
                     path.addSegment(position, color);
                 }
             }
         });
     }
-    resize(width: number, height: number) {
-        this._offscreenCanvas.width = width;
-        this._offscreenCanvas.height = height;
+    reset(): void {
+        this.clear();
+        this._pathEnds.clear();
     }
 }

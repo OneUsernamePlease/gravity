@@ -123,68 +123,70 @@ export class InteractionManager {
 
             case "pen":
             case "touch":
-                const currentTouchPosition = this.activeTouches.get(ev.pointerId)!;
-                if (!currentTouchPosition) return;
-
-                currentTouchPosition.x = ev.clientX;
-                currentTouchPosition.y = ev.clientY;
-
-                switch (this.touchAction) {
-
-                    case TouchAction.AddBody:
-                        // TODO: draw (half transparent) body and vector while dragging
-                        break;
-
-                    case TouchAction.ManipulateView:
-                        if (this.activeTouches.size === 1) {
-                            // --------------------
-                            //      SINGLE TOUCH
-                            // --------------------
-
-                            if (this.lastSingleTouchPos) {
-                                const dx = currentTouchPosition.x - this.lastSingleTouchPos.x;
-                                const dy = currentTouchPosition.y - this.lastSingleTouchPos.y;
-
-                                this._canvas.move(new Vector2D(dx, dy));
-                            }
-
-                            this.lastSingleTouchPos = new Vector2D(currentTouchPosition.x, currentTouchPosition.y);
-
-                            return;
-                        } else {
-
-                            // --------------------
-                            //      MULTI TOUCH IS WHAT'S LEFT
-                            // --------------------
-                            const gesture = this.multiTouch();
-                            if (!gesture) { return; }
-
-                            const touchesMidpoint = gesture.midpoint;
-                            const touchesDistance = gesture.distance;
-
-                            // no previous gesture -> initialize
-                            if (this.previousTouchesMid === null || this.previousTouchesDist === null) {
-                                this.previousTouchesMid = touchesMidpoint;
-                                this.previousTouchesDist = touchesDistance;
-                                return;
-                            }
-
-                            const zoomFactor = this.previousTouchesDist / touchesDistance;
-                            const zoomCenterCanvas = tfm.relativePosition(touchesMidpoint, this._canvasElement);
-                            const scroll = touchesMidpoint.subtract(this.previousTouchesMid);
-                            this.app.zoomToFactor(zoomFactor, zoomCenterCanvas);
-                            this._canvas.move(scroll);
-
-                            this.previousTouchesMid = touchesMidpoint;
-                            this.previousTouchesDist = touchesDistance;
-                        }
-                        break;
-                    }
+                this.canvasTouchMoving(ev);
 
                 break;
         
             default:
                 console.log("unknown pointerType");
+                break;
+        }
+    }
+    private canvasTouchMoving(ev: PointerEvent) {
+        const currentTouchPosition = this.activeTouches.get(ev.pointerId)!;
+        if (!currentTouchPosition) return;
+
+        currentTouchPosition.x = ev.clientX;
+        currentTouchPosition.y = ev.clientY;
+
+        switch (this.touchAction) {
+
+            case TouchAction.AddBody:
+                // TODO: draw (half transparent) body and vector while dragging
+                break;
+            case TouchAction.ManipulateView:
+                if (this.activeTouches.size === 1) {
+                    // --------------------
+                    //      SINGLE TOUCH
+                    // --------------------
+
+                    if (this.lastSingleTouchPos) {
+                        const dx = currentTouchPosition.x - this.lastSingleTouchPos.x;
+                        const dy = currentTouchPosition.y - this.lastSingleTouchPos.y;
+
+                        this._canvas.move(new Vector2D(dx, dy));
+                    }
+
+                    this.lastSingleTouchPos = new Vector2D(currentTouchPosition.x, currentTouchPosition.y);
+
+                    return;
+                } else {
+
+                    // --------------------
+                    //      MULTI TOUCH IS WHAT'S LEFT
+                    // --------------------
+                    const gesture = this.multiTouch();
+                    if (!gesture) { return; }
+
+                    const touchesMidpoint = gesture.midpoint;
+                    const touchesDistance = gesture.distance;
+
+                    // no previous gesture -> initialize
+                    if (this.previousTouchesMid === null || this.previousTouchesDist === null) {
+                        this.previousTouchesMid = touchesMidpoint;
+                        this.previousTouchesDist = touchesDistance;
+                        return;
+                    }
+
+                    const zoomFactor = this.previousTouchesDist / touchesDistance;
+                    const zoomCenterCanvas = tfm.relativePosition(touchesMidpoint, this._canvasElement);
+                    const scroll = touchesMidpoint.subtract(this.previousTouchesMid);
+                    this.app.zoomToFactor(zoomFactor, zoomCenterCanvas);
+                    this._canvas.move(scroll);
+
+                    this.previousTouchesMid = touchesMidpoint;
+                    this.previousTouchesDist = touchesDistance;
+                }    
                 break;
         }
     }
