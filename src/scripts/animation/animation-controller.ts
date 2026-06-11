@@ -1,9 +1,8 @@
-import { DEFAULT_SCROLL_RATE, VECTOR_COLORS } from "../const/const.js";
+import { DEFAULT_SCROLL_RATE } from "../const/const.js";
 import { Canvas } from "./canvas.js";
-import { AnimationSettings, ObjectState, UIAnimationSettings } from "../types/types.js";
+import { AnimationSettings, UIAnimationSettings } from "../types/types.js";
 import { Vector2D } from "../util/vector2d.js";
 import { App } from "../app/app.js";
-import { Paths } from "./paths.js";
 
 export class AnimationController {
 //#region properties
@@ -68,7 +67,7 @@ export class AnimationController {
         const loop = () => {
             if (this.running) {
                 setTimeout(loop, this.animationSettings.frameLength);
-                this.redrawSimulationState(this.app.currentSimulationState, this.animationSettings);
+                this.canvas.drawFrame(this.app.currentSimulationState, this.animationSettings);
                 this.app.updateStatusBarSimulationInfo();
             }
         };
@@ -76,37 +75,6 @@ export class AnimationController {
     }
     stop() {
         this.running = false;
-    }
-    private drawBodies(objectStates: Map<number, ObjectState>) {
-        objectStates.forEach(objectState => {
-            const body = objectState.body;
-            this.canvas.drawCircle(objectState.position, body.radius, body.color);
-        });
-    }
-    tracePaths(objectStates: Map<number, ObjectState>) {
-        this.canvas.addPathSegments(objectStates);
-    }
-    redrawSimulationState(objectStates: Map<number, ObjectState>, animationSettings: AnimationSettings) {
-        this.canvas.clearSimulation();
-        this.drawBodies(objectStates);
-        
-        if (animationSettings.displayVectors) {
-            this.drawVectors(objectStates);
-        }
-        
-        if (animationSettings.tracePaths) {
-            this.tracePaths(objectStates);
-        }
-    }
-    private drawVectors(objectStates: Map<number, ObjectState>) {
-        objectStates.forEach(objectState => {
-            const position = objectState.position;
-            const acceleration = objectState.acceleration;
-            const velocity = objectState.velocity;
-
-            this.canvas.drawLine(position, acceleration, VECTOR_COLORS.get("acceleration")?.hex);
-            this.canvas.drawLine(position, velocity, VECTOR_COLORS.get("velocity")?.hex);
-        });
     }
     setDisplayVectors(display: boolean) {
         this.animationSettings.displayVectors = display;

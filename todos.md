@@ -1,13 +1,11 @@
 # TODO:
     - This architecture is beyond ass
-    - add a cameraChange Variable, use this to redraw entire paths vs. adding segments
+    - redo and activate visibility checks
     - PATHS
-        - dont use an offscreen - thats a finite bitmap and useless for my case
-        - a Path: PathSegment[] - PathSegment extends Path2d - each PathSegment is ~100 lines long, and has a bounding box used to rasterize.
-        - 
+        - make sure to batch segments of a path as long as they have the same color
         - OPTIMIZATIONS:
-            - cache path-bounds
-            - split a path into segments
+            - split a path into segments AND THEN
+            - cache path-segment-bounds
     - improve the UI
         - small controlBar using icons, which opens floating panels containing the controls
         - improve the status bar

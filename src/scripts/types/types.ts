@@ -1,4 +1,3 @@
-import { StatusBar } from "../interaction/ui/statusBar.js";
 import { Body2d } from "../simulation/body2d.js";
 import { Vector2D } from "../util/vector2d.js";
 
@@ -86,6 +85,18 @@ export interface ObjectState {
     position: Vector2D,
     velocity: Vector2D, // simulationUnits (meter) per second
     acceleration: Vector2D
+}
+
+export interface PathCoordinate {
+    coordinate: Vector2D,
+    color: string,
+}
+
+export interface BoundingBox {
+    left: number,
+    right:number,
+    top:number,
+    bottom:number,
 }
 //#endregion
 

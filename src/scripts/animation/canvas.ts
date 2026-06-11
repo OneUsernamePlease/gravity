@@ -1,6 +1,6 @@
 import { Vector2D } from "../util/vector2d.js";
-import { BACKGROUND_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_THICKNESS, VECTOR_THICKNESS } from "../const/const.js";
-import { AnimationSettings, CanvasLayer, CanvasSpace, LayerName, ObjectState } from "../types/types.js";
+import { BACKGROUND_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS } from "../const/const.js";
+import { AnimationSettings, CanvasLayer, CanvasSpace, LayerName, ObjectState, PathCoordinate } from "../types/types.js";
 import { Path, Paths } from "./paths.js";
 import { clamp } from "../util/util.js";
 import { App } from "../app/app.js";
@@ -92,6 +92,8 @@ export class Canvas {
 
         this.applyTransformation();
         this.fillBackground();
+        
+        this._cameraChange = true;
     }   
 //#region View-transformations
     move(displacement: Vector2D) {
@@ -102,7 +104,7 @@ export class Canvas {
 
         this.applyTransformation();
 
-        // this.cameraChange = true;
+        this._cameraChange = true;
     }
     zoomToFactor(factor: number, centerOnCanvas: Vector2D) {
         const oldZoom = this._canvasSpace.currentZoom;
@@ -115,7 +117,7 @@ export class Canvas {
 
         this.applyTransformation();
 
-        // this.cameraChange = true;
+        this._cameraChange = true;
         
         return newZoom;
     }
@@ -139,7 +141,41 @@ export class Canvas {
 //#endregion
 //#region drawing stuff
     drawFrame(objectStates: Map<number, ObjectState>, animationSettings: AnimationSettings) {
+        this.clearSimulation();
+        this.drawBodies(objectStates);
+        
+        if (animationSettings.displayVectors) {
+            this.drawVectors(objectStates);
+        }
+        
+        if (animationSettings.tracePaths) {
+            if (this._cameraChange) {
+                this._paths.addSegments(objectStates);
+                this.clearPathContext();
+                this.drawPaths(this._paths);
+            } else {
+                const previousState = this._paths.pathEnds;
+                this.drawPathSegments(previousState, objectStates)
+                this._paths.addSegments(objectStates);
+            }
+        }
+        this._cameraChange = false;
+    }
+    private drawBodies(objectStates: Map<number, ObjectState>) {
+        objectStates.forEach(objectState => {
+            const body = objectState.body;
+            this.drawCircle(objectState.position, body.radius, body.color);
+        });
+    }
+    private drawVectors(objectStates: Map<number, ObjectState>) {
+        objectStates.forEach(objectState => {
+            const position = objectState.position;
+            const acceleration = objectState.acceleration;
+            const velocity = objectState.velocity;
 
+            this.drawLine(position, acceleration, VECTOR_COLORS.get("acceleration")?.hex);
+            this.drawLine(position, velocity, VECTOR_COLORS.get("velocity")?.hex);
+        });
     }
     private clear(context: CanvasRenderingContext2D) {
         context.save();
@@ -194,19 +230,26 @@ export class Canvas {
         context.fillStyle = color;
         context.fill();
     }
-    drawPaths(paths: Paths, color = "orange", context = this.pathsContext) {
-        const combinedPath = new Path2D();
+    drawPath(path: Path, context: CanvasRenderingContext2D) {
+        if (path.length <= 1) {
+            return;
+        }
+
+        let previousColor = path[0].color;
+        let previousPosition = path[0].coordinate;
+        for (let i = 1; i < path.length; i++) {
+            const element = path[i];
+            const currentPosition = element.coordinate;
+            this.drawPathSegment(previousPosition, currentPosition, previousColor, context);
+
+            previousPosition = currentPosition;
+            previousColor = element.color;
+        }
+    }
+    drawPaths(paths: Paths, context = this.pathsContext) {
         paths.forEach((path) => {
-            combinedPath.addPath(path);
+            this.drawPath(path, context);
         });
-        context.strokeStyle = color;
-        context.lineWidth = PATH_THICKNESS * this._canvasSpace.currentZoom;
-        context.stroke(combinedPath);
-
-        // ---
-
-
-
     }
     drawPathSegment(from: Vector2D, to: Vector2D, color: string, context: CanvasRenderingContext2D) {
         context.strokeStyle = color;
@@ -218,16 +261,14 @@ export class Canvas {
         context.lineTo(to.x, to.y)
         context.stroke();
     }
-    drawPathSegments(paths: Paths, context = this.pathsContext) {
-        paths.forEach(() => {
-
+    drawPathSegments(from: Map<number, PathCoordinate>, to: Map<number, ObjectState>, context = this.pathsContext) {
+        from.forEach((fromState, id) => {
+            const toState = to.get(id);
+            if (!toState) {
+                return;
+            }
+            this.drawPathSegment(fromState.coordinate, toState.position, fromState.color, context);
         });
-    }
-    addPathSegments(objectStates: Map<number, ObjectState>) {
-        this._paths.addSegments(objectStates);
-        this.clearPathContext();
-        this.drawPaths(this._paths);
-
     }
     /**
      * @param position
