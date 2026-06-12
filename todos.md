@@ -20,8 +20,6 @@
             - batch all bodies of the same color (ie. all w/ mass<100, mass>1000000)
             - batch all acc vectors
             - batch all vel vectors
-            - draw in batches
-                - ctx.beginPath() -> draw a batch (same stroke/fill style)
     - mobile / responsive
     - worker threads
     - choose gravityLowerBounds (gravity.ts) dynamically depending on mass or whatever

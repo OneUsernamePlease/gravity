@@ -231,41 +231,35 @@ export class Canvas {
         context.fill();
     }
     drawPath(path: Path, context: CanvasRenderingContext2D) {
-        if (path.length <= 2) {
+        if (path.length < 2) {
             return;
         }
 
-        let batchReady = false;
         let batchStartIndex = 0;
-        let batchEndIndex = 1;
-        let previousColor = path[batchStartIndex].color;
-        let previousPosition = path[batchStartIndex].coordinate;
-        for (let i = 1; i < path.length; i++) {
-            const element = path[i];
-            const currentPosition = element.coordinate;
-            const currentColor = element.color;
-            
-            const lastElement = (i === path.length - 1);
-            if (lastElement) {
-                batchEndIndex = i;
-                batchReady = true;
-            } else {
-                if (previousColor === currentColor) {
-                    batchEndIndex = i;
-                } else {
-                    batchReady = true;
-                }
-            }
-            
-            if (batchReady) {
-                this.drawPathSegmentBatch(path, batchStartIndex, batchEndIndex, context);
-                batchStartIndex = batchEndIndex;
-                batchReady = false;
-            }
 
-            previousPosition = currentPosition;
-            previousColor = element.color;
+        for (let i = 1; i < path.length; i++) {
+            const colorChanged = path[i].color !== path[i - 1].color;
+
+            if (colorChanged) {
+                this.drawPathSegmentBatch(
+                    path,
+                    batchStartIndex,
+                    i,
+                    path[batchStartIndex].color,
+                    context
+                );
+
+                batchStartIndex = i;
+            }
         }
+
+        this.drawPathSegmentBatch(
+            path,
+            batchStartIndex,
+            path.length - 1,
+            path[batchStartIndex].color,
+            context
+        );
     }
     drawPaths(paths: Paths, context = this.pathsContext) {
         paths.forEach((path) => {
@@ -275,12 +269,10 @@ export class Canvas {
     /**
      * a path segment batch is a continuous part of a path that has one color
      */
-    drawPathSegmentBatch(path: Path, fromIndex: number, toIndex: number, context: CanvasRenderingContext2D) {
+    drawPathSegmentBatch(path: Path, fromIndex: number, toIndex: number, color: string, context: CanvasRenderingContext2D) {
         if (!path[fromIndex] || !path[toIndex]) {
             throw new Error("drawPathSegmentBatch - batch indices are outside the path");            
         }
-        const color = path[fromIndex].color;
-        const segments = toIndex - fromIndex;
 
         context.strokeStyle = color;
         context.lineWidth = PATH_THICKNESS * this._canvasSpace.currentZoom;
