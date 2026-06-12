@@ -57,20 +57,19 @@ export interface CanvasSpace {
     origin: Vector2D, // the canvas' origin in simulation space
     currentZoom: number, // simulationUnits (meter) per canvasUnit
 }
-export interface AnimationSettings {
+export interface AnimationSettings extends UIAnimationSettings {
     frameLength: number; // ms
-    displayVectors: boolean;
-    tracePaths: boolean;
 }
 export interface UIAnimationSettings {
     displayVectors: boolean;
     tracePaths: boolean;
+    displayCoordinateSystem: boolean,
 }
 export interface CanvasLayer {
     canvas: HTMLCanvasElement;
     context: CanvasRenderingContext2D;
 }
-export type LayerName = 'background' | 'paths' | 'simulation' | 'interaction';
+export type LayerName = 'background' | 'paths' | 'coordinateSystem' | 'simulation' | 'interaction';
 //#endregion
 
 //#region user-input-related

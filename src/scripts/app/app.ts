@@ -72,12 +72,9 @@ export class App {
         this.initialize();
     }
     private initialize() {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        
-        this.animation.initialize(width, height, this.ui.animationSettings);
+        this.animation.initialize(this.ui.animationSettings);
         this.applySimulationSettings(this.ui.simulationSettings);
-        this.ui.initialize(width, height);
+        this.ui.initialize(this._animation.width, this._animation.height);
         
         this.animation.run();
     }
@@ -131,9 +128,9 @@ export class App {
     scrollRight() {
         this.animation.scrollRight();
     }
-    resizeCanvas(windowWidth: number, windowHeight: number) {
-        this.animation.resizeCanvas(windowWidth, windowHeight);
-        this.ui.updateStatusBarCanvasDimensions(windowWidth, windowHeight);
+    resizeCanvas() {
+        this.animation.resizeCanvas();
+        this.ui.updateStatusBarCanvasDimensions(this.animation.width, this.animation.height);
     }
     setDisplayVectors(display: boolean) {
         this.animation.setDisplayVectors(display);
@@ -141,9 +138,9 @@ export class App {
     }
     setTracePaths(tracePaths: boolean) {
         this.animation.setTracePaths(tracePaths);
-        if (!tracePaths) {
-            this.animation.resetPaths();
-        }
+    }
+    setDisplayCoordinateSystem(displayCoordinateSystem: boolean) {
+        this.animation.setDisplayCoordinateSystem(displayCoordinateSystem);
     }
 // UI related
     updateStatusBarAnimationInfo() {

@@ -18,4 +18,5 @@ export const BACKGROUND_COLOR = "#222222ff";
 export const VECTOR_COLORS: Map<string, {hex: string, name: string}> = new Map()
     .set("acceleration",    { hex: "#20ff20ff", name: "Green" })
     .set("velocity",        { hex: "#ffd700ff", name: "Yellow" });
+export const COORDINATE_SYSTEM_COLOR = "#aaaaaaff";
 //#endregion

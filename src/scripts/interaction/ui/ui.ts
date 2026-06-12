@@ -28,6 +28,9 @@ export class UI {
     private get tracePaths() {
         return this.controlBar.tracePaths;
     }
+    private get displayCoordinateSystem() {
+        return this.controlBar.displayCoordinateSystem;
+    }
     private get mass() {
         return this.controlBar.mass;
     }
@@ -41,6 +44,7 @@ export class UI {
         return {
             displayVectors: this.displayVectors,
             tracePaths: this.tracePaths,
+            displayCoordinateSystem: this.displayCoordinateSystem,
         };
     }
     get simulationSettings(): SimulationSettings {

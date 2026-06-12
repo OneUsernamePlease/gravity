@@ -50,14 +50,13 @@ export class AnimationController {
         private _canvas: Canvas, 
         private _app: App,
     ) {
-        this._animationSettings = { frameLength: 25, displayVectors: true, tracePaths: true };
+        this._animationSettings = { frameLength: 25, displayVectors: true, tracePaths: true, displayCoordinateSystem: true };
         this._running = false;
     }
-    initialize(width: number, height: number, animationSettings: UIAnimationSettings) {
-        this.resizeCanvas(width, height);
-        this.canvas.fillBackground();
+    initialize(animationSettings: UIAnimationSettings) {
         this.animationSettings.displayVectors = animationSettings.displayVectors;
         this.animationSettings.tracePaths = animationSettings.tracePaths;
+        this.animationSettings.displayCoordinateSystem = animationSettings.displayCoordinateSystem;
     }
     run() {
         if (this.running) {
@@ -81,12 +80,26 @@ export class AnimationController {
     }
     setTracePaths(tracePaths: boolean) {
         this.animationSettings.tracePaths = tracePaths;
+        if (!tracePaths) {
+            this.resetPaths();
+        }
     }
     resetPaths() {
         this.canvas.resetPaths();
     }
-    resizeCanvas(width: number, height: number) {
-        this.canvas.resize(width, height);
+    setDisplayCoordinateSystem(displayCoordinateSystem: boolean) {
+        this.animationSettings.displayCoordinateSystem = displayCoordinateSystem;
+        if (!displayCoordinateSystem) {
+            this.resetCoordinateSystem();
+        } else {
+            this.canvas.drawCoordinateSystem();
+        }
+    }
+    resetCoordinateSystem() {
+        this.canvas.clearCoordinateSystem();
+    }
+    resizeCanvas() {
+        this.canvas.resize();
     }
 
     scrollRight(distance?: number) {

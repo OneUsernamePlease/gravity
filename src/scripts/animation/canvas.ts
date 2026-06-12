@@ -1,5 +1,5 @@
 import { Vector2D } from "../util/vector2d.js";
-import { BACKGROUND_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_SEGMENT_MIN_LENGTH, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS } from "../const/const.js";
+import { BACKGROUND_COLOR, COORDINATE_SYSTEM_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_SEGMENT_MIN_LENGTH, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS } from "../const/const.js";
 import { AnimationSettings, CanvasLayer, CanvasSpace, LayerName, ObjectState, PathCoordinate } from "../types/types.js";
 import { Path, Paths } from "./paths.js";
 import { clamp } from "../util/util.js";
@@ -20,33 +20,37 @@ export class Canvas {
             canvas: backgroundCanvas,
             context: backgroundCanvas.getContext("2d", { alpha: false })!
         });
-        
+
         const pathsCanvas = this.createLayer("z-10");
         this._layers.set("paths", {
             canvas: pathsCanvas,
             context: pathsCanvas.getContext("2d")!
         });
 
-        const simulationCanvas = this.createLayer("z-20");
+        const coordinateSystemCanvas = this.createLayer("z-20");
+        this._layers.set("coordinateSystem", {
+            canvas: coordinateSystemCanvas,
+            context: coordinateSystemCanvas.getContext("2d")!
+        })
+
+        const simulationCanvas = this.createLayer("z-30");
         this._layers.set("simulation", {
             canvas: simulationCanvas,
             context: simulationCanvas.getContext("2d")!
         });
 
-        const interactionCanvas = this.createLayer("z-30");
+        const interactionCanvas = this.createLayer("z-40");
         this._layers.set("interaction", {
             canvas: interactionCanvas,
             context: interactionCanvas.getContext("2d")!
-        });        
+        }); 
+
+        this.resize();
+        this.setInitialTransformation();
+        const x = this._canvasSpace;
         this._paths = new Paths();
     }
 //#region get, set
-    get backgroundCanvas() {
-        return this._layers.get("background")!.canvas;
-    }
-    get simulationCanvas() {
-        return this._layers.get("simulation")!.canvas;
-    }
     get interactionCanvas() {
         return this._layers.get("interaction")!.canvas;
     }
@@ -55,6 +59,9 @@ export class Canvas {
     }
     get pathsContext() {
         return this._layers.get("paths")!.context;
+    }
+    get coordinateSystemContext() {
+        return this._layers.get("coordinateSystem")!.context;
     }
     get simulationContext() {
         return this._layers.get("simulation")!.context;
@@ -72,6 +79,9 @@ export class Canvas {
     get currentZoom(): number {
         return this._canvasSpace.currentZoom;
     }
+    get origin() {
+        return this._canvasSpace.origin;
+    }
 //#endregion
     createLayer(zIndexClass: string): HTMLCanvasElement {
         if (!(/^z-0$|^z-[1-9]\d*$/.test(zIndexClass))) {
@@ -84,15 +94,20 @@ export class Canvas {
 
         return canvas;
     }
-    resize(width: number, height: number) {
+    resize() {
+        const rect = this.interactionCanvas.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+
         for (const layer of this._layers.values()) {
             layer.canvas.width = width;
             layer.canvas.height = height;
         }
 
         this.applyTransformation();
+
         this.fillBackground();
-        
+
         this._cameraChange = true;
     }   
 //#region View-transformations
@@ -138,16 +153,24 @@ export class Canvas {
             )
         });
     }
+    private setInitialTransformation() {
+        this._canvasSpace.currentZoom = 1;
+        this._canvasSpace.origin = new Vector2D(- this.width / 2, - this.height / 2);
+        this.applyTransformation();
+    }
 //#endregion
 //#region drawing stuff
     drawFrame(objectStates: Map<number, ObjectState>, animationSettings: AnimationSettings) {
+        // bodies
         this.clearSimulation();
         this.drawBodies(objectStates);
         
+        // vectors
         if (animationSettings.displayVectors) {
             this.drawVectors(objectStates);
         }
         
+        // paths
         if (animationSettings.tracePaths) {
             if (this._cameraChange) {
                 this._paths.addSegments(objectStates);
@@ -159,7 +182,41 @@ export class Canvas {
                 this._paths.addSegments(objectStates);
             }
         }
+        
+        // coordinate system
+        if (animationSettings.displayCoordinateSystem) {
+            if (this._cameraChange) {
+                this.clearCoordinateSystem();
+                this.drawCoordinateSystem();
+            }
+        }
+
         this._cameraChange = false;
+    }
+    drawCoordinateSystem(context = this.coordinateSystemContext) {
+        const origin  = this._canvasSpace.origin;
+        const zoom = this._canvasSpace.currentZoom;
+        
+        const xAxisToOrigin = origin.x;
+        const xAxisLength = this.width * zoom;
+        const yAxisToOrigin = origin.y;
+        const yAxisLength = this.height * zoom;
+        this.drawLine(
+            new Vector2D(0, yAxisToOrigin),
+            new Vector2D(0, yAxisLength),
+            COORDINATE_SYSTEM_COLOR,
+            context
+        );
+        this.drawLine(
+            new Vector2D(xAxisToOrigin, 0),
+            new Vector2D(xAxisLength, 0),
+            COORDINATE_SYSTEM_COLOR,
+            context
+        )
+
+        context.fillStyle = COORDINATE_SYSTEM_COLOR;
+        context.font = `${11*zoom}px sans-serif`;
+        context.fillText(`(0,0)`, 0, 0)
     }
     private drawBodies(objectStates: Map<number, ObjectState>) {
         objectStates.forEach(objectState => {
@@ -186,6 +243,9 @@ export class Canvas {
     clearSimulation() {
         this.clear(this.simulationContext);
     }
+    clearCoordinateSystem() {
+        this.clear(this.coordinateSystemContext);
+    }
     clearPathContext() {
         this.clear(this.pathsContext);
     }
@@ -200,8 +260,8 @@ export class Canvas {
         this.backgroundContext.fillRect(0, 0, this.width, this.height);
     }
     /**
-     * @param position in canvas space
-     * @param direction in canvas space
+     * @param position in simulation
+     * @param direction in simulation
      */
     drawLine(position: Vector2D, direction: Vector2D, color = "white", context = this.simulationContext) {
         // optionally normalize the direction and scale later
@@ -218,8 +278,8 @@ export class Canvas {
     }
     /**
      * draws a circular body at specified position, in specified color
-     * @param position on canvas
-     * @param radius in canvas units
+     * @param position in simulation
+     * @param radius in simulation
      * @param color default white
      */
     drawCircle(position: Vector2D, radius: number, color: string = "white", context = this.simulationContext) {
