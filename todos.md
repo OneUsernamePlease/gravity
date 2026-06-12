@@ -2,10 +2,10 @@
     - This architecture is beyond ass
     - redo and activate visibility checks
     - PATHS
-        - make sure to batch segments of a path as long as they have the same color
         - OPTIMIZATIONS:
-            - split a path into segments AND THEN
-            - cache path-segment-bounds
+            - split a path into subPaths AND THEN
+            - cache subpath-boundingBox
+                - add visibility checks
     - improve the UI
         - small controlBar using icons, which opens floating panels containing the controls
         - improve the status bar
@@ -15,7 +15,6 @@
         - at every change (body placed, g changed)
         - suggestion: change the PAUSE to MOVEMENT-DISABLED, -> keep calculating but don't update positions.
     - rendering optimizations:
-        - canvas layers
         - animationFrames
         - batches
             - batch all bodies of the same color (ie. all w/ mass<100, mass>1000000)
@@ -24,11 +23,12 @@
             - draw in batches
                 - ctx.beginPath() -> draw a batch (same stroke/fill style)
     - mobile / responsive
-    - workers and offscreen canvas
+    - worker threads
     - choose gravityLowerBounds (gravity.ts) dynamically depending on mass or whatever
     - Testing: set the context such that CSS can be used (> body.ts) (works in browser context but not in node) - sadly, *environment: 'jsdom',* presents new problems
 
 # bugs
+    - drawing Paths: adding segments (no camera change) to a persistent path looks slightly different from redrawing paths. could be just a difference in rasterization - drawing many short paths vs. drawing one long path
     - handleCollisions() - objectStates are sometimes undefined - switched to using Map with cached Ids introduced this bug
     - elastic collisions (that should be 100% elastic) are not
     - in theory a body can move at above c so introduce a limit we shall
