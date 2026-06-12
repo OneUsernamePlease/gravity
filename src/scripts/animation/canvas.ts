@@ -1,5 +1,5 @@
 import { Vector2D } from "../util/vector2d.js";
-import { BACKGROUND_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS } from "../const/const.js";
+import { BACKGROUND_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_SEGMENT_MIN_LENGTH, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS } from "../const/const.js";
 import { AnimationSettings, CanvasLayer, CanvasSpace, LayerName, ObjectState, PathCoordinate } from "../types/types.js";
 import { Path, Paths } from "./paths.js";
 import { clamp } from "../util/util.js";
@@ -38,7 +38,7 @@ export class Canvas {
             canvas: interactionCanvas,
             context: interactionCanvas.getContext("2d")!
         });        
-        this._paths = new Paths(this);
+        this._paths = new Paths();
     }
 //#region get, set
     get backgroundCanvas() {
@@ -231,16 +231,37 @@ export class Canvas {
         context.fill();
     }
     drawPath(path: Path, context: CanvasRenderingContext2D) {
-        if (path.length <= 1) {
+        if (path.length <= 2) {
             return;
         }
 
-        let previousColor = path[0].color;
-        let previousPosition = path[0].coordinate;
+        let batchReady = false;
+        let batchStartIndex = 0;
+        let batchEndIndex = 1;
+        let previousColor = path[batchStartIndex].color;
+        let previousPosition = path[batchStartIndex].coordinate;
         for (let i = 1; i < path.length; i++) {
             const element = path[i];
             const currentPosition = element.coordinate;
-            this.drawPathSegment(previousPosition, currentPosition, previousColor, context);
+            const currentColor = element.color;
+            
+            const lastElement = (i === path.length - 1);
+            if (lastElement) {
+                batchEndIndex = i;
+                batchReady = true;
+            } else {
+                if (previousColor === currentColor) {
+                    batchEndIndex = i;
+                } else {
+                    batchReady = true;
+                }
+            }
+            
+            if (batchReady) {
+                this.drawPathSegmentBatch(path, batchStartIndex, batchEndIndex, context);
+                batchStartIndex = batchEndIndex;
+                batchReady = false;
+            }
 
             previousPosition = currentPosition;
             previousColor = element.color;
@@ -250,6 +271,27 @@ export class Canvas {
         paths.forEach((path) => {
             this.drawPath(path, context);
         });
+    }
+    /**
+     * a path segment batch is a continuous part of a path that has one color
+     */
+    drawPathSegmentBatch(path: Path, fromIndex: number, toIndex: number, context: CanvasRenderingContext2D) {
+        if (!path[fromIndex] || !path[toIndex]) {
+            throw new Error("drawPathSegmentBatch - batch indices are outside the path");            
+        }
+        const color = path[fromIndex].color;
+        const segments = toIndex - fromIndex;
+
+        context.strokeStyle = color;
+        context.lineWidth = PATH_THICKNESS * this._canvasSpace.currentZoom;
+
+        context.beginPath();
+        context.moveTo(path[fromIndex].coordinate.x, path[fromIndex].coordinate.y);
+        for (let i = fromIndex + 1; i <= toIndex; i++) {
+            const pathCoordinate = path[i].coordinate;
+            context.lineTo(pathCoordinate.x, pathCoordinate.y);
+        }
+        context.stroke();
     }
     drawPathSegment(from: Vector2D, to: Vector2D, color: string, context: CanvasRenderingContext2D) {
         context.strokeStyle = color;
@@ -261,13 +303,24 @@ export class Canvas {
         context.lineTo(to.x, to.y)
         context.stroke();
     }
+    /**
+     * Draw one segment from each path.
+     * @param from a map containing the starting positions of many path-segments
+     * @param to a map containing the destination positions of many path-segments
+     * @param context CanvasRenderingContext2d to draw onto
+     */
     drawPathSegments(from: Map<number, PathCoordinate>, to: Map<number, ObjectState>, context = this.pathsContext) {
         from.forEach((fromState, id) => {
             const toState = to.get(id);
             if (!toState) {
                 return;
             }
-            this.drawPathSegment(fromState.coordinate, toState.position, fromState.color, context);
+
+            const fromPosition = fromState.coordinate;
+            const toPosition = toState.position;
+            if (!fromPosition.equals(toPosition, PATH_SEGMENT_MIN_LENGTH)) {
+                this.drawPathSegment(fromPosition, toPosition, fromState.color, context);
+            }
         });
     }
     /**

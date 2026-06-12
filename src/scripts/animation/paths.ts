@@ -1,13 +1,13 @@
+import { PATH_SEGMENT_MIN_LENGTH } from "../const/const.js";
 import { ObjectState, PathCoordinate } from "../types/types.js";
 import { Vector2D } from "../util/vector2d.js";
-import { Canvas } from "./canvas.js";
 export class Path extends Array<PathCoordinate> {
     private _lastCoordinate: PathCoordinate | null = null;
     constructor(
     ) { 
         super();
     }
-    get lastPosition() {
+    get lastCoordinate() {
         return this._lastCoordinate;
     }
     addSegment(position: Vector2D, color: string) {
@@ -20,20 +20,16 @@ export class Path extends Array<PathCoordinate> {
     }
 }
 export class Paths extends Map<number, Path> {
-    get zoom() {
-        return this._canvas.currentZoom;
-    }
     get pathEnds(): Map<number, PathCoordinate> {
         const ends = new Map<number, PathCoordinate>();
         this.forEach((path, id) => {
-            if (path.lastPosition) {
-                ends.set(id, path.lastPosition)
+            if (path.lastCoordinate) {
+                ends.set(id, path.lastCoordinate)
             } 
         });
         return ends;
     }
     constructor(
-        private _canvas: Canvas,
     ) {
         super();
     }
@@ -52,8 +48,8 @@ export class Paths extends Map<number, Path> {
 
                 path.addSegment(position, color);
             } else {
-                const lastPosition = path.lastPosition!;
-                if (!position.equals(lastPosition.coordinate, 0.5)) {
+                const lastPosition = path.lastCoordinate!;
+                if (!position.equals(lastPosition.coordinate, PATH_SEGMENT_MIN_LENGTH)) {
                     
                     path.addSegment(position, color);
                 }
