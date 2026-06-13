@@ -15,10 +15,8 @@ function registerEvents() {
     window.addEventListener("resize", windowResized);
 }
 
-function windowResized(this: Window, ev: UIEvent) {
-    let windowWidth = this.innerWidth;
-    let windowHeight = this.innerHeight;
-    app.resizeCanvas(windowWidth, windowHeight);
+function windowResized() {
+    app.resizeCanvas();
 }
 /*function registerModules() {
     const canvasId = "theCanvas"

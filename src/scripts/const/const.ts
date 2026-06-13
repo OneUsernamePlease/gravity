@@ -17,7 +17,8 @@ export const PATH_THICKNESS = .8;
 export const PATH_SEGMENT_MIN_LENGTH = 0.5;
 export const MIN_DISPLAYED_RADIUS = 0.75;
 export const BACKGROUND_COLOR = "#222222ff";
-export const VECTOR_COLORS: Map<string, {hex: string, name: string}> = new Map()
+export type AnimatedVector = "acceleration" | "velocity";
+export const VECTOR_COLORS: Map<AnimatedVector, {hex: string, name: string}> = new Map()
     .set("acceleration",    { hex: "#20ff20ff", name: "Green" })
     .set("velocity",        { hex: "#ffd700ff", name: "Yellow" });
 export const COORDINATE_SYSTEM_AXIS_COLOR = "#aaaaaaff";

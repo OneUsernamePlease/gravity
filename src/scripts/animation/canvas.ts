@@ -199,20 +199,8 @@ export class Canvas {
 
         const xAxisLength = this.width * zoom;
         const yAxisLength = this.height * zoom;
-        this.drawLine(
-            new Vector2D(0, origin.y),
-            new Vector2D(0, yAxisLength),
-            COORDINATE_SYSTEM_AXIS_COLOR,
-            COORDINATE_SYSTEM_AXIS_THICKNESS,
-            context
-        );
-        this.drawLine(
-            new Vector2D(origin.x, 0),
-            new Vector2D(xAxisLength, 0),
-            COORDINATE_SYSTEM_AXIS_COLOR,
-            COORDINATE_SYSTEM_AXIS_THICKNESS,
-            context
-        )
+        this.drawLine(new Vector2D(0, origin.y), new Vector2D(0, yAxisLength), COORDINATE_SYSTEM_AXIS_COLOR, COORDINATE_SYSTEM_AXIS_THICKNESS, context);
+        this.drawLine(new Vector2D(origin.x, 0), new Vector2D(xAxisLength, 0), COORDINATE_SYSTEM_AXIS_COLOR, COORDINATE_SYSTEM_AXIS_THICKNESS, context);
 
         // context.fillStyle = COORDINATE_SYSTEM_COLOR;
         // context.font = `${11*zoom}px sans-serif`;
@@ -224,15 +212,21 @@ export class Canvas {
             this.drawCircle(objectState.position, body.radius, body.color);
         });
     }
-    private drawVectors(objectStates: Map<number, ObjectState>) {
+    private drawVectors(objectStates: Map<number, ObjectState>, context = this.simulationContext) {
+        const accelerationVectors: [Vector2D, Vector2D][] = [];
+        const velocityVectors: [Vector2D, Vector2D][] = [];
+
         objectStates.forEach(objectState => {
             const position = objectState.position;
             const acceleration = objectState.acceleration;
             const velocity = objectState.velocity;
-
-            this.drawLine(position, acceleration, VECTOR_COLORS.get("acceleration")?.hex, VECTOR_THICKNESS);
-            this.drawLine(position, velocity, VECTOR_COLORS.get("velocity")?.hex, VECTOR_THICKNESS);
+        
+            accelerationVectors.push([position, position.add(acceleration)]);
+            velocityVectors.push([position, position.add(velocity)]);    
         });
+        
+        this.drawLineBatch(accelerationVectors, VECTOR_COLORS.get("acceleration")?.hex!, VECTOR_THICKNESS, context)
+        this.drawLineBatch(velocityVectors, VECTOR_COLORS.get("velocity")?.hex!, VECTOR_THICKNESS, context)
     }
     private clear(context: CanvasRenderingContext2D) {
         context.save();
@@ -260,10 +254,11 @@ export class Canvas {
         this.backgroundContext.fillRect(0, 0, this.width, this.height);
     }
     /**
+     * Draws a line from position to position + direction.
      * @param position in simulation
      * @param direction in simulation
      */
-    drawLine(position: Vector2D, direction: Vector2D, color = "white", lineWidth = 1, context = this.simulationContext) {
+    drawLine(position: Vector2D, direction: Vector2D, color = "white", lineWidth = 1, context: CanvasRenderingContext2D) {
         // optionally normalize the direction and scale later
         let endPosition: Vector2D = position.add(direction);
         //if (!this.isLinePotentiallyVisible(position, endPosition)) {
@@ -274,6 +269,24 @@ export class Canvas {
         context.strokeStyle = color;
         context.moveTo(position.x, position.y);
         context.lineTo(endPosition.x, endPosition.y);
+        context.stroke();
+    }
+    /**
+     * @param line [0] -> line start. [1] -> line end.
+     * @param color 
+     * @param lineWidth independent of zoom
+     * @param context CanvasRenderingContext2D
+     */
+    drawLineBatch(line: [Vector2D, Vector2D][], color: string, lineWidth: number, context: CanvasRenderingContext2D) {
+        context.beginPath();
+        context.lineWidth = lineWidth * this._canvasSpace.currentZoom;
+        context.strokeStyle = color;
+
+        line.forEach((line) => {
+            context.moveTo(line[0].x, line[0].y);
+            context.lineTo(line[1].x, line[1].y);
+        });
+        
         context.stroke();
     }
     /**

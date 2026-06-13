@@ -1,6 +1,7 @@
 # TODO:
     - This architecture is beyond ass
         - animation-controller should be able to be removed. run the loop in app.
+        - app does not need to be a class
     - redo and activate visibility checks
     - PATHS
         - OPTIMIZATIONS:
@@ -17,10 +18,6 @@
         - suggestion: change the PAUSE to MOVEMENT-DISABLED, -> keep calculating but don't update positions.
     - rendering optimizations:
         - animationFrames
-        - batches
-            - batch all bodies of the same color (ie. all w/ mass<100, mass>1000000)
-            - batch all acc vectors
-            - batch all vel vectors
     - mobile / responsive
     - worker threads
     - choose gravityLowerBounds (gravity.ts) dynamically depending on mass or whatever

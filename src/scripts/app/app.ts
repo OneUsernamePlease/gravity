@@ -17,38 +17,25 @@ export class App {
     private _ui: UI;
 //#endregion
 //#region get
-    private get gravity() {
-        return this._gravity;
-    }
-    private get animation() {
-        return this._animation;
-    }
-    private get interaction() {
-        return this._interaction;
-    }
-    private get ui() {
-        return this._ui;
-    }
-
     get simulationRunning() {
-        return this.gravity.running;
+        return this._gravity.running;
     }
     get currentSimulationState() {
-        return this.gravity.simulationState;
+        return this._gravity.simulationState;
     }
     get currentTick(): number {
-        return this.gravity.tick;
+        return this._gravity.tick;
     }
     get currentZoom(): number {
-        return this.animation.currentZoom;
+        return this._animation.currentZoom;
     }
     get selectedClickAction(): string {
-        return this.ui.selectedClickAction;
+        return this._ui.selectedClickAction;
     }
     get simulationMetrics(): PerformanceInfo {
         return { 
-            ticksLastSecond: this.gravity.ticksLastSecond,
-            averageTicksPerSecond: this.gravity.averageTicksPerSecond,
+            ticksLastSecond: this._gravity.ticksLastSecond,
+            averageTicksPerSecond: this._gravity.averageTicksPerSecond,
         }
     }
     get canvasWidth() {
@@ -72,85 +59,85 @@ export class App {
         this.initialize();
     }
     private initialize() {
-        this.animation.initialize(this.ui.animationSettings);
-        this.applySimulationSettings(this.ui.simulationSettings);
-        this.ui.initialize(this._animation.width, this._animation.height);
+        this._animation.initialize(this._ui.animationSettings);
+        this.applySimulationSettings(this._ui.simulationSettings);
+        this._ui.initialize(this._animation.width, this._animation.height);
         
-        this.animation.run();
+        this._animation.run();
     }
 //#endregion
 // sim controls
     run() {
-        this.gravity.run();
-        this.ui.simulationResumed();
+        this._gravity.run();
+        this._ui.simulationResumed();
     }
     stop() {
-        this.gravity.stop();
-        this.ui.simulationStopped();
+        this._gravity.stop();
+        this._ui.simulationStopped();
     }
     advanceOneTick() {
-        this.gravity.advanceTick();
-        this.ui.updateStatusBarSimulationInfo();
+        this._gravity.advanceTick();
+        this._ui.updateStatusBarSimulationInfo();
     }
     resetSimulation() {
-        this.gravity.reset();
-        this.animation.resetPaths();
-        this.ui.updateStatusBarSimulationInfo();
+        this._gravity.reset();
+        this._animation.resetPaths();
+        this._ui.updateStatusBarSimulationInfo();
     }
     applySimulationSettings(simulationSettings: SimulationSettings) {
-        this.gravity.applySettings(simulationSettings);
+        this._gravity.applySettings(simulationSettings);
     }    
     addObject(objectState: ObjectState) {
-        return this.gravity.addObject(objectState);
+        return this._gravity.addObject(objectState);
     }
 // animation controls    
     zoomToFactor(zoomFactor: number, zoomCenterCanvas?: Vector2D) {
-        this.animation.zoomToFactor(zoomFactor, zoomCenterCanvas);
-        this.ui.updateStatusBarAnimationInfo();
+        this._animation.zoomToFactor(zoomFactor, zoomCenterCanvas);
+        this._ui.updateStatusBarAnimationInfo();
     }
     zoomIn(zoomCenter = new Vector2D(this.canvasWidth / 2, this.canvasHeight / 2), factor = DEFAULT_ZOOM_FACTOR) {
-        this.animation.zoomIn(zoomCenter, factor);
-        this.ui.updateStatusBarAnimationInfo();
+        this._animation.zoomIn(zoomCenter, factor);
+        this._ui.updateStatusBarAnimationInfo();
     }
     zoomOut(zoomCenter = new Vector2D(this.canvasWidth / 2, this.canvasHeight / 2), factor = DEFAULT_ZOOM_FACTOR) {
-        this.animation.zoomOut(zoomCenter, factor);
-        this.ui.updateStatusBarAnimationInfo();
+        this._animation.zoomOut(zoomCenter, factor);
+        this._ui.updateStatusBarAnimationInfo();
     }
     scrollUp() {
-        this.animation.scrollUp();
+        this._animation.scrollUp();
     }
     scrollDown() {
-        this.animation.scrollDown();
+        this._animation.scrollDown();
     }
     scrollLeft() {
-        this.animation.scrollLeft();
+        this._animation.scrollLeft();
     }
     scrollRight() {
-        this.animation.scrollRight();
+        this._animation.scrollRight();
     }
     resizeCanvas() {
-        this.animation.resizeCanvas();
-        this.ui.updateStatusBarCanvasDimensions(this.animation.width, this.animation.height);
+        this._animation.resizeCanvas();
+        this._ui.updateStatusBarCanvasDimensions(this._animation.width, this._animation.height);
     }
     setDisplayVectors(display: boolean) {
-        this.animation.setDisplayVectors(display);
-        this.ui.displayVectorMessage(display);
+        this._animation.setDisplayVectors(display);
+        this._ui.displayVectorMessage(display);
     }
     setTracePaths(tracePaths: boolean) {
-        this.animation.setTracePaths(tracePaths);
+        this._animation.setTracePaths(tracePaths);
     }
     setDisplayCoordinateSystem(displayCoordinateSystem: boolean) {
-        this.animation.setDisplayCoordinateSystem(displayCoordinateSystem);
+        this._animation.setDisplayCoordinateSystem(displayCoordinateSystem);
     }
 // UI related
     updateStatusBarAnimationInfo() {
-        this.ui.updateStatusBarAnimationInfo();
+        this._ui.updateStatusBarAnimationInfo();
     }
     updateStatusBarSimulationInfo() {
-        this.ui.updateStatusBarSimulationInfo();
+        this._ui.updateStatusBarSimulationInfo();
     }
     body2dFromUi(): Body2d {
-        const bodyInfo = this.ui.bodyInformation;
+        const bodyInfo = this._ui.bodyInformation;
         return new Body2d(bodyInfo.mass, bodyInfo.movable);
     }
 }

@@ -24,12 +24,6 @@ export class InteractionManager {
     private contextMenu = new ContextMenu();
 //#endregion
 //#region get, set
-    get touchAction(): TouchAction {
-        return this._touchAction;
-    }
-    private set touchAction(action: TouchAction) {
-        this._touchAction = action;
-    }
 
 //#endregion
     constructor(private _canvas: Canvas, private app: App) {
@@ -110,7 +104,7 @@ export class InteractionManager {
         currentTouchPosition.x = ev.clientX;
         currentTouchPosition.y = ev.clientY;
 
-        switch (this.touchAction) {
+        switch (this._touchAction) {
 
             case TouchAction.AddBody:
                 // TODO: draw (half transparent) body and vector while dragging
@@ -182,7 +176,7 @@ export class InteractionManager {
         this._activeTouches.set(ev.pointerId, touch);
 
         if (this._activeTouches.size === 1) {
-            this.touchAction = TouchAction.AddBody;
+            this._touchAction = TouchAction.AddBody;
             this._lastSingleTouchPos = touch;
             
             const positionOnCanvas = tfm.relativePosition(touch, this._canvasElement);
@@ -190,7 +184,7 @@ export class InteractionManager {
             this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
 
         } else if (this._activeTouches.size === 2) {
-            this.touchAction = TouchAction.ManipulateView;
+            this._touchAction = TouchAction.ManipulateView;
 
             // reset pinch-gesture
             this._previousTouchesMid = null;
@@ -205,11 +199,11 @@ export class InteractionManager {
 
         this._activeTouches.delete(ev.pointerId);
 
-        switch (this.touchAction) {
+        switch (this._touchAction) {
             case TouchAction.AddBody:
                 const absPos = new Vector2D(util.getAbsolutePointerPosition(ev));
                 this.addBodyAtPointer(tfm.relativePosition(absPos, this._canvasElement));
-                this.touchAction = TouchAction.None;
+                this._touchAction = TouchAction.None;
                 break;
 
             case TouchAction.ManipulateView:
@@ -222,7 +216,7 @@ export class InteractionManager {
                     const remaining = this._activeTouches.values().next().value!;
                     this._lastSingleTouchPos = new Vector2D(remaining.x, remaining.y);
                 } else if (this._activeTouches.size === 0) {
-                    this.touchAction = TouchAction.None;
+                    this._touchAction = TouchAction.None;
                     this._lastSingleTouchPos = null;
                     this._previousTouchesMid = null;
                     this._previousTouchesDist = null;
@@ -337,7 +331,7 @@ export class InteractionManager {
         return { first, second, midpoint, distance };
     }
     private cancelAndClearTouches(): void {
-        this.touchAction = TouchAction.None;
+        this._touchAction = TouchAction.None;
         this._activeTouches.clear();
         this._previousTouchesMid = null;
         this._previousTouchesDist = null;
