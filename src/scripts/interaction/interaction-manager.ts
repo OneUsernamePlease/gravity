@@ -31,35 +31,6 @@ export class InteractionManager {
         this._touchAction = action;
     }
 
-    get activeTouches(): Map<number, Vector2D> {
-        return this._activeTouches;
-    }
-    private set activeTouches(touches: Map<number, Vector2D>) {
-        this._activeTouches = touches;
-    }
-
-    get lastSingleTouchPos(): Vector2D | null {
-        return this._lastSingleTouchPos;
-    }
-
-    private set lastSingleTouchPos(pos: Vector2D | null) {
-        this._lastSingleTouchPos = pos;
-    }
-    
-    get previousTouchesMid(): Vector2D | null {
-        return this._previousTouchesMid;
-    }
-    private set previousTouchesMid(mid: Vector2D | null) {
-        this._previousTouchesMid = mid;
-    }
-
-    get previousTouchesDist(): number | null {
-        return this._previousTouchesDist;
-    }
-    private set previousTouchesDist(dist: number | null) {
-        this._previousTouchesDist = dist;
-    }
-
 //#endregion
     constructor(private _canvas: Canvas, private app: App) {
         const canvasElement = _canvas.interactionCanvas;
@@ -133,7 +104,7 @@ export class InteractionManager {
         }
     }
     private canvasTouchMoving(ev: PointerEvent) {
-        const currentTouchPosition = this.activeTouches.get(ev.pointerId)!;
+        const currentTouchPosition = this._activeTouches.get(ev.pointerId)!;
         if (!currentTouchPosition) return;
 
         currentTouchPosition.x = ev.clientX;
@@ -145,19 +116,19 @@ export class InteractionManager {
                 // TODO: draw (half transparent) body and vector while dragging
                 break;
             case TouchAction.ManipulateView:
-                if (this.activeTouches.size === 1) {
+                if (this._activeTouches.size === 1) {
                     // --------------------
                     //      SINGLE TOUCH
                     // --------------------
 
-                    if (this.lastSingleTouchPos) {
-                        const dx = currentTouchPosition.x - this.lastSingleTouchPos.x;
-                        const dy = currentTouchPosition.y - this.lastSingleTouchPos.y;
+                    if (this._lastSingleTouchPos) {
+                        const dx = currentTouchPosition.x - this._lastSingleTouchPos.x;
+                        const dy = currentTouchPosition.y - this._lastSingleTouchPos.y;
 
                         this._canvas.move(new Vector2D(dx, dy));
                     }
 
-                    this.lastSingleTouchPos = new Vector2D(currentTouchPosition.x, currentTouchPosition.y);
+                    this._lastSingleTouchPos = new Vector2D(currentTouchPosition.x, currentTouchPosition.y);
 
                     return;
                 } else {
@@ -172,26 +143,26 @@ export class InteractionManager {
                     const touchesDistance = gesture.distance;
 
                     // no previous gesture -> initialize
-                    if (this.previousTouchesMid === null || this.previousTouchesDist === null) {
-                        this.previousTouchesMid = touchesMidpoint;
-                        this.previousTouchesDist = touchesDistance;
+                    if (this._previousTouchesMid === null || this._previousTouchesDist === null) {
+                        this._previousTouchesMid = touchesMidpoint;
+                        this._previousTouchesDist = touchesDistance;
                         return;
                     }
 
-                    const zoomFactor = this.previousTouchesDist / touchesDistance;
+                    const zoomFactor = this._previousTouchesDist / touchesDistance;
                     const zoomCenterCanvas = tfm.relativePosition(touchesMidpoint, this._canvasElement);
-                    const scroll = touchesMidpoint.subtract(this.previousTouchesMid);
+                    const scroll = touchesMidpoint.subtract(this._previousTouchesMid);
                     this.app.zoomToFactor(zoomFactor, zoomCenterCanvas);
                     this._canvas.move(scroll);
 
-                    this.previousTouchesMid = touchesMidpoint;
-                    this.previousTouchesDist = touchesDistance;
+                    this._previousTouchesMid = touchesMidpoint;
+                    this._previousTouchesDist = touchesDistance;
                 }    
                 break;
         }
     }
     private deletePointer(ev: PointerEvent) {
-        this.activeTouches.delete(ev.pointerId);
+        this._activeTouches.delete(ev.pointerId);
     }
     private canvasScrollMouseWheel(ev: WheelEvent) {
         // don't scroll the entire page
@@ -208,31 +179,31 @@ export class InteractionManager {
     }
     private canvasTouchStart(ev: PointerEvent) {
         const touch = new Vector2D(ev.clientX, ev.clientY);
-        this.activeTouches.set(ev.pointerId, touch);
+        this._activeTouches.set(ev.pointerId, touch);
 
-        if (this.activeTouches.size === 1) {
+        if (this._activeTouches.size === 1) {
             this.touchAction = TouchAction.AddBody;
-            this.lastSingleTouchPos = touch;
+            this._lastSingleTouchPos = touch;
             
             const positionOnCanvas = tfm.relativePosition(touch, this._canvasElement);
             const positionInSimSpace: Vector2D = tfm.pointFromCanvasToSimulation(positionOnCanvas, this._canvasContext);
             this.pointer.main.downCoordinatesInSimSpace = positionInSimSpace;
 
-        } else if (this.activeTouches.size === 2) {
+        } else if (this._activeTouches.size === 2) {
             this.touchAction = TouchAction.ManipulateView;
 
             // reset pinch-gesture
-            this.previousTouchesMid = null;
-            this.previousTouchesDist = null;
+            this._previousTouchesMid = null;
+            this._previousTouchesDist = null;
             
             // stop scrolling
-            this.lastSingleTouchPos = null;
+            this._lastSingleTouchPos = null;
         }
     }
     private canvasTouchEnd(ev: PointerEvent) {
-        if (!this.activeTouches.has(ev.pointerId)) return;
+        if (!this._activeTouches.has(ev.pointerId)) return;
 
-        this.activeTouches.delete(ev.pointerId);
+        this._activeTouches.delete(ev.pointerId);
 
         switch (this.touchAction) {
             case TouchAction.AddBody:
@@ -243,18 +214,18 @@ export class InteractionManager {
 
             case TouchAction.ManipulateView:
                 // reset pinch-gesture
-                this.previousTouchesMid = null;
-                this.previousTouchesDist = null;
+                this._previousTouchesMid = null;
+                this._previousTouchesDist = null;
 
-                if (this.activeTouches.size === 1) {
+                if (this._activeTouches.size === 1) {
                     // one touch remaining -> use it to scroll
-                    const remaining = this.activeTouches.values().next().value!;
-                    this.lastSingleTouchPos = new Vector2D(remaining.x, remaining.y);
-                } else if (this.activeTouches.size === 0) {
+                    const remaining = this._activeTouches.values().next().value!;
+                    this._lastSingleTouchPos = new Vector2D(remaining.x, remaining.y);
+                } else if (this._activeTouches.size === 0) {
                     this.touchAction = TouchAction.None;
-                    this.lastSingleTouchPos = null;
-                    this.previousTouchesMid = null;
-                    this.previousTouchesDist = null;
+                    this._lastSingleTouchPos = null;
+                    this._previousTouchesMid = null;
+                    this._previousTouchesDist = null;
                 }
                 break;
         }
@@ -346,16 +317,16 @@ export class InteractionManager {
 //#endregion
 //#region manage interactions
     private updateTouchPosition(pointerId: number, x: number, y: number): void {
-        const touch = this.activeTouches.get(pointerId);
+        const touch = this._activeTouches.get(pointerId);
         if (touch) {
             touch.x = x;
             touch.y = y;
         }
     }
     private multiTouch(): MultiTouch | null {
-        if (this.activeTouches.size < 2) return null;
+        if (this._activeTouches.size < 2) return null;
 
-        const touches = this.activeTouches.values();
+        const touches = this._activeTouches.values();
         const first = new Vector2D (touches.next().value!);
         const second = new Vector2D (touches.next().value!);
 
@@ -367,10 +338,10 @@ export class InteractionManager {
     }
     private cancelAndClearTouches(): void {
         this.touchAction = TouchAction.None;
-        this.activeTouches.clear();
-        this.previousTouchesMid = null;
-        this.previousTouchesDist = null;
-        this.lastSingleTouchPos = null;
+        this._activeTouches.clear();
+        this._previousTouchesMid = null;
+        this._previousTouchesDist = null;
+        this._lastSingleTouchPos = null;
     }
 //#endregion
 //#region do stuff

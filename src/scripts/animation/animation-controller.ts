@@ -5,45 +5,17 @@ import { Vector2D } from "../util/vector2d.js";
 import { App } from "../app/app.js";
 
 export class AnimationController {
-//#region properties
     private _animationSettings: AnimationSettings;
     private _running: boolean;
-//#endregion
-//#region get, set
-    private get canvas(): Canvas {
-        return this._canvas;
-    }
-    private set canvas(canvas: Canvas) {
-        this._canvas = canvas;
-    }
-
-    get animationSettings(): AnimationSettings {
-        return this._animationSettings;
-    }
-    set animationSettings(animationSettings: AnimationSettings) {
-        this._animationSettings = animationSettings;
-    }
-
-    private get app() {
-        return this._app;
-    }
-
-    get running() {
-        return this._running;
-    }
-    private set running(running: boolean) {
-        this._running = running;
-    }
-
-    // additional getters
+//#region some getter
     get currentZoom(): number {
-        return this.canvas.currentZoom;
+        return this._canvas.currentZoom;
     }
     get width(): number {
-        return this.canvas.width;
+        return this._canvas.width;
     }
     get height(): number {
-        return this.canvas.height;
+        return this._canvas.height;
     }
 //#endregion
     constructor(
@@ -54,77 +26,77 @@ export class AnimationController {
         this._running = false;
     }
     initialize(animationSettings: UIAnimationSettings) {
-        this.animationSettings.displayVectors = animationSettings.displayVectors;
-        this.animationSettings.tracePaths = animationSettings.tracePaths;
-        this.animationSettings.displayCoordinateSystem = animationSettings.displayCoordinateSystem;
+        this._animationSettings.displayVectors = animationSettings.displayVectors;
+        this._animationSettings.tracePaths = animationSettings.tracePaths;
+        this._animationSettings.displayCoordinateSystem = animationSettings.displayCoordinateSystem;
     }
     run() {
-        if (this.running) {
+        if (this._running) {
             return;
         }
-        this.running = true;
+        this._running = true;
         const loop = () => {
-            if (this.running) {
-                setTimeout(loop, this.animationSettings.frameLength);
-                this.canvas.drawFrame(this.app.currentSimulationState, this.animationSettings);
-                this.app.updateStatusBarSimulationInfo();
+            if (this._running) {
+                setTimeout(loop, this._animationSettings.frameLength);
+                this._canvas.drawFrame(this._app.currentSimulationState, this._animationSettings);
+                this._app.updateStatusBarSimulationInfo();
             }
         };
         loop();
     }
     stop() {
-        this.running = false;
+        this._running = false;
     }
     setDisplayVectors(display: boolean) {
-        this.animationSettings.displayVectors = display;
+        this._animationSettings.displayVectors = display;
     }
     setTracePaths(tracePaths: boolean) {
-        this.animationSettings.tracePaths = tracePaths;
+        this._animationSettings.tracePaths = tracePaths;
         if (!tracePaths) {
             this.resetPaths();
         }
     }
     resetPaths() {
-        this.canvas.resetPaths();
+        this._canvas.resetPaths();
     }
     setDisplayCoordinateSystem(displayCoordinateSystem: boolean) {
-        this.animationSettings.displayCoordinateSystem = displayCoordinateSystem;
+        this._animationSettings.displayCoordinateSystem = displayCoordinateSystem;
         if (!displayCoordinateSystem) {
             this.resetCoordinateSystem();
         } else {
-            this.canvas.drawCoordinateSystem();
+            this._canvas.drawCoordinateSystem();
         }
     }
     resetCoordinateSystem() {
-        this.canvas.clearCoordinateSystem();
+        this._canvas.clearCoordinateSystem();
     }
     resizeCanvas() {
-        this.canvas.resize();
+        this._canvas.resize();
     }
 
     scrollRight(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("horizontal");
         }
-        this.canvas.move(new Vector2D(-distance, 0));
+        this._canvas.move(new Vector2D(-distance, 0));
     }
     scrollLeft(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("horizontal");
         }
-        this.canvas.move(new Vector2D(distance, 0));
+        this._canvas.move(new Vector2D(distance, 0));
     }
     scrollUp(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("vertical");
         }
-        this.canvas.move(new Vector2D(0, distance));
+        this._canvas.move(new Vector2D(0, distance));
     }
     scrollDown(distance?: number) {
         if (!distance) {
             distance = this.scrollDistance("vertical");
         }
-        this.canvas.move(new Vector2D(0, -distance));
+        this._canvas.move(new Vector2D(0, -distance));
     }
     private scrollDistance(orientation: "horizontal" | "vertical", rate: number = DEFAULT_SCROLL_RATE): number {
         switch (orientation) {

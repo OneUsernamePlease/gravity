@@ -1,5 +1,6 @@
 # TODO:
     - This architecture is beyond ass
+        - animation-controller should be able to be removed. run the loop in app.
     - redo and activate visibility checks
     - PATHS
         - OPTIMIZATIONS:

@@ -1,5 +1,5 @@
 import { Vector2D } from "../util/vector2d.js";
-import { BACKGROUND_COLOR, COORDINATE_SYSTEM_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_SEGMENT_MIN_LENGTH, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS } from "../const/const.js";
+import { BACKGROUND_COLOR, COORDINATE_SYSTEM_AXIS_THICKNESS, COORDINATE_SYSTEM_AXIS_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_SEGMENT_MIN_LENGTH, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS } from "../const/const.js";
 import { AnimationSettings, CanvasLayer, CanvasSpace, LayerName, ObjectState, PathCoordinate } from "../types/types.js";
 import { Path, Paths } from "./paths.js";
 import { clamp } from "../util/util.js";
@@ -47,7 +47,7 @@ export class Canvas {
 
         this.resize();
         this.setInitialTransformation();
-        const x = this._canvasSpace;
+
         this._paths = new Paths();
     }
 //#region get, set
@@ -142,7 +142,7 @@ export class Canvas {
     private applyTransformation() {
         this._layers.forEach((layer, name) => {
             if (name === "background") {
-                return
+                return;
             }
             const context = layer.context;
             const zoom = this._canvasSpace.currentZoom;
@@ -196,27 +196,27 @@ export class Canvas {
     drawCoordinateSystem(context = this.coordinateSystemContext) {
         const origin  = this._canvasSpace.origin;
         const zoom = this._canvasSpace.currentZoom;
-        
-        const xAxisToOrigin = origin.x;
+
         const xAxisLength = this.width * zoom;
-        const yAxisToOrigin = origin.y;
         const yAxisLength = this.height * zoom;
         this.drawLine(
-            new Vector2D(0, yAxisToOrigin),
+            new Vector2D(0, origin.y),
             new Vector2D(0, yAxisLength),
-            COORDINATE_SYSTEM_COLOR,
+            COORDINATE_SYSTEM_AXIS_COLOR,
+            COORDINATE_SYSTEM_AXIS_THICKNESS,
             context
         );
         this.drawLine(
-            new Vector2D(xAxisToOrigin, 0),
+            new Vector2D(origin.x, 0),
             new Vector2D(xAxisLength, 0),
-            COORDINATE_SYSTEM_COLOR,
+            COORDINATE_SYSTEM_AXIS_COLOR,
+            COORDINATE_SYSTEM_AXIS_THICKNESS,
             context
         )
 
-        context.fillStyle = COORDINATE_SYSTEM_COLOR;
-        context.font = `${11*zoom}px sans-serif`;
-        context.fillText(`(0,0)`, 0, 0)
+        // context.fillStyle = COORDINATE_SYSTEM_COLOR;
+        // context.font = `${11*zoom}px sans-serif`;
+        // context.fillText(`(0,0)`, 0, 0)
     }
     private drawBodies(objectStates: Map<number, ObjectState>) {
         objectStates.forEach(objectState => {
@@ -230,8 +230,8 @@ export class Canvas {
             const acceleration = objectState.acceleration;
             const velocity = objectState.velocity;
 
-            this.drawLine(position, acceleration, VECTOR_COLORS.get("acceleration")?.hex);
-            this.drawLine(position, velocity, VECTOR_COLORS.get("velocity")?.hex);
+            this.drawLine(position, acceleration, VECTOR_COLORS.get("acceleration")?.hex, VECTOR_THICKNESS);
+            this.drawLine(position, velocity, VECTOR_COLORS.get("velocity")?.hex, VECTOR_THICKNESS);
         });
     }
     private clear(context: CanvasRenderingContext2D) {
@@ -263,14 +263,14 @@ export class Canvas {
      * @param position in simulation
      * @param direction in simulation
      */
-    drawLine(position: Vector2D, direction: Vector2D, color = "white", context = this.simulationContext) {
+    drawLine(position: Vector2D, direction: Vector2D, color = "white", lineWidth = 1, context = this.simulationContext) {
         // optionally normalize the direction and scale later
         let endPosition: Vector2D = position.add(direction);
         //if (!this.isLinePotentiallyVisible(position, endPosition)) {
         //    return;
         //}
         context.beginPath();
-        context.lineWidth = VECTOR_THICKNESS * this._canvasSpace.currentZoom;
+        context.lineWidth = lineWidth * this._canvasSpace.currentZoom;
         context.strokeStyle = color;
         context.moveTo(position.x, position.y);
         context.lineTo(endPosition.x, endPosition.y);
@@ -301,25 +301,13 @@ export class Canvas {
             const colorChanged = path[i].color !== path[i - 1].color;
 
             if (colorChanged) {
-                this.drawPathSegmentBatch(
-                    path,
-                    batchStartIndex,
-                    i,
-                    path[batchStartIndex].color,
-                    context
-                );
+                this.drawPathSegmentBatch(path, batchStartIndex, i, path[batchStartIndex].color, context);
 
                 batchStartIndex = i;
             }
         }
 
-        this.drawPathSegmentBatch(
-            path,
-            batchStartIndex,
-            path.length - 1,
-            path[batchStartIndex].color,
-            context
-        );
+        this.drawPathSegmentBatch(path, batchStartIndex, path.length - 1, path[batchStartIndex].color, context);
     }
     drawPaths(paths: Paths, context = this.pathsContext) {
         paths.forEach((path) => {
