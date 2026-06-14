@@ -1,6 +1,7 @@
-import { PATH_SEGMENT_MIN_LENGTH } from "../const/const.js";
+import { PATH_ALPHA, PATH_SEGMENT_MIN_LENGTH } from "../const/const.js";
 import { ObjectState, PathCoordinate } from "../types/types.js";
 import { Vector2D } from "../util/vector2d.js";
+import { setColorAlpha } from "./animation-utils.js";
 export class Path extends Array<PathCoordinate> {
     private _lastCoordinate: PathCoordinate | null = null;
     constructor(
@@ -40,7 +41,7 @@ export class Paths extends Map<number, Path> {
             }
 
             const position = objectState.position;
-            const color = objectState.body.color;
+            const color = setColorAlpha(objectState.body.color, PATH_ALPHA);
             let path = this.get(id);
             if (!path) {
                 path = new Path();

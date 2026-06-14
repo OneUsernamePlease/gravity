@@ -1,9 +1,10 @@
 import { Vector2D } from "../util/vector2d.js";
-import { BACKGROUND_COLOR, COORDINATE_SYSTEM_AXIS_THICKNESS, COORDINATE_SYSTEM_AXIS_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_SEGMENT_MIN_LENGTH, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS } from "../const/const.js";
+import { BACKGROUND_COLOR, COORDINATE_SYSTEM_AXIS_THICKNESS, COORDINATE_SYSTEM_AXIS_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_SEGMENT_MIN_LENGTH, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS, PATH_ALPHA } from "../const/const.js";
 import { AnimationSettings, CanvasLayer, CanvasSpace, LayerName, ObjectState, PathCoordinate } from "../types/types.js";
 import { Path, Paths } from "./paths.js";
 import { clamp } from "../util/util.js";
 import { App } from "../app/app.js";
+import { setColorAlpha } from "./animation-utils.js";
 
 export class Canvas {
     private _layers: Map<LayerName, CanvasLayer> = new Map();
@@ -371,8 +372,9 @@ export class Canvas {
 
             const fromPosition = fromState.coordinate;
             const toPosition = toState.position;
+            const color = setColorAlpha(fromState.color, PATH_ALPHA);
             if (!fromPosition.equals(toPosition, PATH_SEGMENT_MIN_LENGTH)) {
-                this.drawPathSegment(fromPosition, toPosition, fromState.color, context);
+                this.drawPathSegment(fromPosition, toPosition, color, context);
             }
         });
     }

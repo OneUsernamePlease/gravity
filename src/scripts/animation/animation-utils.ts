@@ -17,6 +17,15 @@ export function randomHexColor(alpha: number = 1): string {
     return `#${toHex(r)}${toHex(g)}${toHex(b)}${toHex(a)}`;
 }
 /**
+ * Set transparency of color to alpha.
+ * @param color a hex color value either of format "#rrggbbaa"
+ * @param alpha a two digit hex value. 00 -> transparent. ff -> opaque
+ */
+export function setColorAlpha(color: string, alpha: string) {
+    const newColor = color.slice(0, -2);
+    return newColor + alpha;
+}
+/**
  * !!! COLORS MUST BE IN THE FORMAT #RRGGBBAA !!!
  * @param color1 #RRGGBBAA
  * @param weight1 
