@@ -1,10 +1,12 @@
 import { Vector2D } from "../util/vector2d.js";
-import { BACKGROUND_COLOR, COORDINATE_SYSTEM_AXIS_THICKNESS, COORDINATE_SYSTEM_AXIS_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_SEGMENT_MIN_LENGTH, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS, PATH_ALPHA } from "../const/const.js";
+import { BACKGROUND_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_SEGMENT_MIN_LENGTH, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS, PATH_ALPHA } from "../const/const.js";
 import { AnimationSettings, CanvasLayer, CanvasSpace, LayerName, ObjectState, PathCoordinate } from "../types/types.js";
 import { Path, Paths } from "./paths.js";
 import { clamp } from "../util/util.js";
 import { App } from "../app/app.js";
 import { setColorAlpha } from "./animation-utils.js";
+import { CoordinateSystem } from "./coordinate-system.js";
+import * as draw from "./draw-utils.js";
 
 export class Canvas {
     private _layers: Map<LayerName, CanvasLayer> = new Map();
@@ -14,7 +16,7 @@ export class Canvas {
     }
     private _paths: Paths;
     private _cameraChange = true;
-    
+    private _coordinateSystem: CoordinateSystem;
     constructor(private _canvasParent: HTMLDivElement, private _app: App) {
         const backgroundCanvas = this.createLayer("z-0");
         this._layers.set("background", {
@@ -50,6 +52,7 @@ export class Canvas {
         this.setInitialTransformation();
 
         this._paths = new Paths();
+        this._coordinateSystem = new CoordinateSystem(this.coordinateSystemContext, this);
     }
 //#region get, set
     get interactionCanvas() {
@@ -71,6 +74,9 @@ export class Canvas {
         return this._layers.get("interaction")!.context;
     }
     // additional getters
+    get canvasSpace() {
+        return this._canvasSpace;
+    }
     get width(): number {
         return this._layers.get("background")!.canvas.width;
     }
@@ -187,30 +193,21 @@ export class Canvas {
         // coordinate system
         if (animationSettings.displayCoordinateSystem) {
             if (this._cameraChange) {
-                this.clearCoordinateSystem();
-                this.drawCoordinateSystem();
+                this._coordinateSystem.clearContext();
+                this._coordinateSystem.draw();
             }
         }
 
         this._cameraChange = false;
     }
-    drawCoordinateSystem(context = this.coordinateSystemContext) {
-        const origin  = this._canvasSpace.origin;
-        const zoom = this._canvasSpace.currentZoom;
-
-        const xAxisLength = this.width * zoom;
-        const yAxisLength = this.height * zoom;
-        this.drawLine(new Vector2D(0, origin.y), new Vector2D(0, yAxisLength), COORDINATE_SYSTEM_AXIS_COLOR, COORDINATE_SYSTEM_AXIS_THICKNESS, context);
-        this.drawLine(new Vector2D(origin.x, 0), new Vector2D(xAxisLength, 0), COORDINATE_SYSTEM_AXIS_COLOR, COORDINATE_SYSTEM_AXIS_THICKNESS, context);
-
-        // context.fillStyle = COORDINATE_SYSTEM_COLOR;
-        // context.font = `${11*zoom}px sans-serif`;
-        // context.fillText(`(0,0)`, 0, 0)
+    redrawCoordinateSystem() {
+        this._coordinateSystem.clearContext();
+        this._coordinateSystem.draw();
     }
     private drawBodies(objectStates: Map<number, ObjectState>) {
         objectStates.forEach(objectState => {
             const body = objectState.body;
-            this.drawCircle(objectState.position, body.radius, body.color);
+            draw.drawCircle(objectState.position, body.radius, body.color, this.simulationContext);
         });
     }
     private drawVectors(objectStates: Map<number, ObjectState>, context = this.simulationContext) {
@@ -226,8 +223,8 @@ export class Canvas {
             velocityVectors.push([position, position.add(velocity)]);    
         });
         
-        this.drawLineBatch(accelerationVectors, VECTOR_COLORS.get("acceleration")?.hex!, VECTOR_THICKNESS, context)
-        this.drawLineBatch(velocityVectors, VECTOR_COLORS.get("velocity")?.hex!, VECTOR_THICKNESS, context)
+        draw.drawLineBatch(accelerationVectors, VECTOR_COLORS.get("acceleration")?.hex!, VECTOR_THICKNESS, context)
+        draw.drawLineBatch(velocityVectors, VECTOR_COLORS.get("velocity")?.hex!, VECTOR_THICKNESS, context)
     }
     private clear(context: CanvasRenderingContext2D) {
         context.save();
@@ -254,56 +251,7 @@ export class Canvas {
         this.backgroundContext.fillStyle = color;
         this.backgroundContext.fillRect(0, 0, this.width, this.height);
     }
-    /**
-     * Draws a line from position to position + direction.
-     * @param position in simulation
-     * @param direction in simulation
-     */
-    drawLine(position: Vector2D, direction: Vector2D, color = "white", lineWidth = 1, context: CanvasRenderingContext2D) {
-        // optionally normalize the direction and scale later
-        let endPosition: Vector2D = position.add(direction);
-        //if (!this.isLinePotentiallyVisible(position, endPosition)) {
-        //    return;
-        //}
-        context.beginPath();
-        context.lineWidth = lineWidth * this._canvasSpace.currentZoom;
-        context.strokeStyle = color;
-        context.moveTo(position.x, position.y);
-        context.lineTo(endPosition.x, endPosition.y);
-        context.stroke();
-    }
-    /**
-     * @param line [0] -> line start. [1] -> line end.
-     * @param color 
-     * @param lineWidth independent of zoom
-     * @param context CanvasRenderingContext2D
-     */
-    drawLineBatch(line: [Vector2D, Vector2D][], color: string, lineWidth: number, context: CanvasRenderingContext2D) {
-        context.beginPath();
-        context.lineWidth = lineWidth * this._canvasSpace.currentZoom;
-        context.strokeStyle = color;
-
-        line.forEach((line) => {
-            context.moveTo(line[0].x, line[0].y);
-            context.lineTo(line[1].x, line[1].y);
-        });
-        
-        context.stroke();
-    }
-    /**
-     * draws a circular body at specified position, in specified color
-     * @param position in simulation
-     * @param radius in simulation
-     * @param color default white
-     */
-    drawCircle(position: Vector2D, radius: number, color: string = "white", context = this.simulationContext) {
-        //if (!this.isCircleVisible(position, radius)) return;
-        context.beginPath();
-        context.arc(position.x, position.y, radius, 0, Math.PI * 2);
-        context.closePath();
-        context.fillStyle = color;
-        context.fill();
-    }
+    
     drawPath(path: Path, context: CanvasRenderingContext2D) {
         if (path.length < 2) {
             return;

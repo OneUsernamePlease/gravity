@@ -64,7 +64,7 @@ export class AnimationController {
         if (!displayCoordinateSystem) {
             this.resetCoordinateSystem();
         } else {
-            this._canvas.drawCoordinateSystem();
+            this._canvas.redrawCoordinateSystem();
         }
     }
     resetCoordinateSystem() {
