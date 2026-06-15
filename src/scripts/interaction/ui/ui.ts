@@ -64,7 +64,7 @@ export class UI {
 //#region initialize
     constructor(private app: App) {
         this.controlBar = new ControlBar(this, this.app);
-        this.statusBar = new StatusBar();
+        this.statusBar = new StatusBar("BodyCount", "TickInfo", "Zoom", "CanvasSize");
         this.topMenu = new TopMenu(this, this.app);
     }
 
