@@ -22,12 +22,24 @@ export class StatusBar {
             element.innerHTML = `Zoom: ${this.ui.zoom.toFixed(2)} (m/px)`;
         }
     }
-
+    private clearMessage(field: StatusBarFieldType) {
+        this.setStatusMessage("", field);
+    }
+    private hideField(field: StatusBarFieldType) {
+        const element = this.fields.get(field);
+        element?.classList.add('hidden');
+    }
+    private showField(field: StatusBarFieldType) {
+        const element = this.fields.get(field);
+        element?.classList.remove('hidden');
+    }
     displayVectorMessage(display: boolean) {
         if (display) {
+            this.showField("VectorInfo");
             this.setStatusMessage(this.vectorMessage(), "VectorInfo");
         } else {
-            this.setStatusMessage("", "VectorInfo");
+            this.clearMessage("VectorInfo");
+            this.hideField("VectorInfo");
         }
     }
     updateSimulationInfo(tick: number, bodyCount: number, performanceInfo?: PerformanceInfo) {
