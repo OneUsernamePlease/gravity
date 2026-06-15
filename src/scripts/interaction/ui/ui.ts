@@ -60,11 +60,14 @@ export class UI {
             movable: this.movable,
         }
     }
+    get zoom() {
+        return this.app.currentZoom;
+    }
 //#endregion
 //#region initialize
     constructor(private app: App) {
         this.controlBar = new ControlBar(this, this.app);
-        this.statusBar = new StatusBar();
+        this.statusBar = new StatusBar(this, "BodyCount", "TickInfo", "VectorInfo", "Zoom", "CanvasSize");
         this.topMenu = new TopMenu(this, this.app);
     }
 
