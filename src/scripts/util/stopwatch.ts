@@ -32,8 +32,7 @@ export class Stopwatch {
         return this._elapsed;
     }
     reset() {
-        this._running = false;
-        this.startTimeMs = 0;
+        this.startTimeMs = performance.now();
         this._elapsed = 0;
     }
 }

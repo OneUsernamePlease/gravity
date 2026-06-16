@@ -126,7 +126,6 @@ export class Gravity implements SimulationAPI {
         this._lastSecondTicks = 0;
         this._lastSecondTimeStamp = 0;
         this._stopwatch.reset();
-        if (this._running) this._stopwatch.start();
     }
     advanceTick() {
         this.updateAccelerationVectors();
