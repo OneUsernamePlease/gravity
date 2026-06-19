@@ -1,10 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { Vector2D } from '../scripts/util/vector2d';
 
-test('test test', () => {
-  expect(true).toBe(true);
-});
-
 describe("Vector2D", () => {
     describe("constructor", () => {
         test("default constructor initializes to (0,0)", () => {
@@ -33,55 +29,69 @@ describe("Vector2D", () => {
         });
     });
 
+    describe("equals()", () => {
+        const v = new Vector2D(-1.123456789, 1.123456789);
+        test("equals exactly", () => {
+            const vAgain = new Vector2D(-1.123456789, 1.123456789);
+            expect(v.equals(vAgain)).toBe(true);
+        });
+
+        test("equals with epsilon", () => {
+            const almostV = new Vector2D(-1.123456666, 1.123456666);
+            expect(v.equals(almostV, 0.000001)).toBe(true);
+        });
+
+        test("does not equal", () => {
+            const notV = new Vector2D(-46, 22);
+            expect(v.equals(notV)).toBe(false);
+        })
+    })
+
     describe("add()", () => {
         test("adds a single vector", () => {
-            const v = new Vector2D(1, 2).add({ x: 3, y: 4 });
-            expect(v.x).toBe(4);
-            expect(v.y).toBe(6);
+            const v = new Vector2D(1, 2).add(new Vector2D(3, 4));
+            expect(v).toEqual({ x: 4, y: 6});
         });
 
         test("adds multiple vectors", () => {
             const v = new Vector2D(1, 1).add(
-                { x: 1, y: 1 },
-                { x: 2, y: 2 },
-                { x: -1, y: 3 }
+                new Vector2D(1, 1),
+                new Vector2D(2, 2),
+                new Vector2D(-1, 3)
             );
-            expect(v.x).toBe(3);
-            expect(v.y).toBe(7);
+            expect(v).toEqual({ x: 3, y: 7});
         });
     });
 
     describe("subtract()", () => {
         test("subtracts another vector", () => {
-            const v = new Vector2D(5, 5).subtract({ x: 2, y: 3 });
-            expect(v.x).toBe(3);
-            expect(v.y).toBe(2);
+            const v = new Vector2D(5, 5).subtract(new Vector2D(2, 3));
+            expect(v).toEqual({ x: 3, y: 2});
         });
     });
 
     describe("scale()", () => {
         test("scales vector by scalar", () => {
             const v = new Vector2D(2, -3).scale(2);
-            expect(v.x).toBe(4);
-            expect(v.y).toBe(-6);
+            expect(v).toEqual({ x: 4, y: -6});
         });
     });
 
     describe("dotProduct()", () => {
-        test("computes dot product", () => {
+        test("dot product", () => {
             const v = new Vector2D(3, 4);
-            const result = v.dotProduct({ x: -2, y: 5 });
-            expect(result).toBe(3 * -2 + 4 * 5);
+            const result = v.dotProduct(new Vector2D(-2, 5));
+            expect(result).toEqual(3 * -2 + 4 * 5);
         });
     });
 
     describe("magnitude()", () => {
-        test("computes magnitude correctly", () => {
-            const v = new Vector2D(3, 4);
+        test("magnitude", () => {
+            const v = new Vector2D(-3, -4);
             expect(v.magnitude()).toBe(5);
         });
 
-        test("magnitude of zero vector is 0", () => {
+        test("magnitude of zero vector", () => {
             const v = new Vector2D(0, 0);
             expect(v.magnitude()).toBe(0);
         });
@@ -89,8 +99,8 @@ describe("Vector2D", () => {
 
     describe("normalize()", () => {
         test("normalizes a nonzero vector", () => {
-            const v = new Vector2D(3, 4).normalize();
-            expect(v.x).toBeCloseTo(3 / 5);
+            const v = new Vector2D(-3, 4).normalize();
+            expect(v.x).toBeCloseTo(-3 / 5);
             expect(v.y).toBeCloseTo(4 / 5);
         });
 
@@ -102,15 +112,15 @@ describe("Vector2D", () => {
     });
 
     describe("distance()", () => {
-        test("computes distance to another vector", () => {
+        test("distance to another vector", () => {
             const v = new Vector2D(1, 1);
-            const d = v.distance({ x: 4, y: 5 });
+            const d = v.distance(new Vector2D(4, 5));
             expect(d).toBe(5);
         });
 
         test("distance to same point is 0", () => {
             const v = new Vector2D(5, 5);
-            expect(v.distance({ x: 5, y: 5 })).toBe(0);
+            expect(v.distance(new Vector2D(5, 5))).toBe(0);
         });
     });
     
@@ -122,7 +132,7 @@ describe("Vector2D", () => {
             const line2End = new Vector2D(15,0);
             
             const result = Vector2D.linesIntersecting([line1Start, line1End], [line2Start, line2End], true);
-            expect(result).toEqual([{ x: 9, y: 0 }, { x: 10, y: 0 }]);
+            expect(result).toEqual([new Vector2D(9, 0), new Vector2D(10, 0)]);
         });
         test("horizontal colinear line segments partial intersection (not strict) - returns line1", () => {
             const line1Start = new Vector2D(0,0);
