@@ -3,7 +3,7 @@ import { Vector2D } from "../util/vector2d.js";
 import * as c from "../const/const.js";
 import { SimulationAPI } from "../types/apis.js";
 import { clamp } from "../util/util.js";
-import { Stopwatch } from "../util/stopwatch.js";
+import { SimplePerformance } from "../util/simple-performance.js";
 
 export class Gravity implements SimulationAPI {
     private _simulationState: Map<number, ObjectState>;
@@ -14,10 +14,7 @@ export class Gravity implements SimulationAPI {
     private _collisionDetection: boolean;
     private _elasticCollisions: boolean;
     private _g: number; // gravitational constant
-    private _stopwatch: Stopwatch = new Stopwatch();
-    private _lastSecondTicks: number = 0;
-    private _lastSecondTimeStamp: number = 0;
-    private _currentSecondTicks: number = 0;
+    private _performance: SimplePerformance = new SimplePerformance();
     private readonly gravityLowerBounds: number = 1; // force calculations for distances lower than this number are skipped
     private _cachedIds: number[] = [];
 //#region get, set
@@ -40,15 +37,15 @@ export class Gravity implements SimulationAPI {
     /**
      * Total time the simulation has been running for in milliseconds. Does not increase while the simulation is stopped.
      */
-    get runningTime(): number {
-        return this._stopwatch.elapsed;
+    get totalTime(): number {
+        return this._performance.elapsed;
     }
     get ticksLastSecond() {
-        return this._lastSecondTicks;
+        return this._performance.measurementsLastInterval;
     }
     get averageTicksPerSecond() {
-        if (this.runningTime === 0) return 0;
-        const elapsedSeconds = this.runningTime / 1000;
+        if (this.totalTime === 0) return 0;
+        const elapsedSeconds = this.totalTime / 1000;
         return this._tickCount / elapsedSeconds;
     }
 
@@ -90,23 +87,16 @@ export class Gravity implements SimulationAPI {
     stop() {
         this._running = false;
 
-        // Performance metrics
-        this._stopwatch.stop();
-        this._currentSecondTicks = 0;
-        this._lastSecondTicks = 0;
-        this._lastSecondTimeStamp = 0;
+        this._performance.stop();
+        this._performance.reset();
     }
     run() {
         if (this._running) {
             return;
         }
         this._running = true;
-        
-        // Performance metrics
-        this._currentSecondTicks = 0;
-        this._lastSecondTicks = 0;
-        this._lastSecondTimeStamp = this.runningTime;
-        this._stopwatch.start();
+
+        this._performance.start();
         
         const runSimulationStep = () => {
             if (this._running) {
@@ -120,12 +110,7 @@ export class Gravity implements SimulationAPI {
     reset() {
         this.clearObjects();
         this._tickCount = 0;
-        
-        // Performance metrics
-        this._currentSecondTicks = 0;
-        this._lastSecondTicks = 0;
-        this._lastSecondTimeStamp = 0;
-        this._stopwatch.reset();
+        this._performance.reset();
     }
     advanceTick() {
         this.updateAccelerationVectors();
@@ -133,15 +118,9 @@ export class Gravity implements SimulationAPI {
         if (this._collisionDetection) {
             this.handleCollisions();
         }
-        
-        // Performance metrics
-        this._currentSecondTicks++;
-        const elapsedSinceLastSecond = this.runningTime - this._lastSecondTimeStamp;
-        if (elapsedSinceLastSecond >= 1000) {
-            this._lastSecondTicks = (this._currentSecondTicks / elapsedSinceLastSecond ) * 1000;
-            this._currentSecondTicks = 0;
-            this._lastSecondTimeStamp = this.runningTime;
-        }
+
+        this._performance.measure();
+
         this._tickCount++;
     }
     private clearObjects() {
