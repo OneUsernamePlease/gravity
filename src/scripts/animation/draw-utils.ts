@@ -2,12 +2,10 @@ import { Vector2D } from "../util/vector2d.js";
 
 /**
  * Draws a line from position to position + direction.
- * @param position in simulation
- * @param direction in simulation
+ * @param from on context
+ * @param to on context
  */
-export function drawLine(position: Vector2D, direction: Vector2D, color = "white", lineWidth = 1, context: CanvasRenderingContext2D) {
-    // optionally normalize the direction and scale later
-    let endPosition: Vector2D = position.add(direction);
+export function drawLine(from: Vector2D, to: Vector2D, color = "white", lineWidth = 1, context: CanvasRenderingContext2D) {
     //if (!this.isLinePotentiallyVisible(position, endPosition)) {
     //    return;
     //}
@@ -16,8 +14,8 @@ export function drawLine(position: Vector2D, direction: Vector2D, color = "white
     context.beginPath();
     context.lineWidth = lineWidth / scaleX; // lineWidth * this._canvasSpace.currentZoom;
     context.strokeStyle = color;
-    context.moveTo(position.x, position.y);
-    context.lineTo(endPosition.x, endPosition.y);
+    context.moveTo(from.x, from.y);
+    context.lineTo(to.x, to.y);
     context.stroke();
 }
 /**

@@ -14,7 +14,7 @@ export const VECTOR_THICKNESS = .8;
 export const COORDINATE_SYSTEM_AXIS_THICKNESS = 1;
 export const COORDINATE_SYSTEM_GRID_THICKNESS = .5;
 export const PATH_THICKNESS = .8;
-export const PATH_ALPHA = "77";
+export const PATH_ALPHA = "99";
 export const PATH_SEGMENT_MIN_LENGTH = 0.5;
 export const MIN_DISPLAYED_RADIUS = 0.75;
 export const BACKGROUND_COLOR = "#222222ff";
@@ -24,4 +24,5 @@ export const VECTOR_COLORS: Map<AnimatedVector, {hex: string, name: string}> = n
     .set("velocity",        { hex: "#ffd700ff", name: "Yellow" });
 export const COORDINATE_SYSTEM_AXIS_COLOR = "#aaaaaaff";
 export const COORDINATE_SYSTEM_GRID_COLOR = "#888888ff";
+export const COORDINATE_SYSTEM_AXIS_DASH_LENGTH = 20;
 //#endregion
