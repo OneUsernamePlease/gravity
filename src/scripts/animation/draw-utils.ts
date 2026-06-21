@@ -53,3 +53,8 @@ export function drawCircle(position: Vector2D, radius: number, color: string = "
     context.fillStyle = color;
     context.fill();
 }
+export function drawText(position: {x: number, y: number}, text: string, color: string, fontSize: string, context: CanvasRenderingContext2D) {
+    context.fillStyle = color;
+    context.font = `${fontSize}px sans-serif`;
+    context.fillText(text, position.x, position.y)
+}

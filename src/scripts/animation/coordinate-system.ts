@@ -1,5 +1,5 @@
 import { COORDINATE_SYSTEM_AXIS_COLOR, COORDINATE_SYSTEM_AXIS_DASH_LENGTH, COORDINATE_SYSTEM_AXIS_THICKNESS } from "../const/const.js";
-import { clamp, magnitude, roundTowardsZeroToNearestMultiple } from "../util/util.js";
+import { magnitude, roundTowardsZeroToNearestMultiple } from "../util/util.js";
 import { Vector2D } from "../util/vector2d.js";
 import { Canvas } from "./canvas.js";
 import * as draw from "./draw-utils.js";
@@ -47,7 +47,7 @@ export class CoordinateSystem {
 
         draw.drawLineBatch(lineBatch, COORDINATE_SYSTEM_AXIS_COLOR, COORDINATE_SYSTEM_AXIS_THICKNESS, this._context);
     }
-    private drawAxisDashes() {
+    private drawAxisDashes(numbers: boolean = true) {
         const dashBatch: [Vector2D, Vector2D][] = [];
         const dashLengthOnScreen = COORDINATE_SYSTEM_AXIS_DASH_LENGTH * this.zoom;
         const origin = this.canvasSpace.origin;
@@ -63,6 +63,9 @@ export class CoordinateSystem {
         for (let i = 0; i < yDashCount; i++) {
             const dashY = lowestYDashPosition + distanceBetween * i;
             dashBatch.push([new Vector2D(dashYX1, dashY), new Vector2D(dashYX2, dashY)]);
+            if (numbers && dashY !== 0) {
+                this.drawAxisNumber("y", dashY);
+            }
         }
 
         // x-axis
@@ -72,15 +75,43 @@ export class CoordinateSystem {
         for (let i = 0; i < xDashCount; i++) {
             const dashX = lowestXDashPosition + distanceBetween * i;
             dashBatch.push([new Vector2D(dashX, dashXY1), new Vector2D(dashX, dashXY2)]);
+            if (numbers && dashX !== 0) {
+                this.drawAxisNumber("x", dashX);
+            }
         }
 
         draw.drawLineBatch(dashBatch, COORDINATE_SYSTEM_AXIS_COLOR, COORDINATE_SYSTEM_AXIS_THICKNESS, this._context);
     }
-    private drawNumbers() {
-        throw new Error("not implemented");
+    private drawAxisNumber(axis: "x" | "y", axisValue: number) {
+        const color = COORDINATE_SYSTEM_AXIS_COLOR;
+        const fontSize = `${11*this.zoom}`;
+        const formatNumber = (n: number) => {
+            if (Math.abs(n) >= 10000) {
+                return n.toExponential(2).replace(/\.?0+e/, "e");
+            }
+            return n.toFixed(2).replace(/\.?0+$/, ""); // drop trailing zeros. that's why is so the weird.
+        }
+        const text = formatNumber(axisValue);
         
-        // context.fillStyle = COORDINATE_SYSTEM_COLOR;
-        // context.font = `${11*zoom}px sans-serif`;
-        // context.fillText(`(0,0)`, 0, 0)
+        let pos: Vector2D = new Vector2D();
+        const distanceFromAxis = COORDINATE_SYSTEM_AXIS_DASH_LENGTH * this.zoom / 2;
+        switch (axis) {
+            case "x":
+                pos = new Vector2D(axisValue, -distanceFromAxis);
+                break;
+        
+            case "y":
+                pos = new Vector2D(distanceFromAxis, axisValue);
+                break;
+        
+            default:
+                break;
+        }
+
+        this.drawText(pos, text, color, fontSize)
+    }
+
+    private drawText(position: {x: number, y: number}, text: string, color: string, fontSize: string) {
+        draw.drawText(position, text, color, fontSize, this._context);
     }
 }
