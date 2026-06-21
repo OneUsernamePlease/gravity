@@ -18,15 +18,61 @@ export function log(message: string) {
     console.log(`[${formattedTimestamp}] ${message}`);
 }
 /**
- * min and max included
+ * Generates an integer between min and max (both included).
  * @returns random number
  */
 export function rng(min: number, max: number) {
+    if (min > max) {
+        throw new Error('min must be <= max');
+    }
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
 //#endregion
 
 //#region math stuff
+type MagnitudeMode =  "1-10" | "1-5-10" | "1-2-5-10";
+const magnitudeModeSteps: Record<MagnitudeMode, number[]> = {
+    "1-10": [1],
+    "1-5-10": [1,5],
+    "1-2-5-10": [1,2,5],
+}
+/**
+ * Calculates the power of 10 of or below n, or, depending on mode, a multiple of that.
+ * Zero returns zero. Negative numbers work just as well.
+ * 
+ * Example: n = 40, returns 10 (mode 1-10), returns 20 (mode 1-2-5-10).
+ * 
+ * Example: n = 0.11, return 0.1 (all modes)
+ * 
+ * Example: n = 775, returns 100 (mode 1-10), returns 200 (mode 1-2-5-10), returns 500 (mode 1-5-10).
+ * 
+ * Example: n = 1, returns 1 (all modes)
+ * 
+ * Example: n = 10, returns 10 (all modes)
+ * 
+ * Example: n = 10, returns 1000 (all modes)
+ */
+export function magnitude(n: number, mode: MagnitudeMode = "1-10") {
+    if (n === 0) {
+        return 0;
+    }
+    const sign = n < 0 ? -1 : 1;
+    
+    n = Math.abs(n)
+
+    const basePower = 10 ** Math.floor(Math.log10(n));
+    const normalized = n / basePower;
+
+    const steps = magnitudeModeSteps[mode];
+
+    for (let i = steps.length - 1; i >= 0; i--) {
+    if (normalized >= steps[i]) {
+            return steps[i] * basePower * sign;
+        }
+    }
+
+    return steps[0] * basePower / 10 * sign;
+}
 /**
  * empty string is NOT considered numeric
  * @param s the string to be examined
@@ -77,6 +123,18 @@ export function clamp(n: number, min: number, max: number): number {
 }
 export function isInRange(n: number, min: number, max: number): boolean {
     return n >= min && n <= max;
+}
+/**
+ * Rounds towards zero. Be careful dealing with negative numbers.
+ * @param n round this number down
+ * @param m to the nearest multiple of this number
+ */
+export function roundTowardsZeroToNearestMultiple(n: number, m: number): number {
+    if (m === 0) {
+        throw new Error("m cannot be 0"); 
+    }
+    const mod = n % m;
+    return n - mod;
 }
 //#endregion
 
