@@ -37,20 +37,25 @@ const magnitudeModeSteps: Record<MagnitudeMode, number[]> = {
     "1-2-5-10": [1,2,5],
 }
 /**
- * Calculates the power of 10 of or below n, or, depending on mode, a multiple of that.
- * Zero returns zero. Negative numbers work just as well.
- * 
- * Example: n = 40, returns 10 (mode 1-10), returns 20 (mode 1-2-5-10).
- * 
- * Example: n = 0.11, return 0.1 (all modes)
- * 
- * Example: n = 775, returns 100 (mode 1-10), returns 200 (mode 1-2-5-10), returns 500 (mode 1-5-10).
- * 
- * Example: n = 1, returns 1 (all modes)
- * 
- * Example: n = 10, returns 10 (all modes)
- * 
- * Example: n = 10, returns 1000 (all modes)
+ * Returns the largest "nice" magnitude less than or equal to `n`.
+ *
+ * Examples:
+ *
+ * magnitude(40, "1-10")       // 10
+ * magnitude(40, "1-2-5-10")   // 20
+ *
+ * magnitude(0.11)             // 0.1
+ *
+ * magnitude(775, "1-10")      // 100
+ * magnitude(775, "1-2-5-10")  // 500
+ * magnitude(775, "1-5-10")    // 500
+ *
+ * magnitude(1)                // 1
+ * magnitude(10)               // 10
+ * magnitude(1000)             // 1000
+ *
+ * magnitude(-42, "1-2-5-10")  // -20
+ * magnitude(0)                // 0
  */
 export function magnitude(n: number, mode: MagnitudeMode = "1-10") {
     if (n === 0) {
