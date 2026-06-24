@@ -1,4 +1,4 @@
-import { COORDINATE_SYSTEM_AXIS_COLOR, COORDINATE_SYSTEM_AXIS_DASH_LENGTH, COORDINATE_SYSTEM_AXIS_THICKNESS } from "../const/const.js";
+import { COORDINATE_SYSTEM_AXIS_COLOR, COORDINATE_SYSTEM_AXIS_DASH_LENGTH, COORDINATE_SYSTEM_AXIS_THICKNESS, COORDINATE_SYSTEM_GRID_COLOR, COORDINATE_SYSTEM_GRID_THICKNESS, COORDINATE_SYSTEM_TEXT_COLOR } from "../const/const.js";
 import { magnitude, roundTowardsZeroToNearestMultiple } from "../util/util.js";
 import { Vector2D } from "../util/vector2d.js";
 import { Canvas } from "./canvas.js";
@@ -26,7 +26,7 @@ export class CoordinateSystem {
     draw() {
         this.drawMainAxis()
 
-        this.drawAxisDashes();
+        this.drawAxisGridOrDashes();
     }
     clearContext() {
         this._context.save();
@@ -47,43 +47,47 @@ export class CoordinateSystem {
 
         draw.drawLineBatch(lineBatch, COORDINATE_SYSTEM_AXIS_COLOR, COORDINATE_SYSTEM_AXIS_THICKNESS, this._context);
     }
-    private drawAxisDashes(numbers: boolean = true) {
+    private drawAxisGridOrDashes(grid: boolean = true, numbers: boolean = true) {
         const dashBatch: [Vector2D, Vector2D][] = [];
         const dashLengthOnScreen = COORDINATE_SYSTEM_AXIS_DASH_LENGTH * this.zoom;
+        const xGridLengthOnScreen = this.zoom * this.width;
+        const yGridLengthOnScreen = this.zoom * this.height;
         const origin = this.canvasSpace.origin;
         const magnitudeZoom = magnitude(this.zoom, "1-2-5-10");
         const distanceBetween = magnitudeZoom * 100;
-        const xDashCount = this.width * this.zoom / distanceBetween;
-        const yDashCount = this.height * this.zoom / distanceBetween;
+        const xAxisIntersectionCount = this.width * this.zoom / distanceBetween;
+        const yAxisIntersectionCount = this.height * this.zoom / distanceBetween;
 
-        // y-axis
+        // y-axis dashes / x-lines grid
         const lowestYDashPosition = roundTowardsZeroToNearestMultiple(origin.y, distanceBetween); // negative y is up
-        const dashYX1 = -dashLengthOnScreen / 2;
-        const dashYX2 = dashYX1 + dashLengthOnScreen;
-        for (let i = 0; i < yDashCount; i++) {
-            const dashY = lowestYDashPosition + distanceBetween * i;
-            dashBatch.push([new Vector2D(dashYX1, dashY), new Vector2D(dashYX2, dashY)]);
-            if (numbers && dashY !== 0) {
-                this.drawAxisNumber("y", dashY);
+        const yX1 = grid ? origin.x : -dashLengthOnScreen / 2;
+        const yX2 = grid ? origin.x + xGridLengthOnScreen : yX1 + dashLengthOnScreen;
+        for (let i = 0; i < yAxisIntersectionCount; i++) {
+            const yPosition = lowestYDashPosition + distanceBetween * i;
+            dashBatch.push([new Vector2D(yX1, yPosition), new Vector2D(yX2, yPosition)]);
+            if (numbers && yPosition !== 0) {
+                this.drawAxisNumber("y", yPosition);
             }
         }
 
-        // x-axis
+        // x-axis dashes / y-lines grid
         const lowestXDashPosition = roundTowardsZeroToNearestMultiple(origin.x, distanceBetween); // negative y is up
-        const dashXY1 = -dashLengthOnScreen / 2;
-        const dashXY2 = dashXY1 + dashLengthOnScreen;
-        for (let i = 0; i < xDashCount; i++) {
-            const dashX = lowestXDashPosition + distanceBetween * i;
-            dashBatch.push([new Vector2D(dashX, dashXY1), new Vector2D(dashX, dashXY2)]);
-            if (numbers && dashX !== 0) {
-                this.drawAxisNumber("x", dashX);
+        const xY1 = grid ? origin.y : -dashLengthOnScreen / 2;
+        const xY2 = grid ? origin.y + yGridLengthOnScreen : xY1 + dashLengthOnScreen;
+        for (let i = 0; i < xAxisIntersectionCount; i++) {
+            const xPosition = lowestXDashPosition + distanceBetween * i;
+            dashBatch.push([new Vector2D(xPosition, xY1), new Vector2D(xPosition, xY2)]);
+            if (numbers && xPosition !== 0) {
+                this.drawAxisNumber("x", xPosition);
             }
         }
 
-        draw.drawLineBatch(dashBatch, COORDINATE_SYSTEM_AXIS_COLOR, COORDINATE_SYSTEM_AXIS_THICKNESS, this._context);
+        const color = grid ? COORDINATE_SYSTEM_GRID_COLOR : COORDINATE_SYSTEM_AXIS_COLOR;
+        const thickness = grid ? COORDINATE_SYSTEM_GRID_THICKNESS : COORDINATE_SYSTEM_AXIS_THICKNESS;
+        draw.drawLineBatch(dashBatch, color, thickness, this._context);
     }
     private drawAxisNumber(axis: "x" | "y", axisValue: number) {
-        const color = COORDINATE_SYSTEM_AXIS_COLOR;
+        const color = COORDINATE_SYSTEM_TEXT_COLOR;
         const fontSize = `${11*this.zoom}`;
         const formatNumber = (n: number) => {
             if (Math.abs(n) >= 10000) {

@@ -23,6 +23,7 @@ export const VECTOR_COLORS: Map<AnimatedVector, {hex: string, name: string}> = n
     .set("acceleration",    { hex: "#20ff20ff", name: "Green" })
     .set("velocity",        { hex: "#ffd700ff", name: "Yellow" });
 export const COORDINATE_SYSTEM_AXIS_COLOR = "#aaaaaaff";
+export const COORDINATE_SYSTEM_TEXT_COLOR = "#aaaaaaff";
 export const COORDINATE_SYSTEM_GRID_COLOR = "#888888ff";
 export const COORDINATE_SYSTEM_AXIS_DASH_LENGTH = 16;
 //#endregion
