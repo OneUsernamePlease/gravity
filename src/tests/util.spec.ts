@@ -207,3 +207,33 @@ describe("isNumeric", () => {
         });
     });
 });
+
+describe("decimalToHex", () => {
+    test("string input", () => {
+        expect(util.decimalToHex("-Infinity")).toEqual("-Infinity");
+        expect(util.decimalToHex("-123.123")).toEqual("-7b.1f7ced916874");
+        expect(util.decimalToHex("0")).toEqual("0");
+        expect(util.decimalToHex("15")).toEqual("f");
+        expect(util.decimalToHex("16")).toEqual("10");
+    });
+    
+    test("number input", () => {
+        expect(util.decimalToHex(Infinity)).toEqual("Infinity");
+        expect(util.decimalToHex(-123.123)).toEqual("-7b.1f7ced916874");
+        expect(util.decimalToHex(0)).toEqual("0");
+        expect(util.decimalToHex(15)).toEqual("f");
+        expect(util.decimalToHex(16)).toEqual("10");
+        expect(util.decimalToHex(Math.PI)).toEqual("3.243f6a8885a3");
+        expect(util.decimalToHex(1e15)).toEqual("38d7ea4c68000");
+    });
+    
+    test("invalid input", () => {
+        expect(() => { util.decimalToHex("nope") }).toThrow(Error);
+        expect(() => { util.decimalToHex("") }).toThrow(Error);
+    });
+    
+});
+
+describe("hexToDecimal", () => {
+    
+});

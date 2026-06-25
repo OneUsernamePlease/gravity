@@ -95,7 +95,7 @@ export function decimalToHex(d: string | number): string {
         if (isNumeric(d)) {
             d = parseFloat(d);
         } else {
-            return "";
+            throw new Error("invalid input");
         }
     }
     return d.toString(16);
