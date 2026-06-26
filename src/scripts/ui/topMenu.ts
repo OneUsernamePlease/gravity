@@ -1,7 +1,7 @@
 // Basic Menu.
 // Contains Buttons: Reset, Play/Pause, Next Step, To the Repository
 
-import { App } from "../../app/app.js";
+import { App } from "../app/app.js";
 import { UI } from "./ui.js";
 
 export class TopMenu {

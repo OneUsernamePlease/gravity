@@ -1,5 +1,5 @@
-import { VECTOR_COLORS } from "../../const/const.js";
-import { PerformanceInfo, StatusBarFieldType } from "../../types/types.js";
+import { VECTOR_COLORS } from "../const/const.js";
+import { PerformanceInfo, StatusBarFieldType } from "../types/types.js";
 import { UI } from "./ui.js";
 
 export class StatusBar {

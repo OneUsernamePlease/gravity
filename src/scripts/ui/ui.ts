@@ -1,5 +1,5 @@
-import { UIAnimationSettings, SimulationSettings } from "../../types/types.js";
-import { App } from "../../app/app.js";
+import { UIAnimationSettings, SimulationSettings } from "../types/types.js";
+import { App } from "../app/app.js";
 import { StatusBar } from "./statusBar.js";
 import { TopMenu } from "./topMenu.js";
 import { ControlBar } from "./controlBar.js";

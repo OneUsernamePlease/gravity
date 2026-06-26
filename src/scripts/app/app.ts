@@ -1,7 +1,7 @@
-import { UI } from "../interaction/ui/ui.js";
+import { UI } from "../ui/ui.js";
 import { Gravity } from "../simulation/gravity.js";
 import { AnimationController } from "../animation/animation-controller.js";
-import { InteractionManager } from "../interaction/interaction-manager.js";
+import { InteractionManager } from "./interaction-manager.js";
 import { Canvas } from "../animation/canvas.js";
 import { ObjectState, PerformanceInfo, SimulationSettings } from "../types/types.js";
 import { Vector2D } from "../util/vector2d.js";

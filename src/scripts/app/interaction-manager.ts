@@ -1,10 +1,10 @@
 import { Vector2D } from "../util/vector2d.js";
 import { TouchAction, ButtonState, MouseButtons, Pointer, MouseAction, MultiTouchGesture as MultiTouch, ObjectState } from "../types/types.js";
 import * as util from "../util/util.js";
-import { App } from "../app/app.js";
+import { App } from "./app.js";
 import * as tfm from "../util/transformations.js";
 import { Body2d } from "../simulation/body2d.js";
-import { ContextMenu } from "./contextMenu.js";
+import { ContextMenu } from "../ui/contextMenu.js";
 import { Canvas } from "../animation/canvas.js";
 
 export class InteractionManager {
