@@ -4,7 +4,7 @@ import * as util from "../util/util.js";
 import { App } from "./app.js";
 import * as tfm from "../util/transformations.js";
 import { Body2d } from "../simulation/body2d.js";
-import { ContextMenu } from "../ui/contextMenu.js";
+import { ContextMenu } from "../ui/context-menu.js";
 import { Canvas } from "../animation/canvas.js";
 
 export class InteractionManager {
@@ -240,7 +240,7 @@ export class InteractionManager {
                 ev.preventDefault();
                 break;
             case MouseButtons.Secondary:
-                // okay I implemented this and i don' t event need it yet
+                // okay I implemented this and i don' t even need it yet
                 // this.openContextMenu(new Vector2D(ev.clientX, ev.clientY));
 
                 this.pointer.secondary.state = ButtonState.Up;
@@ -297,12 +297,10 @@ export class InteractionManager {
     private openContextMenu(position: Vector2D) {
         this.contextMenu.open(
             position,
-            [
-                {
-                    label: 'Test1',
-                    action: () => { console.log('test1')},
-                }
-            ]
+            {
+                label: 'Test1',
+                action: () => { console.log('test1')},
+            },
         )
     }
     private closeContextMenu() {
