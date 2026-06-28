@@ -2,6 +2,8 @@ import * as util from "../util/util.js";
 import { RadioButtonGroup, SimulationSettings, UIAnimationSettings } from "../types/types.js";
 import { App } from "../app/app.js";
 import { UI } from "./ui.js";
+import { Vector2D } from "../util/vector2d.js";
+import { VECTOR_COLORS } from "../const/const.js";
 export class ControlBar {
     private zoomInButton: HTMLInputElement;
     private zoomOutButton: HTMLInputElement;
@@ -113,6 +115,10 @@ export class ControlBar {
         this.scrollLeftButton.addEventListener("click", () => this.scrollLeftClicked());
         this.scrollRightButton.addEventListener("click", () => this.scrollRightClicked());
         this.displayVectorsCheckbox.addEventListener("change", () => this.cbxDisplayVectorsChanged());
+        this.displayVectorsCheckbox.addEventListener("mouseenter", (ev) => this.cbxDisplayVectorsPrepareTooltip(ev));
+        this.displayVectorsCheckbox.labels?.forEach((label) => {
+            label.addEventListener("mouseenter", (ev) => this.cbxDisplayVectorsPrepareTooltip(ev));
+        });
         this.tracePathsCheckbox.addEventListener("change", () => this.cbxTracePathsChanged());
         this.displayCoordinateSystemCheckbox.addEventListener("change", () => this.cbxDisplayCoordinateSystemChanged());
         this.collisionDetectionCheckbox.addEventListener("change", () => this.cbxCollisionsChanged());
@@ -184,6 +190,12 @@ export class ControlBar {
     }
     cbxDisplayVectorsChanged() {
         this.app.setDisplayVectors(this.displayVectors);
+    }
+    cbxDisplayVectorsPrepareTooltip(ev: MouseEvent) {
+        const position = new Vector2D(ev.clientX, ev.clientY);
+        setTimeout(() => {
+            this.ui.showTooltip(position, `Acceleration: ${VECTOR_COLORS.get("acceleration")?.name} - Velocity: ${VECTOR_COLORS.get("velocity")?.name}`)
+        }, 300);
     }
     cbxTracePathsChanged() {
         this.app.setTracePaths(this.tracePaths);

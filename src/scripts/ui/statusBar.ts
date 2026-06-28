@@ -1,4 +1,3 @@
-import { VECTOR_COLORS } from "../const/const.js";
 import { PerformanceInfo, StatusBarFieldType } from "../types/types.js";
 import { UI } from "./ui.js";
 
@@ -33,15 +32,6 @@ export class StatusBar {
         const element = this.fields.get(field);
         element?.classList.remove('hidden');
     }
-    displayVectorMessage(display: boolean) {
-        if (display) {
-            this.showField("VectorInfo");
-            this.setStatusMessage(this.vectorMessage(), "VectorInfo");
-        } else {
-            this.clearMessage("VectorInfo");
-            this.hideField("VectorInfo");
-        }
-    }
     updateSimulationInfo(tick: number, bodyCount: number, performanceInfo?: PerformanceInfo) {
         this.updateTickInfo(tick, performanceInfo);
         this.updateBodyCount(bodyCount);
@@ -62,9 +52,6 @@ export class StatusBar {
         let message = `Simulation Tick: ${tickCount}`;
         message += performanceInfo?.ticksLastSecond ? `, Ticks/s: ${performanceInfo.ticksLastSecond.toFixed(1)}` : "";
         this.setStatusMessage(message, "TickInfo");
-    }
-    private vectorMessage() {
-        return `Acceleration: ${VECTOR_COLORS.get("acceleration")?.name} - Velocity: ${VECTOR_COLORS.get("velocity")?.name}`;
     }
     /**
      * @param fieldIndexOrId number of field (starting at one) OR id of the field

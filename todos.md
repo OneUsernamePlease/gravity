@@ -9,6 +9,7 @@
             - cache subpath-boundingBox
                 - add visibility checks
     - improve the UI
+        - give ui elements an optional property "tooltipText". use this instead of creating the tooltip individually for elements
         - small controlBar using icons, which opens floating panels containing the controls
         - improve the status bar
             - maxN -> status bar can have between 1 and N fields.

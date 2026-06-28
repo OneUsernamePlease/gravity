@@ -3,6 +3,8 @@ import { App } from "../app/app.js";
 import { StatusBar } from "./statusBar.js";
 import { TopMenu } from "./topMenu.js";
 import { ControlBar } from "./controlBar.js";
+import { Tooltip } from "./tooltip.js";
+import { Vector2D } from "../util/vector2d.js";
 
 export class UI {
 //#region properties
@@ -10,6 +12,7 @@ export class UI {
     private statusBar: StatusBar;
     private topMenu: TopMenu;
     private controlBar: ControlBar;
+    private tooltip: Tooltip = new Tooltip();
 //#endregion
 //#region get, set
     // get all the values
@@ -67,12 +70,14 @@ export class UI {
 //#region initialize
     constructor(private app: App) {
         this.controlBar = new ControlBar(this, this.app);
-        this.statusBar = new StatusBar(this, "BodyCount", "TickInfo", "VectorInfo", "Zoom", "CanvasSize");
+        this.statusBar = new StatusBar(this, "BodyCount", "TickInfo", "Zoom", "CanvasSize");
         this.topMenu = new TopMenu(this, this.app);
+
+        document.addEventListener("mousemove", () => { this.hideTooltip(); })
+        document.addEventListener("mousedown", () => { this.hideTooltip(); })
     }
 
     initialize(width: number, height: number) {
-        this.statusBar.displayVectorMessage(this.displayVectors)
         this.statusBar.updateCanvasDimensions(width, height);
 
         const isNarrow = window.matchMedia("(max-width: 768px)").matches;
@@ -90,11 +95,15 @@ export class UI {
     simulationResumed() {
         this.topMenu.simulationResumed();
     }
-
-//#region StatusBar
-    displayVectorMessage(display: boolean) {
-        this.statusBar.displayVectorMessage(display);
+    showTooltip(position: Vector2D, message: string) {
+        this.tooltip.open(position, message);
     }
+    hideTooltip() {
+        if (this.tooltip.isOpen) {
+            this.tooltip.close();
+        }
+    }
+//#region StatusBar
     updateStatusBarSimulationInfo() {
         this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.size, this.app.simulationMetrics);
     }

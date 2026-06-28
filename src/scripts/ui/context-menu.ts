@@ -1,12 +1,7 @@
 import { ContextMenuItem } from "../types/types.js";
-import { Vector2D } from "../util/vector2d.js";
 import { FloatingElement } from "./floating-element.js";
 
 export class ContextMenu extends FloatingElement<ContextMenuItem> {
-    get isOpen() {
-        return this._isOpen;
-    }
-
     constructor () {
         const className = `
             fixed min-w-45
@@ -17,6 +12,8 @@ export class ContextMenu extends FloatingElement<ContextMenuItem> {
         `
 
         super("div", className);
+ 
+        this._element.addEventListener("contextmenu", (ev) => { ev.preventDefault(); })
     }
     protected override render(entries: ContextMenuItem[]) {
         for (const entry of entries) {

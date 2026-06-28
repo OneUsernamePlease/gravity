@@ -5,10 +5,14 @@ export abstract class FloatingElement<T> {
     protected _isOpen = false;
     protected _padding = 8;
     protected _zIndexClass = "z-100";
+
+    get isOpen() {
+        return this._isOpen;
+    }
+    
     constructor(
         tagName: keyof HTMLElementTagNameMap,
         className?: string,
-
     ) {
         this._element = document.createElement(tagName);
 

@@ -38,7 +38,7 @@ export class InteractionManager {
         canvasElement.addEventListener("mouseup",       (ev) => this.canvasMouseUp(ev as MouseEvent));      // so we need mouse events to catch all button interactions
         canvasElement.addEventListener("wheel",         (ev) => this.canvasScrollMouseWheel(ev as WheelEvent));
         canvasElement.addEventListener("touchend",      (ev) => { ev.preventDefault() }, { passive: false });   // prevent touch-triggered MouseUp
-        canvasElement.addEventListener('contextmenu',   (ev) => { ev.preventDefault() });
+        canvasElement.addEventListener("contextmenu",   (ev) => { ev.preventDefault() });
     }
 //#region primary interaction
     private canvasPointerDown(ev: PointerEvent) {

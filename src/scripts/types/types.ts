@@ -100,7 +100,7 @@ export interface BoundingBox {
 //#endregion
 
 //#region UI
-export type StatusBarFieldType = "BodyCount" | "TickInfo" | "VectorInfo" | "Zoom" | "CanvasSize"
+export type StatusBarFieldType = "BodyCount" | "TickInfo" | "Zoom" | "CanvasSize"
 export interface RadioButtonGroup {
     name: string;
     buttons: HTMLInputElement[];

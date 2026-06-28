@@ -121,7 +121,6 @@ export class App {
     }
     setDisplayVectors(display: boolean) {
         this._animation.setDisplayVectors(display);
-        this._ui.displayVectorMessage(display);
     }
     setTracePaths(tracePaths: boolean) {
         this._animation.setTracePaths(tracePaths);
