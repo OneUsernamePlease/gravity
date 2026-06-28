@@ -1,4 +1,3 @@
-import { Vector2D } from "../util/vector2d.js";
 import { FloatingElement } from "./floating-element.js"
 
 export class Tooltip extends FloatingElement<string> {
@@ -25,5 +24,4 @@ export class Tooltip extends FloatingElement<string> {
 
         this._element.innerHTML = text;
     }
-
 }

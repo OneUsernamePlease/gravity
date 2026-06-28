@@ -115,9 +115,9 @@ export class ControlBar {
         this.scrollLeftButton.addEventListener("click", () => this.scrollLeftClicked());
         this.scrollRightButton.addEventListener("click", () => this.scrollRightClicked());
         this.displayVectorsCheckbox.addEventListener("change", () => this.cbxDisplayVectorsChanged());
-        this.displayVectorsCheckbox.addEventListener("mouseenter", (ev) => this.cbxDisplayVectorsPrepareTooltip(ev));
+        this.displayVectorsCheckbox.addEventListener("mouseenter", (ev) => this.prepareTooltipDisplayVectors(ev));
         this.displayVectorsCheckbox.labels?.forEach((label) => {
-            label.addEventListener("mouseenter", (ev) => this.cbxDisplayVectorsPrepareTooltip(ev));
+            label.addEventListener("mouseenter", (ev) => this.prepareTooltipDisplayVectors(ev));
         });
         this.tracePathsCheckbox.addEventListener("change", () => this.cbxTracePathsChanged());
         this.displayCoordinateSystemCheckbox.addEventListener("change", () => this.cbxDisplayCoordinateSystemChanged());
@@ -191,11 +191,11 @@ export class ControlBar {
     cbxDisplayVectorsChanged() {
         this.app.setDisplayVectors(this.displayVectors);
     }
-    cbxDisplayVectorsPrepareTooltip(ev: MouseEvent) {
+    prepareTooltipDisplayVectors(ev: MouseEvent) {
         const position = new Vector2D(ev.clientX, ev.clientY);
         setTimeout(() => {
             this.ui.showTooltip(position, `Acceleration: ${VECTOR_COLORS.get("acceleration")?.name} - Velocity: ${VECTOR_COLORS.get("velocity")?.name}`)
-        }, 300);
+        }, 500);
     }
     cbxTracePathsChanged() {
         this.app.setTracePaths(this.tracePaths);

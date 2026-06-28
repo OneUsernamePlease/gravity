@@ -263,37 +263,45 @@ export class Gravity implements SimulationAPI {
         // if the bodies are moving apart, do nothing
         if (velocityAlongDisplacement > 0) { return; }
 
+        const invMass1 = body1.body.movable ? 1 / body1.body.mass : 0;
+        const invMass2 = body2.body.movable ? 1 / body2.body.mass : 0;
+
         // impulseScalar = change in momentum as scalar
-        const impulseScalar = -(1 + restitution) * velocityAlongDisplacement / (body1.body.mass + body2.body.mass);
+        const impulseScalar = -(1 + restitution) * velocityAlongDisplacement / (invMass1 + invMass2);
+
+        const impulse = normalizedDisplacement.scale(impulseScalar);
 
         // update velocities based on the impulse scalar
-        const deltaV1 = normalizedDisplacement.scale(impulseScalar * body2.body.mass);
-        const deltaV2 = normalizedDisplacement.scale(impulseScalar * body1.body.mass);
+        const deltaV1 = impulse.scale(invMass1);
+        const deltaV2 = impulse.scale(invMass2);
         body1.velocity = body1.velocity.subtract(deltaV1);
         body2.velocity = body2.velocity.add(deltaV2);
-        
-        // REFACTOR ME: at the top, check for movable, if not just reflect velocity
-        // if a body is immovable, reset its velocity and transfer it back
-        if (!body1.body.movable) {
-            body1.velocity = new Vector2D(0, 0);
-            body2.velocity = body2.velocity.add(deltaV1);
-        }
-        if (!body2.body.movable) {
-            body2.velocity = new Vector2D(0, 0);
-            body1.velocity = body1.velocity.add(deltaV2);
-        }
     }
     private placeBodiesTangentially(objectState1: ObjectState, objectState2: ObjectState) {
         const displacement = objectState1.position.displacementVector(objectState2.position);
+        const displacementMag = displacement.magnitude()
+        if (displacementMag === 0) {
+            return;
+        }
         const normalDisplacement = displacement.normalize();        
         const targetDistance = objectState1.body.radius + objectState2.body.radius;
-        const totalMoveDistance = targetDistance - displacement.magnitude();
         if (targetDistance === 0) {
             return;
         }
-        const moveBody1 = normalDisplacement.scale(totalMoveDistance * (objectState1.body.radius / targetDistance));
-        const moveBody2 = normalDisplacement.scale(totalMoveDistance * (objectState2.body.radius / targetDistance));
-    
+        const totalMoveDistance = targetDistance - displacementMag;
+        const invMass1 = 1 / objectState1.body.mass;
+        const invMass2 = 1 / objectState2.body.mass;
+
+        const totalInvMass = invMass1 + invMass2;
+
+        const moveBody1 = normalDisplacement.scale(
+            totalMoveDistance * invMass1 / totalInvMass
+        );
+
+        const moveBody2 = normalDisplacement.scale(
+            totalMoveDistance * invMass2 / totalInvMass
+        );
+
         objectState1.position = objectState1.position.subtract(moveBody1);
         objectState2.position = objectState2.position.add(moveBody2);
     }

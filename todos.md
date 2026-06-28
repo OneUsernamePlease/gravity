@@ -25,6 +25,8 @@
     - Testing: set the context such that CSS can be used (> body.ts) (works in browser context but not in node) - sadly, *environment: 'jsdom',* presents new problems
 
 # bugs
+    - tooltip:
+        - element mouseEnter -> prepare tooltip -> shows tooltip, mouse is now on tooltip -> moving mouse or clicking hides tooltip -> mouseEnter triggers again -> tooltip shows again
     - drawing Paths: adding segments (no camera change) to a persistent path looks slightly different from redrawing paths. could be just a difference in rasterization - drawing many short paths vs. drawing one long path
     - handleCollisions() - objectStates are sometimes undefined - switched to using Map with cached Ids introduced this bug
     - elastic collisions (that should be 100% elastic) are not
