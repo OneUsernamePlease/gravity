@@ -1,7 +1,8 @@
 import { MenuItem } from "../types/types.js";
-import { FloatingElement } from "./floating-element.js";
+import { Vector2D } from "../util/vector2d.js";
+import { FloatingElement } from "./floating-element.js"
 
-export class ContextMenu extends FloatingElement<MenuItem> {
+export class Popover extends FloatingElement<MenuItem> {
     constructor () {
         const className = `
             fixed min-w-45
@@ -12,8 +13,21 @@ export class ContextMenu extends FloatingElement<MenuItem> {
         `
 
         super("div", className);
- 
+
         this._element.addEventListener("contextmenu", (ev) => { ev.preventDefault(); })
+    }
+    override open(position: Vector2D, ...entries: MenuItem[]): void
+    override open(forElement: HTMLElement, ...entries: MenuItem[]): void
+    override open(elOrPos: Vector2D | HTMLElement, ...entries: MenuItem[]) {
+        let position: Vector2D;
+
+        if (elOrPos instanceof HTMLElement) {
+            position = this.computePosition(elOrPos);
+        } else {
+            position = elOrPos;
+        }
+
+        super.open(position, ...entries)
     }
     protected override render(entries: MenuItem[]) {
         for (const entry of entries) {
@@ -38,5 +52,12 @@ export class ContextMenu extends FloatingElement<MenuItem> {
 
         this._element.appendChild(button);
         }
+    }
+    private computePosition(forElement: HTMLElement): Vector2D {
+        let position = new Vector2D();
+
+        
+
+        return position;
     }
 }

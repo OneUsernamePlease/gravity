@@ -3,9 +3,9 @@ import { Vector2D } from "../util/vector2d.js";
 export abstract class FloatingElement<T> {
     protected _element: HTMLElement;
     protected _isOpen = false;
-    protected _padding = 8;
+    protected _padding = 6;
     protected _zIndexClass = "z-100";
-
+    
     get isOpen() {
         return this._isOpen;
     }
@@ -40,16 +40,17 @@ export abstract class FloatingElement<T> {
         const box = this._element.getBoundingClientRect();
 
         if (box.right > window.innerWidth - this._padding) {
-            const overflow = box.right - window.innerWidth;
+            const overflow = box.right - window.innerWidth + this._padding;
             x = position.x - overflow;
-            x = Math.max(this._padding, x);
         }
         if (box.bottom > window.innerHeight - this._padding) {
-            const overflow = box.bottom - window.innerHeight;
+            const overflow = box.bottom - window.innerHeight + this._padding;
             y = position.y - overflow;
-            y = Math.max(this._padding, y);
         }
         
+        x = Math.max(this._padding, x);
+        y = Math.max(this._padding, y);
+
         this._element.style.left = `${x}px`;
         this._element.style.top = `${y}px`;
 

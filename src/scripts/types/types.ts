@@ -6,13 +6,13 @@ export interface Pointer {
     main: {
         state: ButtonState;
         downCoordinatesInSimSpace: Vector2D | undefined;
-    };
+    }
     secondary: {
         state: ButtonState;
-    };
+    }
     wheel: {
         state: ButtonState;
-    };
+    }
 }
 export enum TouchAction {
     None = 0,
@@ -54,8 +54,8 @@ export enum MouseButtons {
 //#region view and animation
 export interface CanvasSpace {
     // use this to transform simulationSpace to canvasSpace and back
-    origin: Vector2D, // the canvas' origin in simulation space
-    currentZoom: number, // simulationUnits (meter) per canvasUnit
+    origin: Vector2D; // the canvas' origin in simulation space
+    currentZoom: number; // simulationUnits (meter) per canvasUnit
 }
 export interface AnimationSettings extends UIAnimationSettings {
     frameLength: number; // ms
@@ -63,7 +63,7 @@ export interface AnimationSettings extends UIAnimationSettings {
 export interface UIAnimationSettings {
     displayVectors: boolean;
     tracePaths: boolean;
-    displayCoordinateSystem: boolean,
+    displayCoordinateSystem: boolean;
 }
 export interface CanvasLayer {
     canvas: HTMLCanvasElement;
@@ -80,40 +80,42 @@ export interface SimulationSettings {
 }
 
 export interface ObjectState {
-    body: Body2d, 
-    position: Vector2D,
-    velocity: Vector2D, // simulationUnits (meter) per second
-    acceleration: Vector2D
+    body: Body2d; 
+    position: Vector2D;
+    velocity: Vector2D; // simulationUnits (meter) per second
+    acceleration: Vector2D;
 }
 
 export interface PathCoordinate {
-    coordinate: Vector2D,
-    color: string,
+    coordinate: Vector2D;
+    color: string;
 }
 
 export interface BoundingBox {
-    left: number,
-    right:number,
-    top:number,
-    bottom:number,
+    left: number;
+    right:number;
+    top:number;
+    bottom:number;
 }
 //#endregion
 
 //#region UI
-export type StatusBarFieldType = "BodyCount" | "TickInfo" | "Zoom" | "CanvasSize"
+export type StatusBarFieldType = "BodyCount" | "TickInfo" | "Zoom" | "CanvasSize";
+export type FloatingPositionAlignment = "BottomRight" | "Left";
+export type FloatingPositionOverflow = "Shift" | "Flip";
 export interface RadioButtonGroup {
     name: string;
     buttons: HTMLInputElement[];
 }
-export interface ContextMenuItem {
-    label: string 
-    action: () => void
-    disabled?: boolean
-    highlighted?: boolean
+export interface MenuItem {
+    label: string ;
+    action: () => void;
+    disabled?: boolean;
+    highlighted?: boolean;
 }
 //#endregion
 
 export interface PerformanceInfo {
-    ticksLastSecond?: number,
-    averageTicksPerSecond?: number
+    ticksLastSecond?: number;
+    averageTicksPerSecond?: number;
 }
