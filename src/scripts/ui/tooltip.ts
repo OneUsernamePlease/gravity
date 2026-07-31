@@ -10,7 +10,7 @@ export class Tooltip extends FloatingElement<string> {
             text-sm text-zinc-100
         `
 
-        super("div", className);
+        super("div", {className});
 
         this._element.addEventListener("contextmenu", (ev) => { ev.preventDefault(); })
         this._element.addEventListener("mousedown", () => { this.close(); })

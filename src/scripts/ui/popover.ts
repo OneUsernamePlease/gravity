@@ -12,7 +12,7 @@ export class Popover extends FloatingElement<MenuItem> {
             text-sm text-zinc-100
         `
 
-        super("div", className);
+        super("div", { className });
 
         this._element.addEventListener("contextmenu", (ev) => { ev.preventDefault(); })
     }

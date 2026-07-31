@@ -2,6 +2,7 @@ import { MenuItem } from "../types/types.js";
 import { FloatingElement } from "./floating-element.js";
 
 export class ContextMenu extends FloatingElement<MenuItem> {
+    
     constructor () {
         const className = `
             fixed min-w-45
@@ -11,7 +12,7 @@ export class ContextMenu extends FloatingElement<MenuItem> {
             text-sm text-zinc-100
         `
 
-        super("div", className);
+        super("div", { className });
  
         this._element.addEventListener("contextmenu", (ev) => { ev.preventDefault(); })
     }
