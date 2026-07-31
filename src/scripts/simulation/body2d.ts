@@ -46,13 +46,13 @@ export class Body2d {
     }
 
     /**
-     * returns the radius of a sphere based on mass and density
+     * returns the radius of the body based on mass and density
      */
     defaultRadius(mass?: number) {
         if (!mass) {
             mass = this.mass;
         }
-        return ((3 * mass)/(4 * Math.PI * Body2d.defaultDensity)) ** (1/3); 
+        return (Math.sqrt(mass * Body2d.defaultDensity) / Math.PI); 
     }
     /**
      * Sets the bodies' properties' values. If radius or color are omitted, their mass-dependent defaults are used.

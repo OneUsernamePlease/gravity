@@ -16,7 +16,7 @@ export class Gravity implements SimulationAPI {
     private _g: number; // gravitational constant
     private _performance: SimplePerformance = new SimplePerformance();
     private readonly gravityLowerBounds: number = 1; // force calculations for distances lower than this number are skipped
-    private _cachedIds: number[] = [];
+    private _cachedIds: number[] = []; 
 //#region get, set
     get simulationState() {
         return this._simulationState;
@@ -184,7 +184,7 @@ export class Gravity implements SimulationAPI {
         const distance = objectStateI.position.distance(objectStateJ.position);
         if (distance < this.gravityLowerBounds || distance === 0) // if the bodies are too close, skip the calculation
             { return new Vector2D(0, 0); } 
-        const netForceBetweenBodies: number = this._g * ((objectStateI.body.mass * objectStateJ.body.mass)/(distance * distance));
+        const netForceBetweenBodies: number = this._g * ((objectStateI.body.mass * objectStateJ.body.mass)/(distance));
         const unitVectorIToJ = objectStateJ.position.subtract(objectStateI.position).normalize();
         return unitVectorIToJ.scale(netForceBetweenBodies);
     }
