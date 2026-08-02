@@ -1,11 +1,11 @@
-import { Alignment, FloatingElementOverflow, Overflow } from "../types/types.js";
+import { Alignment, OnOverflow, Overflow } from "../types/types.js";
 import { Vector2D } from "../util/vector2d.js";
 export abstract class FloatingElement<T> {
     protected _element: HTMLElement;
     protected _isOpen = false;
     protected _padding = 6;
     protected _zIndexClass = "z-100";
-    protected _onOverflow: FloatingElementOverflow = "shift";
+    protected _onOverflow: OnOverflow = "shift";
     protected _alignment: Alignment = "bottom-right";
     get isOpen() {
         return this._isOpen;
@@ -13,7 +13,7 @@ export abstract class FloatingElement<T> {
     set alignment(alignment: Alignment) {
         this._alignment = alignment;
     }
-    set onOverflow(onOverflow: FloatingElementOverflow) {
+    set onOverflow(onOverflow: OnOverflow) {
         this._onOverflow = onOverflow;
     }
     constructor(
@@ -21,7 +21,7 @@ export abstract class FloatingElement<T> {
         options?: {
             className?: string,
             alignment?: Alignment,
-            onOverflow?: FloatingElementOverflow,
+            onOverflow?: OnOverflow,
         }
     ) {
         this._element = document.createElement(tagName);
