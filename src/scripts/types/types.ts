@@ -102,7 +102,13 @@ export interface BoundingBox {
 //#region UI
 export type StatusBarFieldType = "BodyCount" | "TickInfo" | "Zoom" | "CanvasSize";
 export type FloatingElementOverflow = "shift" | "flip" | "none";
-export type FloatingElementAlignment = "top-left" | "top" | "top-right" | "right" | "bottom-right" | "bottom" | "bottom-left" | "left";
+export type Alignment = "top-left" | "top" | "top-right" | "right" | "bottom-right" | "bottom" | "bottom-left" | "left";
+export type Overflow = {
+    top: number,
+    right: number,
+    bottom: number,
+    left: number,
+}
 export interface RadioButtonGroup {
     name: string;
     buttons: HTMLInputElement[];

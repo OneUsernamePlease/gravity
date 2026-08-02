@@ -12,7 +12,11 @@ export class ContextMenu extends FloatingElement<MenuItem> {
             text-sm text-zinc-100
         `
 
-        super("div", { className });
+        super("div", { 
+            className,
+            alignment: "bottom-right",
+            onOverflow: "flip"
+        });
  
         this._element.addEventListener("contextmenu", (ev) => { ev.preventDefault(); })
     }
