@@ -103,6 +103,12 @@ export interface BoundingBox {
 export type StatusBarFieldType = "BodyCount" | "TickInfo" | "Zoom" | "CanvasSize";
 export type OnOverflow = "shift" | "flip" | "none";
 export type Alignment = "top-left" | "top" | "top-right" | "right" | "bottom-right" | "bottom" | "bottom-left" | "left";
+export type PopoverOptions = {
+    tagName?: keyof HTMLElementTagNameMap,
+    className?: string,
+    alignment?: Alignment,
+    onOverflow?: OnOverflow,
+}
 export type Overflow = {
     top: number,
     right: number,

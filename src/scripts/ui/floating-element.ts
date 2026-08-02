@@ -1,5 +1,6 @@
-import { Alignment, OnOverflow, Overflow } from "../types/types.js";
+import { Alignment, OnOverflow, Overflow, PopoverOptions } from "../types/types.js";
 import { Vector2D } from "../util/vector2d.js";
+
 export abstract class FloatingElement<T> {
     protected _element: HTMLElement;
     protected _isOpen = false;
@@ -16,20 +17,14 @@ export abstract class FloatingElement<T> {
     set onOverflow(onOverflow: OnOverflow) {
         this._onOverflow = onOverflow;
     }
-    constructor(
-        tagName: keyof HTMLElementTagNameMap,
-        options?: {
-            className?: string,
-            alignment?: Alignment,
-            onOverflow?: OnOverflow,
-        }
-    ) {
+    constructor(options?: PopoverOptions) {
+        const tagName = options?.tagName ? options.tagName : "div";
         this._element = document.createElement(tagName);
 
-        if (options?.className) this._element.className = options.className;
         if (options?.alignment) this._alignment = options.alignment;
         if (options?.onOverflow) this._onOverflow = options.onOverflow;
-
+        if (options?.className) this._element.className = options.className;
+        
         this._element.classList.add("hidden");
         this._element.classList.add(this._zIndexClass);
 
@@ -140,19 +135,19 @@ export abstract class FloatingElement<T> {
             left: Math.max(0, padding - box.left)
         }
     }
-    private fixAlignment(alignment: Alignment, overflow: Overflow): Alignment {            
+    private fixAlignment(alignment: Alignment, overflow: Overflow): Alignment {
         const overflowTop = overflow.top > 0;
         const overflowBottom = overflow.bottom > 0;
         const overflowLeft = overflow.left > 0;
         const overflowRight = overflow.right > 0;
-        let fixedAlignment = this._alignment;
+        let fixedAlignment = alignment;
 
         // Basically XOR
         if (overflowTop !== overflowBottom) {
-            fixedAlignment = FloatingElement.FLIP_VERTICAL[alignment];
+            fixedAlignment = FloatingElement.FLIP_VERTICAL[fixedAlignment];
         }
         if (overflowLeft !== overflowRight) {
-            fixedAlignment = FloatingElement.FLIP_HORIZONTAL[alignment];
+            fixedAlignment = FloatingElement.FLIP_HORIZONTAL[fixedAlignment];
         }
 
         return fixedAlignment;

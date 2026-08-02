@@ -1,18 +1,23 @@
-import { MenuItem } from "../types/types.js";
+import { MenuItem, PopoverOptions } from "../types/types.js";
 import { Vector2D } from "../util/vector2d.js";
 import { FloatingElement } from "./floating-element.js"
 
 export class Popover extends FloatingElement<MenuItem> {
-    constructor () {
-        const className = `
+    constructor (options?: PopoverOptions) {
+        const className = options?.className ? options.className : `
             fixed min-w-45
             rounded-xl border border-zinc-700
             bg-zinc-900/95 backdrop-blur
             p-1 shadow-2xl
             text-sm text-zinc-100
-        `
-
-        super("div", { className });
+        `;
+        
+        super({
+            tagName: options?.tagName,
+            className,
+            alignment: options?.alignment,
+            onOverflow: options?.onOverflow
+        });
 
         this._element.addEventListener("contextmenu", (ev) => { ev.preventDefault(); })
     }
