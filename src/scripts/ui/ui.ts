@@ -113,5 +113,8 @@ export class UI {
     updateStatusBarAnimationInfo() {
         this.statusBar.updateAnimationInfo(this.app.currentZoom)
     }
+    closeStatusBarPopover() {
+        this.statusBar.closePopover();
+    }
 //#endregion
 }

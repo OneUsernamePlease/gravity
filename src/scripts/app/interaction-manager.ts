@@ -250,6 +250,7 @@ export class InteractionManager {
         }
     }
     private canvasMouseDown(ev: MouseEvent) {
+        this.closeStatusBarPopover()
         if (this.contextMenu.isOpen) {
             this.closeContextMenu();
             return;
@@ -305,6 +306,9 @@ export class InteractionManager {
     }
     private closeContextMenu() {
         this.contextMenu.close();
+    }
+    private closeStatusBarPopover() {
+        this.app.closeStatusBarPopover();
     }
 //#endregion
 //#region manage interactions

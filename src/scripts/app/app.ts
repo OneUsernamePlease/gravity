@@ -9,7 +9,6 @@ import { Body2d } from "../simulation/body2d.js";
 import { DEFAULT_ZOOM_FACTOR } from "../const/const.js";
 
 export class App {
-
 //#region properties
     private _gravity: Gravity;
     private _animation: AnimationController;
@@ -138,5 +137,8 @@ export class App {
     body2dFromUi(): Body2d {
         const bodyInfo = this._ui.bodyInformation;
         return new Body2d(bodyInfo.mass, bodyInfo.movable);
+    }
+    closeStatusBarPopover() {
+        this._ui.closeStatusBarPopover();
     }
 }

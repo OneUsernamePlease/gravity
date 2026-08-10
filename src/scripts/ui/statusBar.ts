@@ -1,9 +1,12 @@
-import { PerformanceInfo, StatusBarFieldType } from "../types/types.js";
+import { MenuItem, PerformanceInfo, StatusBarFieldType } from "../types/types.js";
+import { Vector2D } from "../util/vector2d.js";
+import { Popover } from "./popover.js";
 import { UI } from "./ui.js";
 
 export class StatusBar {
     bar: HTMLDivElement
     fields: Map<StatusBarFieldType, HTMLSpanElement> = new Map();
+    private popover: Popover = new Popover({alignment: "top"})
 
     constructor(private ui: UI, ...fields: StatusBarFieldType[]) {
         this.bar = document.getElementById("statusBar")! as HTMLDivElement;
@@ -14,12 +17,34 @@ export class StatusBar {
             this.fields.set(name, span);
         });
         this.setInitialMessages();
+
+        this.bar.addEventListener("contextmenu", (ev) => { this.leftClick(ev); })
+    }
+    leftClick(ev: PointerEvent) {
+        ev.preventDefault();
+
+        const popoverEntries = this.generateEntries();
+
+        this.popover.open(new Vector2D(ev.x, ev.y), ...popoverEntries);
+    }
+    closePopover() {
+        this.popover.close();
     }
     setInitialMessages() {
         const element = this.fields.get("Zoom");
         if (element) {
             element.innerHTML = `Zoom: ${this.ui.zoom.toFixed(2)} (m/px)`;
         }
+    }
+    private generateEntries(): MenuItem[] {
+        const entries: MenuItem[] = [];
+
+        entries.push({
+            label: "Do Nothing",
+            action: () => {},
+        })
+
+        return entries;
     }
     private clearMessage(field: StatusBarFieldType) {
         this.setStatusMessage("", field);

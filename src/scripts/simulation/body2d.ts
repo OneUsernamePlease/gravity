@@ -52,7 +52,7 @@ export class Body2d {
         if (!mass) {
             mass = this.mass;
         }
-        return (Math.sqrt(mass * Body2d.defaultDensity) / Math.PI); 
+        return (Math.sqrt(mass * Body2d.defaultDensity) / 4); 
     }
     /**
      * Sets the bodies' properties' values. If radius or color are omitted, their mass-dependent defaults are used.

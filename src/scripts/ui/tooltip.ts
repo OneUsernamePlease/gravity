@@ -1,3 +1,4 @@
+import { Alignment, OnOverflow } from "../types/types.js";
 import { FloatingElement } from "./floating-element.js"
 
 export class Tooltip extends FloatingElement<string> {
@@ -8,9 +9,10 @@ export class Tooltip extends FloatingElement<string> {
             bg-zinc-900/95 backdrop-blur
             p-1 shadow-2xl
             text-sm text-zinc-100
-        `
-
-        super("div", {className});
+        `;
+        const alignment: Alignment = "bottom-right";
+        const onOverflow: OnOverflow = "shift"
+        super({ className, alignment, onOverflow });
 
         this._element.addEventListener("contextmenu", (ev) => { ev.preventDefault(); })
         this._element.addEventListener("mousedown", () => { this.close(); })
