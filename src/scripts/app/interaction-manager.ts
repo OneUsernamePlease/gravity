@@ -351,7 +351,7 @@ export class InteractionManager {
     }
     private addBodyAtPointer(pointerPositionOnCanvas: Vector2D) {
         this.app.addObject(this.objectStateFromUiAndInteraction(pointerPositionOnCanvas));
-        this.app.updateStatusBarSimulationInfo();
+        this.app.updateStatus();
     }
     private objectStateFromUiAndInteraction(pointerPositionOnCanvas: Vector2D): ObjectState {
         const body: Body2d = this.app.body2dFromUi();

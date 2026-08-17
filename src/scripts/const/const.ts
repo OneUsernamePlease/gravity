@@ -6,6 +6,7 @@ export const MAX_G = 100;
 //#endregion
 
 //#region animation
+export const DEFAULT_FPS = 40;
 export const MIN_ZOOM = 0.05;
 export const MAX_ZOOM = 100;
 export const DEFAULT_ZOOM_FACTOR = 0.075;

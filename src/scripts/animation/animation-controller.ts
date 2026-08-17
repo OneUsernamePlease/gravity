@@ -1,4 +1,4 @@
-import { DEFAULT_SCROLL_RATE } from "../const/const.js";
+import { DEFAULT_FPS, DEFAULT_SCROLL_RATE } from "../const/const.js";
 import { Canvas } from "./canvas.js";
 import { AnimationSettings, UIAnimationSettings } from "../types/types.js";
 import { Vector2D } from "../util/vector2d.js";
@@ -18,11 +18,8 @@ export class AnimationController {
         return this._canvas.height;
     }
 //#endregion
-    constructor(
-        private _canvas: Canvas, 
-        private _app: App,
-    ) {
-        this._animationSettings = { frameLength: 25, displayVectors: true, tracePaths: true, displayCoordinateSystem: true };
+   constructor(private _canvas: Canvas, private _app: App) {
+        this._animationSettings = { frameLength: 1000 / DEFAULT_FPS, displayVectors: true, tracePaths: true, displayCoordinateSystem: true };
         this._running = false;
     }
     initialize(animationSettings: UIAnimationSettings) {
@@ -39,7 +36,7 @@ export class AnimationController {
             if (this._running) {
                 setTimeout(loop, this._animationSettings.frameLength);
                 this._canvas.drawFrame(this._app.currentSimulationState, this._animationSettings);
-                this._app.updateStatusBarSimulationInfo();
+                this._app.updateStatus();
             }
         };
         loop();

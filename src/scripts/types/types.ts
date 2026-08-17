@@ -58,7 +58,8 @@ export interface CanvasSpace {
     currentZoom: number; // simulationUnits (meter) per canvasUnit
 }
 export interface AnimationSettings extends UIAnimationSettings {
-    frameLength: number; // ms
+    /** Animation-frame length in milliseconds */
+    frameLength: number;
 }
 export interface UIAnimationSettings {
     displayVectors: boolean;

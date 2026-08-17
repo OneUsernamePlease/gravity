@@ -3,93 +3,178 @@ import { Vector2D } from "../util/vector2d.js";
 import { Popover } from "./popover.js";
 import { UI } from "./ui.js";
 
-export class StatusBar {
-    bar: HTMLDivElement
-    fields: Map<StatusBarFieldType, HTMLSpanElement> = new Map();
-    private popover: Popover = new Popover({alignment: "top"})
+export type Status = {
+    zoom?: number;
+    bodyCount?: number;
+    canvasSize?: {
+        width: number;
+        height: number;
+    };
+    tickInfo?: {
+        tickCount: number;
+        performanceInfo?: PerformanceInfo;
+    };
+};
 
-    constructor(private ui: UI, ...fields: StatusBarFieldType[]) {
-        this.bar = document.getElementById("statusBar")! as HTMLDivElement;
-        fields.forEach((name) => {
-            const span = document.createElement("span");
-            span.classList.add("px-2");
-            this.bar.appendChild(span);
-            this.fields.set(name, span);
-        });
-        this.setInitialMessages();
+export class StatusStore {
+    private status: Status = {};
+    private subscribers = new Set<(status: Status) => void>();
+    subscribe(callback: (status: Status) => void) {
+        this.subscribers.add(callback);
 
-        this.bar.addEventListener("contextmenu", (ev) => { this.leftClick(ev); })
+        callback(this.status);
+
+        return () => {
+            this.subscribers.delete(callback);
+        };
     }
-    leftClick(ev: PointerEvent) {
+    private setState(update: Status) {
+        Object.assign(this.status, update);
+
+        for (const subscriber of this.subscribers) {
+            subscriber(this.status);
+        }
+    }
+    setZoom(zoom: number) {
+        this.setState({ zoom });
+    }
+    setBodyCount(bodyCount: number) {
+        this.setState({ bodyCount });
+    }
+    setCanvasSize(width: number, height: number) {
+        this.setState({
+            canvasSize: { width, height },
+        });
+    }
+    setTickInfo(tickCount: number, performanceInfo?: PerformanceInfo) {
+        this.setState({
+            tickInfo: {
+                tickCount,
+                performanceInfo,
+            },
+        });
+    }
+}
+
+export class StatusBar {
+    private readonly bar: HTMLDivElement;
+    private readonly fields = new Map<StatusBarFieldType, HTMLSpanElement>();
+    private readonly popover = new Popover({ alignment: "top" });
+    private readonly unsubscribe: () => void;
+
+    constructor(private readonly status: StatusStore, ...fields: StatusBarFieldType[]) {
+        this.bar = document.getElementById("statusBar") as HTMLDivElement;
+
+        for (const field of fields) {
+            this.createField(field);
+        }
+
+        this.unsubscribe = this.status.subscribe((state) => {
+            this.render(state);
+        });
+
+        this.bar.addEventListener("contextmenu", (ev) => {
+            this.leftClick(ev);
+        });
+    }
+    destroy() {
+        this.unsubscribe();
+        this.popover.close();
+    }
+    private createField(field: StatusBarFieldType) {
+        if (this.fields.has(field)) {
+            return;
+        }
+
+        const span = document.createElement("span");
+        span.classList.add("px-2");
+
+        this.bar.appendChild(span);
+        this.fields.set(field, span);
+    }
+    private removeField(field: StatusBarFieldType) {
+        const element = this.fields.get(field);
+        if (!element) { return; }
+
+        element.remove();
+        this.fields.delete(field);
+    }
+    toggle(...fields: StatusBarFieldType[]) {
+        for (const field of fields) {
+            if (this.fields.has(field)) {
+                this.removeField(field);
+            } else {
+                this.createField(field);
+            }
+        }
+    }
+    private render(state: Status) {
+        if (state.zoom !== undefined) {
+            this.setStatusMessage(
+                `Zoom: ${state.zoom.toFixed(2)} (m/px)`,
+                "Zoom",
+            );
+        }
+
+        if (state.bodyCount !== undefined) {
+            this.setStatusMessage(
+                `Bodies: ${state.bodyCount}`,
+                "BodyCount",
+            );
+        }
+
+        if (state.canvasSize !== undefined) {
+            const { width, height } = state.canvasSize;
+
+            this.setStatusMessage(
+                `Size: ${width} * ${height}`,
+                "CanvasSize",
+            );
+        }
+
+        if (state.tickInfo !== undefined) {
+            const { tickCount, performanceInfo } = state.tickInfo;
+
+            let message = `Simulation Tick: ${tickCount}`;
+
+            if (performanceInfo?.ticksLastSecond !== undefined) {
+                message += `, Ticks/s: ${performanceInfo.ticksLastSecond.toFixed(1)}`;
+            }
+
+            this.setStatusMessage(message, "TickInfo");
+        }
+    }
+    private setStatusMessage(
+        message: string,
+        field: StatusBarFieldType,
+    ) {
+        const element = this.fields.get(field);
+
+        if (!element) {
+            return;
+        }
+
+        element.textContent = message;
+    }
+    leftClick(ev: MouseEvent) {
         ev.preventDefault();
 
         const popoverEntries = this.generateEntries();
 
-        this.popover.open(new Vector2D(ev.x, ev.y), ...popoverEntries);
+        this.popover.open(
+            new Vector2D(ev.clientX, ev.clientY),
+            ...popoverEntries,
+        );
     }
     closePopover() {
         this.popover.close();
     }
-    setInitialMessages() {
-        const element = this.fields.get("Zoom");
-        if (element) {
-            element.innerHTML = `Zoom: ${this.ui.zoom.toFixed(2)} (m/px)`;
-        }
-    }
     private generateEntries(): MenuItem[] {
-        const entries: MenuItem[] = [];
-
-        entries.push({
-            label: "Do Nothing",
-            action: () => {},
-        })
-
-        return entries;
-    }
-    private clearMessage(field: StatusBarFieldType) {
-        this.setStatusMessage("", field);
-    }
-    private hideField(field: StatusBarFieldType) {
-        const element = this.fields.get(field);
-        element?.classList.add('hidden');
-    }
-    private showField(field: StatusBarFieldType) {
-        const element = this.fields.get(field);
-        element?.classList.remove('hidden');
-    }
-    updateSimulationInfo(tick: number, bodyCount: number, performanceInfo?: PerformanceInfo) {
-        this.updateTickInfo(tick, performanceInfo);
-        this.updateBodyCount(bodyCount);
-    }
-    updateAnimationInfo(zoom: number) {
-        this.updateZoom(zoom);
-    }
-    updateZoom(currentZoom: number) {
-        this.setStatusMessage(`Zoom: ${currentZoom.toFixed(2)} (m/px)`, "Zoom");
-    }
-    updateCanvasDimensions(width: number, height: number) {
-        this.setStatusMessage(`Canvas size: ${width} * ${height}`, "CanvasSize");
-    }
-    private updateBodyCount(bodyCount: number) {
-        this.setStatusMessage(`Number of Bodies: ${bodyCount}`, "BodyCount");
-    }
-    private updateTickInfo( tickCount: number, performanceInfo?: PerformanceInfo ) {
-        let message = `Simulation Tick: ${tickCount}`;
-        message += performanceInfo?.ticksLastSecond ? `, Ticks/s: ${performanceInfo.ticksLastSecond.toFixed(1)}` : "";
-        this.setStatusMessage(message, "TickInfo");
-    }
-    /**
-     * @param fieldIndexOrId number of field (starting at one) OR id of the field
-     */
-    private setStatusMessage(message: string, field: StatusBarFieldType, append: boolean = false) {
-        const element = this.fields.get(field);
-        if (!element) return;
-        
-
-        if (append) {
-            element!.innerHTML += message;
-        } else {
-            element!.innerHTML = message;
-        }
+        return [
+            {
+                label: "Do Nothing",
+                action: () => {},
+            },
+        ];
     }
 }

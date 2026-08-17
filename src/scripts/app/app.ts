@@ -7,6 +7,7 @@ import { ObjectState, PerformanceInfo, SimulationSettings } from "../types/types
 import { Vector2D } from "../util/vector2d.js";
 import { Body2d } from "../simulation/body2d.js";
 import { DEFAULT_ZOOM_FACTOR } from "../const/const.js";
+import { StatusStore } from "../ui/statusBar.js";
 
 export class App {
 //#region properties
@@ -14,6 +15,7 @@ export class App {
     private _animation: AnimationController;
     private _interaction: InteractionManager;
     private _ui: UI;
+    readonly status: StatusStore = new StatusStore();
 //#endregion
 //#region get
     get simulationRunning() {
@@ -60,7 +62,9 @@ export class App {
     private initialize() {
         this._animation.initialize(this._ui.animationSettings);
         this.applySimulationSettings(this._ui.simulationSettings);
-        this._ui.initialize(this._animation.width, this._animation.height);
+
+        this.status.setCanvasSize(this.canvasWidth, this.canvasHeight);
+        this.status.setZoom(this.currentZoom);
         
         this._animation.run();
     }
@@ -76,12 +80,16 @@ export class App {
     }
     advanceOneTick() {
         this._gravity.advanceTick();
-        this._ui.updateStatusBarSimulationInfo();
+        
+        this.status.setTickInfo(this.currentTick, this.simulationMetrics);
+        this.status.setBodyCount(this.currentSimulationState.size);
     }
     resetSimulation() {
         this._gravity.reset();
         this._animation.resetPaths();
-        this._ui.updateStatusBarSimulationInfo();
+        
+        this.status.setTickInfo(this.currentTick, this.simulationMetrics);
+        this.status.setBodyCount(this.currentSimulationState.size);
     }
     applySimulationSettings(simulationSettings: SimulationSettings) {
         this._gravity.applySettings(simulationSettings);
@@ -92,15 +100,17 @@ export class App {
 // animation controls    
     zoomToFactor(zoomFactor: number, zoomCenterCanvas?: Vector2D) {
         this._animation.zoomToFactor(zoomFactor, zoomCenterCanvas);
-        this._ui.updateStatusBarAnimationInfo();
+        
+        this.status.setZoom(this.currentZoom);
     }
     zoomIn(zoomCenter = new Vector2D(this.canvasWidth / 2, this.canvasHeight / 2), factor = DEFAULT_ZOOM_FACTOR) {
         this._animation.zoomIn(zoomCenter, factor);
-        this._ui.updateStatusBarAnimationInfo();
+        
+        this.status.setZoom(this.currentZoom);
     }
     zoomOut(zoomCenter = new Vector2D(this.canvasWidth / 2, this.canvasHeight / 2), factor = DEFAULT_ZOOM_FACTOR) {
         this._animation.zoomOut(zoomCenter, factor);
-        this._ui.updateStatusBarAnimationInfo();
+        this.status.setZoom(this.currentZoom);
     }
     scrollUp() {
         this._animation.scrollUp();
@@ -116,7 +126,8 @@ export class App {
     }
     resizeCanvas() {
         this._animation.resizeCanvas();
-        this._ui.updateStatusBarCanvasDimensions(this._animation.width, this._animation.height);
+        
+        this.status.setCanvasSize(this._animation.width, this._animation.height);
     }
     setDisplayVectors(display: boolean) {
         this._animation.setDisplayVectors(display);
@@ -128,11 +139,17 @@ export class App {
         this._animation.setDisplayCoordinateSystem(displayCoordinateSystem);
     }
 // UI related
-    updateStatusBarAnimationInfo() {
-        this._ui.updateStatusBarAnimationInfo();
-    }
-    updateStatusBarSimulationInfo() {
-        this._ui.updateStatusBarSimulationInfo();
+    updateStatus() {
+        this.status.setTickInfo(
+            this.currentTick,
+            this.simulationMetrics,
+        );
+
+        this.status.setBodyCount(
+            this.currentSimulationState.size,
+        );
+
+        this.status.setZoom(this.currentZoom);
     }
     body2dFromUi(): Body2d {
         const bodyInfo = this._ui.bodyInformation;

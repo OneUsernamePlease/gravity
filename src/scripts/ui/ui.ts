@@ -70,16 +70,16 @@ export class UI {
 //#region initialize
     constructor(private app: App) {
         this.controlBar = new ControlBar(this, this.app);
-        this.statusBar = new StatusBar(this, "BodyCount", "TickInfo", "Zoom", "CanvasSize");
+        this.statusBar = new StatusBar(this.app.status, "BodyCount", "TickInfo", "Zoom", "CanvasSize");
         this.topMenu = new TopMenu(this, this.app);
 
         document.addEventListener("mousemove", () => { this.hideTooltip(); })
         document.addEventListener("mousedown", () => { this.hideTooltip(); })
+
+        this.initialize();
     }
 
-    initialize(width: number, height: number) {
-        this.statusBar.updateCanvasDimensions(width, height);
-
+    private initialize() {
         const isNarrow = window.matchMedia("(max-width: 768px)").matches;
         if (isNarrow) {
             this.controlBar.collapse();
@@ -103,18 +103,8 @@ export class UI {
             this.tooltip.close();
         }
     }
-//#region StatusBar
-    updateStatusBarSimulationInfo() {
-        this.statusBar.updateSimulationInfo(this.app.currentTick, this.app.currentSimulationState.size, this.app.simulationMetrics);
-    }
-    updateStatusBarCanvasDimensions(windowWidth: number, windowHeight: number) {
-        this.statusBar.updateCanvasDimensions(windowWidth, windowHeight)
-    }
-    updateStatusBarAnimationInfo() {
-        this.statusBar.updateAnimationInfo(this.app.currentZoom)
-    }
+
     closeStatusBarPopover() {
         this.statusBar.closePopover();
     }
-//#endregion
 }
