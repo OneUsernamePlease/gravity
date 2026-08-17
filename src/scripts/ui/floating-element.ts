@@ -1,4 +1,5 @@
 import { Alignment, OnOverflow, Overflow, PopoverOptions } from "../types/types.js";
+import { exhaustive } from "../util/util.js";
 import { Vector2D } from "../util/vector2d.js";
 
 export abstract class FloatingElement<T> {
@@ -113,8 +114,7 @@ export abstract class FloatingElement<T> {
                 return new Vector2D(x - box.width, y - box.height / 2);
         
             default:
-                const _exhaustive: never = alignment;
-                throw new Error(`Invalid alignment: ${alignment}`);
+                exhaustive(alignment);
         }
     }
     private getShiftedPosition(position: Vector2D, overflow: Overflow): Vector2D {

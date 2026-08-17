@@ -7,6 +7,9 @@ Just Some functions
 import { Vector2D } from "./vector2d.js";
 
 //#region generic stuff
+export function exhaustive(thing: never): never {
+    throw new Error(`Invalid alignment: ${thing}`);
+}
 export function log(message: string) {
     const timestamp = new Date();
     const hours = timestamp.getHours().toString().padStart(2, '0');
