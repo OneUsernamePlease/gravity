@@ -1,3 +1,4 @@
+import { Rectangle } from "../types/types.js";
 import { Vector2D } from "../util/vector2d.js";
 
 /**
@@ -57,4 +58,20 @@ export function drawText(position: {x: number, y: number}, text: string, color: 
     context.fillStyle = color;
     context.font = `${fontSize}px sans-serif`;
     context.fillText(text, position.x, position.y)
+}
+export function getVisibleRectangle(zoom: number, origin: Vector2D, context: CanvasRenderingContext2D) {
+    return {
+        minX: origin.x,
+        minY: origin.y,
+        maxX: origin.x + context.canvas.width * zoom,
+        maxY: origin.y + context.canvas.height * zoom,
+    };
+}
+export function rectanglesOverlap(a: Rectangle, b: Rectangle): boolean {
+    return (
+        a.minX <= b.maxX &&
+        a.maxX >= b.minX &&
+        a.minY <= b.maxY &&
+        a.maxY >= b.minY
+    );
 }

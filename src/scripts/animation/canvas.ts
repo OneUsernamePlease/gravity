@@ -1,6 +1,6 @@
 import { Vector2D } from "../util/vector2d.js";
 import { BACKGROUND_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_SEGMENT_MIN_LENGTH, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS, PATH_ALPHA } from "../const/const.js";
-import { AnimationSettings, CanvasLayer, CanvasSpace, LayerName, ObjectState, PathCoordinate } from "../types/types.js";
+import { AnimationSettings, CanvasLayer, CanvasSpace, LayerName, ObjectState, PathCoordinate, Rectangle } from "../types/types.js";
 import { Path, Paths } from "./paths.js";
 import { clamp } from "../util/util.js";
 import { App } from "../app/app.js";
@@ -17,6 +17,7 @@ export class Canvas {
     private _paths: Paths;
     private _cameraChange = true;
     private _coordinateSystem: CoordinateSystem;
+    private _simulationVisibleRectangle: Rectangle;
     constructor(private _canvasParent: HTMLDivElement, private _app: App) {
         const backgroundCanvas = this.createLayer("z-0");
         this._layers.set("background", {
@@ -53,6 +54,7 @@ export class Canvas {
 
         this._paths = new Paths();
         this._coordinateSystem = new CoordinateSystem(this.coordinateSystemContext, this);
+        this._simulationVisibleRectangle = draw.getVisibleRectangle(this._canvasSpace.currentZoom, this._canvasSpace.origin, this.simulationContext);
     }
 //#region get, set
     get interactionCanvas() {
@@ -168,6 +170,8 @@ export class Canvas {
 //#endregion
 //#region drawing stuff
     drawFrame(objectStates: Map<number, ObjectState>, animationSettings: AnimationSettings) {
+        
+
         // bodies
         this.clearSimulation();
         this.drawBodies(objectStates);

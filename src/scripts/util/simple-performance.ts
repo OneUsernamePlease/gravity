@@ -2,7 +2,7 @@ import { Stopwatch } from "./stopwatch.js";
 
 export class SimplePerformance {
     private _stopwatch: Stopwatch = new Stopwatch();
-    private _measurementsLastInterval: number = 0;
+    private _measurementsLastInterval: number = 0; // refactor me: make this undefined if it should be ignored
     private _measurementsCurrentInterval: number = 0;
     private _lastIntervalStartTimeStamp: number = 0;
 

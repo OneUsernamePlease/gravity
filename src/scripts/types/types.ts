@@ -92,11 +92,11 @@ export interface PathCoordinate {
     color: string;
 }
 
-export interface BoundingBox {
-    left: number;
-    right:number;
-    top:number;
-    bottom:number;
+export interface Rectangle {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
 }
 //#endregion
 

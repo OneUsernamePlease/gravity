@@ -1,7 +1,6 @@
 import { MenuItem, PerformanceInfo, StatusBarFieldType } from "../types/types.js";
 import { Vector2D } from "../util/vector2d.js";
 import { Popover } from "./popover.js";
-import { UI } from "./ui.js";
 
 export type Status = {
     zoom?: number;

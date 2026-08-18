@@ -1,4 +1,5 @@
 # TODO:
+    - started adding visibility checks - did you finish those yet?
     - This architecture is beyond ass
         - animation-controller should be able to be removed. run the loop in app.
         - app does not need to be a class
