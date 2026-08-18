@@ -1,6 +1,6 @@
-import { Alignment, OnOverflow, Overflow, PopoverOptions } from "../types/types.js";
-import { exhaustive } from "../util/util.js";
-import { Vector2D } from "../util/vector2d.js";
+import { Alignment, OnOverflow, Overflow, PopoverOptions } from "@/types/types.js";
+import { exhaustive } from "@/util/util.js";
+import { Vector2D } from "@/util/vector2d.js";
 
 export abstract class FloatingElement<T> {
     protected _element: HTMLElement;

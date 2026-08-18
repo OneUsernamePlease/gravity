@@ -1,9 +1,9 @@
-import { ObjectState, SimulationSettings } from "../types/types.js";
-import { Vector2D } from "../util/vector2d.js";
-import * as c from "../const/const.js";
-import { SimulationAPI } from "../types/apis.js";
-import { clamp } from "../util/util.js";
-import { SimplePerformance } from "../util/simple-performance.js";
+import { ObjectState, SimulationSettings } from "@/types/types.js";
+import { Vector2D } from "@/util/vector2d.js";
+import * as c from "@/const/const.js";
+import { SimulationAPI } from "@/types/apis.js";
+import { clamp } from "@/util/util.js";
+import { SimplePerformance } from "@/util/simple-performance.js";
 
 export class Gravity implements SimulationAPI {
     private _simulationState: Map<number, ObjectState>;

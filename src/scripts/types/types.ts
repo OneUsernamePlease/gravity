@@ -1,5 +1,5 @@
-import { Body2d } from "../simulation/body2d.js";
-import { Vector2D } from "../util/vector2d.js";
+import { Body2d } from "@/simulation/body2d.js";
+import { Vector2D } from "@/util/vector2d.js";
 
 //#region pointer (touch, mouse)
 export interface Pointer {

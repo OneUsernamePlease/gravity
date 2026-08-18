@@ -1,4 +1,4 @@
-import { App } from "../app/app.js";
+import { App } from "@/app/app.js";
 
 let app: App;
 

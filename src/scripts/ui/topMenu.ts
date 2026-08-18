@@ -1,8 +1,5 @@
-// Basic Menu.
-// Contains Buttons: Reset, Play/Pause, Next Step, To the Repository
-
-import { App } from "../app/app.js";
-import { UI } from "./ui.js";
+import { App } from "@/app/app.js";
+import { UI } from "@/ui/ui.js";
 
 export class TopMenu {
     private resetButton: HTMLInputElement;
@@ -27,7 +24,6 @@ export class TopMenu {
 
     resetButtonClicked() {
         this.app.resetSimulation()
-        this.ui.updateStatusBarSimulationInfo();
     }
     playPauseClicked() {
         if (this.app.simulationRunning) {
@@ -38,7 +34,6 @@ export class TopMenu {
     }
     stepButtonClicked() {
         this.app.advanceOneTick();
-        this.ui.updateStatusBarSimulationInfo();
     }
 
     simulationStopped() {

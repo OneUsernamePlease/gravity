@@ -1,8 +1,8 @@
-import { DEFAULT_FPS, DEFAULT_SCROLL_RATE } from "../const/const.js";
-import { Canvas } from "./canvas.js";
-import { AnimationSettings, UIAnimationSettings } from "../types/types.js";
-import { Vector2D } from "../util/vector2d.js";
-import { App } from "../app/app.js";
+import { DEFAULT_FPS, DEFAULT_SCROLL_RATE } from "@/const/const.js";
+import { Canvas } from "@/animation/canvas.js";
+import { AnimationSettings, UIAnimationSettings } from "@/types/types.js";
+import { Vector2D } from "@/util/vector2d.js";
+import { App } from "@/app/app.js";
 
 export class AnimationController {
     private _animationSettings: AnimationSettings;

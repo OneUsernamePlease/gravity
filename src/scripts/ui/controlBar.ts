@@ -1,9 +1,9 @@
-import * as util from "../util/util.js";
-import { RadioButtonGroup, SimulationSettings, UIAnimationSettings } from "../types/types.js";
-import { App } from "../app/app.js";
-import { UI } from "./ui.js";
-import { Vector2D } from "../util/vector2d.js";
-import { VECTOR_COLORS } from "../const/const.js";
+import * as util from "@/util/util.js";
+import { RadioButtonGroup, SimulationSettings, UIAnimationSettings } from "@/types/types.js";
+import { App } from "@/app/app.js";
+import { UI } from "@/ui/ui.js";
+import { Vector2D } from "@/util/vector2d.js";
+import { VECTOR_COLORS } from "@/const/const.js";
 export class ControlBar {
     private zoomInButton: HTMLInputElement;
     private zoomOutButton: HTMLInputElement;

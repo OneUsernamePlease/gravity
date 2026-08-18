@@ -1,4 +1,4 @@
-import { Vector2D } from "./vector2d.js";
+import { Vector2D } from "@/util/vector2d.js";
 export function relativePosition(absolutePosition: Vector2D, element: HTMLElement): Vector2D {
     const elementRect = element.getBoundingClientRect();
     const x = absolutePosition.x - elementRect.left;

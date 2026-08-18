@@ -1,5 +1,5 @@
-import { Rectangle } from "../types/types.js";
-import { Vector2D } from "../util/vector2d.js";
+import { Rectangle } from "@/types/types.js";
+import { Vector2D } from "@/util/vector2d.js";
 
 /**
  * Draws a line from position to position + direction.

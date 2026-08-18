@@ -1,5 +1,7 @@
 import { defineConfig } from 'vite';
-import tailwindcss from '@tailwindcss/vite'
+import tailwindcss from '@tailwindcss/vite';
+import { fileURLToPath, URL } from "node:url";
+
 export default defineConfig({
   // This is the default public directory and root.
   root: 'src',
@@ -12,5 +14,10 @@ export default defineConfig({
   base: "/gravity",
   plugins: [
     tailwindcss(),
-  ]
+  ],
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src/scripts", import.meta.url))
+    }
+  }
 });

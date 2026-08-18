@@ -1,5 +1,5 @@
-import { Alignment, OnOverflow } from "../types/types.js";
-import { FloatingElement } from "./floating-element.js"
+import { Alignment, OnOverflow } from "@/types/types.js";
+import { FloatingElement } from "@/ui/floating-element.js"
 
 export class Tooltip extends FloatingElement<string> {
     constructor () {

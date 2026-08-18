@@ -1,7 +1,7 @@
-import { PATH_ALPHA, PATH_SEGMENT_MIN_LENGTH } from "../const/const.js";
-import { ObjectState, PathCoordinate } from "../types/types.js";
-import { Vector2D } from "../util/vector2d.js";
-import { setColorAlpha } from "./animation-utils.js";
+import { PATH_ALPHA, PATH_SEGMENT_MIN_LENGTH } from "@/const/const.js";
+import { ObjectState, PathCoordinate } from "@/types/types.js";
+import { Vector2D } from "@/util/vector2d.js";
+import { setColorAlpha } from "@/animation/animation-utils.js";
 export class Path extends Array<PathCoordinate> {
     private _lastCoordinate: PathCoordinate | null = null;
     constructor(

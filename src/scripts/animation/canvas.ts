@@ -1,12 +1,12 @@
-import { Vector2D } from "../util/vector2d.js";
-import { BACKGROUND_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_SEGMENT_MIN_LENGTH, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS, PATH_ALPHA } from "../const/const.js";
-import { AnimationSettings, CanvasLayer, CanvasSpace, LayerName, ObjectState, PathCoordinate, Rectangle } from "../types/types.js";
-import { Path, Paths } from "./paths.js";
-import { clamp } from "../util/util.js";
-import { App } from "../app/app.js";
-import { setColorAlpha } from "./animation-utils.js";
-import { CoordinateSystem } from "./coordinate-system.js";
-import * as draw from "./draw-utils.js";
+import { Vector2D } from "@/util/vector2d.js";
+import { BACKGROUND_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_SEGMENT_MIN_LENGTH, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS, PATH_ALPHA } from "@/const/const.js";
+import { AnimationSettings, CanvasLayer, CanvasSpace, LayerName, ObjectState, PathCoordinate, Rectangle } from "@/types/types.js";
+import { Path, Paths } from "@/animation/paths.js";
+import { clamp } from "@/util/util.js";
+import { App } from "@/app/app.js";
+import { setColorAlpha } from "@/animation/animation-utils.js";
+import { CoordinateSystem } from "@/animation/coordinate-system.js";
+import * as draw from "@/animation/draw-utils.js";
 
 export class Canvas {
     private _layers: Map<LayerName, CanvasLayer> = new Map();

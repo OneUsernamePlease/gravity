@@ -1,4 +1,4 @@
-import { Stopwatch } from "./stopwatch.js";
+import { Stopwatch } from "@/util/stopwatch.js";
 
 export class SimplePerformance {
     private _stopwatch: Stopwatch = new Stopwatch();

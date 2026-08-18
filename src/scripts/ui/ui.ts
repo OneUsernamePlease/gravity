@@ -1,10 +1,10 @@
-import { UIAnimationSettings, SimulationSettings } from "../types/types.js";
-import { App } from "../app/app.js";
-import { StatusBar } from "./statusBar.js";
-import { TopMenu } from "./topMenu.js";
-import { ControlBar } from "./controlBar.js";
-import { Tooltip } from "./tooltip.js";
-import { Vector2D } from "../util/vector2d.js";
+import { UIAnimationSettings, SimulationSettings } from "@/types/types.js";
+import { App } from "@/app/app.js";
+import { StatusBar } from "@/ui/statusBar.js";
+import { TopMenu } from "@/ui/topMenu.js";
+import { ControlBar } from "@/ui/controlBar.js";
+import { Tooltip } from "@/ui/tooltip.js";
+import { Vector2D } from "@/util/vector2d.js";
 
 export class UI {
 //#region properties
@@ -103,7 +103,6 @@ export class UI {
             this.tooltip.close();
         }
     }
-
     closeStatusBarPopover() {
         this.statusBar.closePopover();
     }

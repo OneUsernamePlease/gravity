@@ -1,8 +1,8 @@
-import { COORDINATE_SYSTEM_AXIS_COLOR, COORDINATE_SYSTEM_AXIS_DASH_LENGTH, COORDINATE_SYSTEM_AXIS_THICKNESS, COORDINATE_SYSTEM_GRID_COLOR, COORDINATE_SYSTEM_GRID_THICKNESS, COORDINATE_SYSTEM_TEXT_COLOR } from "../const/const.js";
-import { magnitude, roundTowardsZeroToNearestMultiple } from "../util/util.js";
-import { Vector2D } from "../util/vector2d.js";
-import { Canvas } from "./canvas.js";
-import * as draw from "./draw-utils.js";
+import { COORDINATE_SYSTEM_AXIS_COLOR, COORDINATE_SYSTEM_AXIS_DASH_LENGTH, COORDINATE_SYSTEM_AXIS_THICKNESS, COORDINATE_SYSTEM_GRID_COLOR, COORDINATE_SYSTEM_GRID_THICKNESS, COORDINATE_SYSTEM_TEXT_COLOR } from "@/const/const.js";
+import { magnitude, roundTowardsZeroToNearestMultiple } from "@/util/util.js";
+import { Vector2D } from "@/util/vector2d.js";
+import { Canvas } from "@/animation/canvas.js";
+import * as draw from "@/animation/draw-utils.js";
 export class CoordinateSystem {
     get canvasSpace() {
         return this._canvas.canvasSpace;

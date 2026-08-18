@@ -1,5 +1,5 @@
-import { MenuItem, PopoverOptions } from "../types/types.js";
-import { FloatingElement } from "./floating-element.js"
+import { MenuItem, PopoverOptions } from "@/types/types.js";
+import { FloatingElement } from "@/ui/floating-element.js"
 
 export class Popover extends FloatingElement<MenuItem> {
     constructor (options?: PopoverOptions) {

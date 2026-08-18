@@ -1,13 +1,13 @@
-import { UI } from "../ui/ui.js";
-import { Gravity } from "../simulation/gravity.js";
-import { AnimationController } from "../animation/animation-controller.js";
-import { InteractionManager } from "./interaction-manager.js";
-import { Canvas } from "../animation/canvas.js";
-import { ObjectState, PerformanceInfo, SimulationSettings } from "../types/types.js";
-import { Vector2D } from "../util/vector2d.js";
-import { Body2d } from "../simulation/body2d.js";
-import { DEFAULT_ZOOM_FACTOR } from "../const/const.js";
-import { StatusStore } from "../ui/statusBar.js";
+import { UI } from "@/ui/ui.js";
+import { Gravity } from "@/simulation/gravity.js";
+import { AnimationController } from "@/animation/animation-controller.js";
+import { InteractionManager } from "@/app/interaction-manager.js";
+import { Canvas } from "@/animation/canvas.js";
+import { ObjectState, PerformanceInfo, SimulationSettings } from "@/types/types.js";
+import { Vector2D } from "@/util/vector2d.js";
+import { Body2d } from "@/simulation/body2d.js";
+import { DEFAULT_ZOOM_FACTOR } from "@/const/const.js";
+import { StatusStore } from "@/ui/statusBar.js";
 
 export class App {
 //#region properties
@@ -88,8 +88,7 @@ export class App {
         this._gravity.reset();
         this._animation.resetPaths();
         
-        this.status.setTickInfo(this.currentTick, this.simulationMetrics);
-        this.status.setBodyCount(this.currentSimulationState.size);
+        this.updateStatus();
     }
     applySimulationSettings(simulationSettings: SimulationSettings) {
         this._gravity.applySettings(simulationSettings);
