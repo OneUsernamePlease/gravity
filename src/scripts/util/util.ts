@@ -206,4 +206,17 @@ export function calculateVelocityBetweenPoints(toCoordinate: Vector2D , fromCoor
 export function twoDigitHex(n: number) {
     return n.toString(16).padStart(2, "0");
 }
+/**
+ * Checks whether point is inside a rectangle defined by origin, width and height.
+ * @param point The point to examine
+ * @param origin Top-left corner of the rectangle 
+ * @param width Width of the rectangle
+ * @param height Height of the rectangle
+ * @returns true if point is inside the rectangle.
+ */
+export function isInside(point: Vector2D, origin: Vector2D, width: number, height: number): boolean {
+    const withinX = point.x >= origin.x && point.x <= origin.x + width;
+    const withinY = point.y >= origin.y && point.y <= origin.y + height;
+    return withinX && withinY;
+}
 //#endregion
