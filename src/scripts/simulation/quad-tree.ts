@@ -1,12 +1,10 @@
 import { Vector2D } from "@/util/vector2d.js";
 import { isInside } from "@/util/util.js";
 
-interface Positionable {
-    position: Vector2D,
-}
-type Leaf<T extends Positionable> = T[];
-type NodeData<T extends Positionable> = Leaf<T> | QuadTreeNode<T>[];
-export class QuadTreeNode<T extends Positionable> {
+type GetPosition<T> = (element: T) => Vector2D;
+type Leaf<T> = T[];
+type NodeData<T> = Leaf<T> | QuadTreeNode<T>[];
+export class QuadTreeNode<T> {
     constructor(
         public nodePosition: Vector2D, // top-left corner
         private _sideLength: number,
@@ -41,12 +39,12 @@ export class QuadTreeNode<T extends Positionable> {
     }
     
     /**
-     * Adds an element. Traverses the tree and generates leafs if necessary.
+     * Adds an element. Traverses the tree and generates nodes if necessary.
      * @param element 
      * @returns 
      */
     public add(element: T) {
-        if (!this.hasWithinBounds(element.position)) {
+        if (!this.hasWithinBounds(this._tree.getPosition(element))) {
             throw new Error(`Cannot add element ${element} that lies outside the node's bounds.`);
         }
 
@@ -56,7 +54,7 @@ export class QuadTreeNode<T extends Positionable> {
                 this._depth < this._tree.maxDepth
             ) {
                 // full and not too deep?
-                if (this.data.some(leafElement => leafElement.position.equals(element.position))) {
+                if (this.data.some(leafElement => this._tree.getPosition(leafElement).equals(this._tree.getPosition(element)))) {
                     // is identical with another point? -> Ignore size limit and add anyway
                     this.data.push(element);
                 } else {
@@ -71,7 +69,8 @@ export class QuadTreeNode<T extends Positionable> {
         } else {
             // internal? find targetChildNode -> Add recursively
             const targetChildNode = this.getChildNodeContaining(element);
-            targetChildNode!.add(element);
+            if (!targetChildNode) throw new Error("No child-node containing the element found.");
+            targetChildNode.add(element);
         }
     }
     /**
@@ -91,13 +90,13 @@ export class QuadTreeNode<T extends Positionable> {
         const southEastLeaf = new QuadTreeNode<T>(this.nodePosition.add(new Vector2D(newSideLength, newSideLength)), newSideLength, [], true, this._depth + 1, this._tree);
 
         leafElements.forEach((leafElement) => {
-            if (northWestLeaf.hasWithinBounds(leafElement.position)) {
+            if (northWestLeaf.hasWithinBounds(this._tree.getPosition(leafElement))) {
                 (northWestLeaf.data as Leaf<T>).push(leafElement);
-            } else if (northEastLeaf.hasWithinBounds(leafElement.position)) {
+            } else if (northEastLeaf.hasWithinBounds(this._tree.getPosition(leafElement))) {
                 (northEastLeaf.data as Leaf<T>).push(leafElement);
-            } else if (southWestLeaf.hasWithinBounds(leafElement.position)) {
+            } else if (southWestLeaf.hasWithinBounds(this._tree.getPosition(leafElement))) {
                 (southWestLeaf.data as Leaf<T>).push(leafElement);
-            } else if (southEastLeaf.hasWithinBounds(leafElement.position)) {
+            } else if (southEastLeaf.hasWithinBounds(this._tree.getPosition(leafElement))) {
                 (southEastLeaf.data as Leaf<T>).push(leafElement);
             } else {
                 throw new Error("After subdividing, the position of the element is not in any of the child-nodes.");
@@ -124,7 +123,7 @@ export class QuadTreeNode<T extends Positionable> {
            return null;
         }
 
-        const position = element.position;
+        const position = this._tree.getPosition(element);
         if (children[0].hasWithinBounds(position)) { return children[0]; }
         else if (children[1].hasWithinBounds(position)) {  return children[1]; }
         else if (children[2].hasWithinBounds(position)) { return children[2]; }
@@ -140,7 +139,7 @@ export class QuadTreeNode<T extends Positionable> {
             position: ${this.nodePosition.toString()}
             size: ${this._sideLength} * ${this._sideLength}
             ${this.isLeafNode() ?
-                `Contains ${this.data.length} elements: ${this.data.map(body => body.position.toString()).join(" - ")}` :
+                `Contains ${this.data.length} elements: ${this.data.map(body => this._tree.getPosition(body).toString()).join(" - ")}` :
                 ``
             }
         `
@@ -155,9 +154,10 @@ export class QuadTreeNode<T extends Positionable> {
     }
 }
 
-export class QuadTree<T extends Positionable> {
+export class QuadTree<T> {
     public root: QuadTreeNode<T>;
     constructor(
+        public getPosition: GetPosition<T>,
         public position: Vector2D,
         public sideLength: number,
         private _maxLeafSize: number = 8,
@@ -177,6 +177,10 @@ export class QuadTree<T extends Positionable> {
     public printTree() {
         this.root.printNode();
     }
+    /**
+     * Breadth first searches the tree.
+     * @returns an array of QuadTreeNode\<T>
+     */
     public getAllNodes(): QuadTreeNode<T>[] {
         const nodes = [this.root];
 
@@ -191,6 +195,3 @@ export class QuadTree<T extends Positionable> {
         return nodes;
     }
 }
-
-
-
