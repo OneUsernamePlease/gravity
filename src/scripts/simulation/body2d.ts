@@ -36,13 +36,13 @@ export class Body2d {
         this._color = c;
     } 
 // #endregion
-    constructor(private _mass: number, movable?: boolean, color?: string, radius?: number)  {
-        if (radius === undefined) { radius = this.defaultRadius(_mass); }
-        this.radius = radius;
-        if (color === undefined) { color = this.massDependentColor(_mass); }
-        this.color = color;
-        if (movable === undefined) { movable = true; }
-        this.movable = movable;     
+    constructor(
+        private _mass: number,
+        options?: { movable?: boolean, color?: string, radius?: number}
+    ) {
+        this.radius = options?.radius === undefined ? this.defaultRadius(_mass) : options.radius;
+        this.color = options?.color === undefined ? this.massDependentColor(_mass) : options.color;
+        this.movable = options?.movable === undefined ? true : options.movable;
     }
 
     /**

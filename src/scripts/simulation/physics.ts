@@ -2,6 +2,10 @@ import { ObjectState } from "@/types/types.js";
 import { Vector2D } from "@/util/vector2d.js";
 
 export namespace Physics {
+    interface BodyMassPosition {
+        position: Vector2D;
+        mass: number;
+    }
     /**
      * Calculates the force-vector between the bodies with the given ids
      * @param objectState1 objectState of body1
@@ -12,10 +16,10 @@ export namespace Physics {
      * @param gravityReferenceDistance 
      * @returns a vector representing the force applied ***to*** body with id i
      */
-    export function calculateGravitationalForceBetweenBodies (
+    export function gravitationalForceBetweenBodies (
         // REFACTOR ME: ObjectState has too much info, we just need position and mass.
-        objectState1: ObjectState,
-        objectState2: ObjectState,
+        objectState1: BodyMassPosition,
+        objectState2: BodyMassPosition,
         g: number,
         gravityLowerBounds: number,
         gravityRadiusExponent: number,
@@ -38,8 +42,43 @@ export namespace Physics {
 
         // use effectiveG or this._g to toggle whether the G-compensation should be activated.
         // Oh yeah, and: REFACTOR ME, thats not a good way to toggle.
-        const netForceBetweenBodies: number = effectiveG * ((objectState1.body.mass * objectState2.body.mass)/Math.pow(distance, gravityRadiusExponent));
+        const netForceBetweenBodies: number = effectiveG * ((objectState1.mass * objectState2.mass)/Math.pow(distance, gravityRadiusExponent));
         const unitVectorIToJ = objectState2.position.subtract(objectState1.position).normalize();
         return unitVectorIToJ.scale(netForceBetweenBodies);
+    }
+    /**
+    * @param restitution number between 0 (perfectly inelastic) and 1 (perfectly elastic)
+    */
+    export function elasticCollision(body1: ObjectState, body2: ObjectState, restitution: number = 1) {
+        const lowerBounds = 1;
+
+        // normal vector between the bodies
+        const displacement = body1.position.displacementVector(body2.position);
+        const distance = displacement.magnitude(); 
+        if (distance <= lowerBounds || distance === 0) {
+            return; 
+        }
+        const normalizedDisplacement = displacement.scale(1 / distance);
+
+        // relative velocity along the normalDisplacement?
+        const relativeVelocity = body2.velocity.subtract(body1.velocity);
+        const velocityAlongDisplacement = relativeVelocity.dotProduct(normalizedDisplacement);
+
+        // if the bodies are moving apart, do nothing
+        if (velocityAlongDisplacement > 0) { return; }
+
+        const invMass1 = body1.body.movable ? 1 / body1.body.mass : 0;
+        const invMass2 = body2.body.movable ? 1 / body2.body.mass : 0;
+
+        // impulseScalar = change in momentum as scalar
+        const impulseScalar = -(1 + restitution) * velocityAlongDisplacement / (invMass1 + invMass2);
+
+        const impulse = normalizedDisplacement.scale(impulseScalar);
+
+        // update velocities based on the impulse scalar
+        const deltaV1 = impulse.scale(invMass1);
+        const deltaV2 = impulse.scale(invMass2);
+        body1.velocity = body1.velocity.subtract(deltaV1);
+        body2.velocity = body2.velocity.add(deltaV2);
     }
 }

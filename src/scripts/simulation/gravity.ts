@@ -15,8 +15,8 @@ export class Gravity implements SimulationAPI {
     private _collisionDetection: boolean;
     private _elasticCollisions: boolean;
     private _g: number; // gravitational constant
-    private _gravityExponent: number = 1;
-    private _gravityReferenceDistance: number = 100;
+    private _gravityRadiusExponent: number = 1;
+    private _gravityReferenceDistance: number = 200;
     private _performance: SimplePerformance = new SimplePerformance();
     private readonly gravityLowerBounds: number = 1; // force calculations for distances lower than this number are skipped
     private _cachedIds: number[] = []; 
@@ -37,7 +37,7 @@ export class Gravity implements SimulationAPI {
         return this._g;
     }
     get gravityExponent(): number {
-        return this._gravityExponent;
+        return this._gravityRadiusExponent;
     }
     get gravityReferenceDistance(): number {
         return this._gravityReferenceDistance;
@@ -58,7 +58,7 @@ export class Gravity implements SimulationAPI {
     }
 
     set gravityExponent(e: number) {
-        this._gravityExponent = e;
+        this._gravityRadiusExponent = e;
     }
 
     private set g(newG: number) {
@@ -194,8 +194,9 @@ export class Gravity implements SimulationAPI {
         const objectStateI = this.simulationState.get(idI)!;
         const objectStateJ = this.simulationState.get(idJ)!;
 
-        return Physics.calculateGravitationalForceBetweenBodies(objectStateI,
-            objectStateJ,
+        return Physics.gravitationalForceBetweenBodies(
+            { mass: objectStateI.body.mass, position: objectStateI.position },
+            { mass: objectStateJ.body.mass, position: objectStateJ.position },
             this._g,
             this.gravityLowerBounds,
             this.gravityExponent,
@@ -222,7 +223,7 @@ export class Gravity implements SimulationAPI {
                     if (distanceIJ <= objectStateI.body.radius || distanceIJ <= objectStateJ.body.radius) { 
                         this.mergeBodies(idI, idJ);
                     } else if (this._elasticCollisions) {
-                        this.elasticCollision(objectStateI, objectStateJ);
+                        Physics.elasticCollision(objectStateI, objectStateJ, c.DEFAULT_COLLISION_RESTITUTION)
                     }
                 }
             }
@@ -255,41 +256,6 @@ export class Gravity implements SimulationAPI {
             changeObject.velocity = new Vector2D(0, 0);
         }
         this.removeFromObjectStates(removeId);
-    }
-    /**
-    * @param restitution number between 0 (perfectly inelastic) and 1 (perfectly elastic)
-    */
-    private elasticCollision(body1: ObjectState, body2: ObjectState, restitution: number = 1) {
-        const lowerBounds = 1;
-
-        // normal vector between the bodies
-        const displacement = body1.position.displacementVector(body2.position);
-        const distance = displacement.magnitude(); 
-        if (distance <= lowerBounds || distance === 0) {
-            return; 
-        }
-        const normalizedDisplacement = displacement.scale(1 / distance);
-
-        // relative velocity along the normalDisplacement?
-        const relativeVelocity = body2.velocity.subtract(body1.velocity);
-        const velocityAlongDisplacement = relativeVelocity.dotProduct(normalizedDisplacement);
-
-        // if the bodies are moving apart, do nothing
-        if (velocityAlongDisplacement > 0) { return; }
-
-        const invMass1 = body1.body.movable ? 1 / body1.body.mass : 0;
-        const invMass2 = body2.body.movable ? 1 / body2.body.mass : 0;
-
-        // impulseScalar = change in momentum as scalar
-        const impulseScalar = -(1 + restitution) * velocityAlongDisplacement / (invMass1 + invMass2);
-
-        const impulse = normalizedDisplacement.scale(impulseScalar);
-
-        // update velocities based on the impulse scalar
-        const deltaV1 = impulse.scale(invMass1);
-        const deltaV2 = impulse.scale(invMass2);
-        body1.velocity = body1.velocity.subtract(deltaV1);
-        body2.velocity = body2.velocity.add(deltaV2);
     }
     private placeBodiesTangentially(objectState1: ObjectState, objectState2: ObjectState) {
         const displacement = objectState1.position.displacementVector(objectState2.position);

@@ -1,8 +1,9 @@
 
 //#region physics
-export const DEFAULT_G = 50;
-export const MIN_G = -10;
-export const MAX_G = 100;
+export const DEFAULT_G = 500;
+export const MIN_G = -100;
+export const MAX_G = 1000;
+export const DEFAULT_COLLISION_RESTITUTION = 1;
 //#endregion
 
 //#region animation
@@ -27,4 +28,5 @@ export const COORDINATE_SYSTEM_AXIS_COLOR = "#aaaaaaff";
 export const COORDINATE_SYSTEM_TEXT_COLOR = "#aaaaaaff";
 export const COORDINATE_SYSTEM_GRID_COLOR = "#888888ff";
 export const COORDINATE_SYSTEM_AXIS_DASH_LENGTH = 16;
+
 //#endregion
