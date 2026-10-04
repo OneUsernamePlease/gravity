@@ -152,7 +152,7 @@ export class App {
     }
     body2dFromUi(): Body2d {
         const bodyInfo = this._ui.bodyInformation;
-        return new Body2d(bodyInfo.mass, bodyInfo.movable);
+        return new Body2d(bodyInfo.mass, { movable: bodyInfo.movable });
     }
     closeStatusBarPopover() {
         this._ui.closeStatusBarPopover();

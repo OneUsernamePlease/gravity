@@ -1,12 +1,11 @@
 import { ObjectState, SimulationSettings } from "@/types/types.js";
 import { Vector2D } from "@/util/vector2d.js";
 import * as c from "@/const/const.js";
-import { SimulationAPI } from "@/types/apis.js";
 import { clamp } from "@/util/util.js";
 import { SimplePerformance } from "@/util/simple-performance.js";
 import { Physics } from "./physics.js";
 
-export class Gravity implements SimulationAPI {
+export class Gravity {
     private _simulationState: Map<number, ObjectState>;
     private _nextId: number = 0;
     private _running: boolean;
@@ -16,7 +15,7 @@ export class Gravity implements SimulationAPI {
     private _elasticCollisions: boolean;
     private _g: number; // gravitational constant
     private _gravityRadiusExponent: number = 1;
-    private _gravityReferenceDistance: number = 200;
+    private _gravityReferenceDistance: number = 400;
     private _performance: SimplePerformance = new SimplePerformance();
     private readonly gravityLowerBounds: number = 1; // force calculations for distances lower than this number are skipped
     private _cachedIds: number[] = []; 

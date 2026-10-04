@@ -1,9 +1,11 @@
 import { Vector2D } from "@/util/vector2d.js";
+
 export type GetMass<T> = (element: T) => number;
 export type GetPosition<T> = (element: T) => Vector2D;
 export type Aggregator<T, M> = {
     generate(element: T): M;
     combine(a: M, b: M): M;
+    add(aggregate: M, element: T): M;
     empty(): M;
 }
 export type MassAggregate = {
