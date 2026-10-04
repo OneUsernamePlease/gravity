@@ -4,6 +4,7 @@ import * as c from "@/const/const.js";
 import { SimulationAPI } from "@/types/apis.js";
 import { clamp } from "@/util/util.js";
 import { SimplePerformance } from "@/util/simple-performance.js";
+import { Physics } from "./physics.js";
 
 export class Gravity implements SimulationAPI {
     private _simulationState: Map<number, ObjectState>;
@@ -14,6 +15,8 @@ export class Gravity implements SimulationAPI {
     private _collisionDetection: boolean;
     private _elasticCollisions: boolean;
     private _g: number; // gravitational constant
+    private _gravityExponent: number = 1;
+    private _gravityReferenceDistance: number = 100;
     private _performance: SimplePerformance = new SimplePerformance();
     private readonly gravityLowerBounds: number = 1; // force calculations for distances lower than this number are skipped
     private _cachedIds: number[] = []; 
@@ -33,7 +36,12 @@ export class Gravity implements SimulationAPI {
     get g(): number {
         return this._g;
     }
-
+    get gravityExponent(): number {
+        return this._gravityExponent;
+    }
+    get gravityReferenceDistance(): number {
+        return this._gravityReferenceDistance;
+    }
     /**
      * Total time the simulation has been running for in milliseconds. Does not increase while the simulation is stopped.
      */
@@ -47,6 +55,10 @@ export class Gravity implements SimulationAPI {
         if (this.totalTime === 0) return 0;
         const elapsedSeconds = this.totalTime / 1000;
         return this._tickCount / elapsedSeconds;
+    }
+
+    set gravityExponent(e: number) {
+        this._gravityExponent = e;
     }
 
     private set g(newG: number) {
@@ -175,18 +187,20 @@ export class Gravity implements SimulationAPI {
     }
     /**
      * Calculates the force-vector between the bodies with the given ids
+     * @param gravityExponent the exponent applied to the distance between the bodies. Ie.: G * (m1*m2 / r^exponent)
      * @returns a vector representing the force applied ***to*** body with id i
      */
     private calculateForceBetweenBodies(idI: number, idJ: number): Vector2D {
         const objectStateI = this.simulationState.get(idI)!;
         const objectStateJ = this.simulationState.get(idJ)!;
 
-        const distance = objectStateI.position.distance(objectStateJ.position);
-        if (distance < this.gravityLowerBounds || distance === 0) // if the bodies are too close, skip the calculation
-            { return new Vector2D(0, 0); } 
-        const netForceBetweenBodies: number = this._g * ((objectStateI.body.mass * objectStateJ.body.mass)/(distance));
-        const unitVectorIToJ = objectStateJ.position.subtract(objectStateI.position).normalize();
-        return unitVectorIToJ.scale(netForceBetweenBodies);
+        return Physics.calculateGravitationalForceBetweenBodies(objectStateI,
+            objectStateJ,
+            this._g,
+            this.gravityLowerBounds,
+            this.gravityExponent,
+            this.gravityReferenceDistance
+        );
     }
     private handleCollisions() {
         const ids = this._cachedIds;
