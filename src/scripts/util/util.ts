@@ -104,17 +104,22 @@ export function decimalToHex(d: string | number): string {
     return d.toString(16);
 }
 /**
- * converts a hexadecimal-number-string to a decimal number and returns it
- * @returns 0 if hex is not a valid hexadecimal number
+ * Converts a hexadecimal-number-string to a decimal number and returns it (returns integers).
  */
-export function hexToDecimal(hex: string): number {
+export function hexStringToNumber(hex: string): number {
     const prefix = "0x"
-    if (!(hex.startsWith(prefix))) {
-        hex = prefix + hex;
+    const originalHex = hex;
+    hex = hex.trim().toLowerCase();
+    if (hex.startsWith(prefix)) {
+        hex = hex.slice(prefix.length)
     }
-    const num: number = Number(hex);
+    const num: number = parseInt(hex, 16);
     const valid = !isNaN(num);
-    return valid ? num : 0;
+    if (valid) {
+        return num;
+    } else {
+        throw new Error(`${originalHex} is not a valid hexadecimal number.`)
+    }
 }
 /**
  * 

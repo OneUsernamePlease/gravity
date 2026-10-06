@@ -22,7 +22,7 @@ test.describe("build a tree", () => {
         tree.add({id: ++testElementCounter, position: new Vector2D(11, 1) });
     
         const nodes = tree.getAllNodes();
-        tree.printTree();
+
         expect(nodes.some(node => (node.depth === 6))).toBeTruthy();
         expect(nodes.some(node => (node.depth === 7))).toBeFalsy();
     });
@@ -40,7 +40,6 @@ test.describe("build a tree", () => {
 
         const nodes = tree.getAllNodes();
         
-        tree.printTree();
         expect(nodes.some(node => (node.depth === 3))).toBeTruthy();
         expect(nodes.some(node => (node.depth === 4))).toBeFalsy();
     });

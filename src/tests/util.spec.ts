@@ -234,6 +234,56 @@ describe("decimalToHex", () => {
     
 });
 
-describe("hexToDecimal", () => {
-    
+describe("Hex-string to number", () => {
+    test("converts without prefix", () => {
+        expect(util.hexStringToNumber("ff")).toBe(255);
+        expect(util.hexStringToNumber("10")).toBe(16);
+        expect(util.hexStringToNumber("a")).toBe(10);
+    });
+
+    test("converts with prefix", () => {
+        expect(util.hexStringToNumber("0xff")).toBe(255);
+        expect(util.hexStringToNumber("0x10")).toBe(16);
+        expect(util.hexStringToNumber("0xABC")).toBe(2748);
+    });
+
+    test("uppercase with prefix", () => {
+        expect(util.hexStringToNumber("0XFF")).toBe(255);
+    });
+
+    test("uppercase without prefix", () => {
+        expect(util.hexStringToNumber("FF")).toBe(255);
+        expect(util.hexStringToNumber("ABC")).toBe(2748);
+    });
+
+    test("zero", () => {
+        expect(util.hexStringToNumber("0")).toBe(0);
+        expect(util.hexStringToNumber("0x0")).toBe(0);
+    });
+
+    test("invalid string throws", () => {
+        expect(() => util.hexStringToNumber("not-hex")).toThrow(
+            "not-hex is not a valid hexadecimal number.",
+        );
+    });
+
+    test("invalid string with prefix throws", () => {
+        expect(() => util.hexStringToNumber("0xGG")).toThrow(
+            "0xGG is not a valid hexadecimal number.",
+        );
+    });
+
+    test("negative numbers", () => {
+        expect(util.hexStringToNumber("-ff")).toBe(-255);
+        expect(util.hexStringToNumber("-0xff")).toBe(-255);
+    });
+
+    test("number with whitespaces", () => {
+        expect(util.hexStringToNumber(" ff ")).toBe(255);
+        expect(util.hexStringToNumber(" 0xff ")).toBe(255);
+    });
+
+    test("empty string throws", () => {
+        expect(() => util.hexStringToNumber("")).toThrow();
+    });
 });

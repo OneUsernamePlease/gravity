@@ -235,9 +235,7 @@ test.describe("aggregate mass", () => {
         tree.add(body3);
         tree.add(body4);
         tree.add(body5);
-
-        tree.printTree();
-
+        
         const massAggregate = aggregateQuadtree(tree);
         const rootAggregate = massAggregate.get(tree.root);
 
