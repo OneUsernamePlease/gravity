@@ -4,15 +4,15 @@ import { ObjectState } from "@/types/types.js";
 
 export type GetMass<T> = (element: T) => number;
 export type GetPosition<T> = (element: T) => Vector2D;
+export type MassAggregate = {
+    totalMass: number;
+    centerOfMass: Vector2D;
+}
 export interface Aggregator<T, M> {
     generate(element: T): M;
     combine(a: M, b: M): M;
     add(aggregate: M, element: T): M;
     empty(): M;
-}
-export type MassAggregate = {
-    totalMass: number;
-    centerOfMass: Vector2D;
 }
 export class MassAggregator<T> implements Aggregator<T, MassAggregate> {
     constructor(
@@ -75,30 +75,25 @@ export function aggregateQuadtree(quadtree: QuadTree<ObjectState>): Map<QuadTree
         }
     );
     
+    // recursively aggregates and builds the aggregate-map (from the passed node down)
     const aggregateNode = (node: QuadTreeNode<ObjectState>): MassAggregate => {
         let tempAggregate = aggregate.get(node) || aggregator.empty();
         if (node.isLeafNode()) {
-            for (let i = 0; i < node.data.length; i++) {
-                if (i === 0) {
-                    tempAggregate = aggregator.generate(node.data[i]);
-                } else {
-                    tempAggregate = aggregator.add(tempAggregate, node.data[i])
-                }                
-            }
+            node.data.forEach((objectState) => {
+                tempAggregate = aggregator.add(tempAggregate, objectState);
+            });
         } else {
             const children = node.getChildNodes();
             children?.forEach((child) => {
-                const childNodeAggregate = aggregate.get(child) || aggregateNode(child);
-                
-                tempAggregate = aggregator.combine(childNodeAggregate, tempAggregate)
-            })
+                const childNodeAggregate = aggregateNode(child);
+                tempAggregate = aggregator.combine(childNodeAggregate, tempAggregate);
+            });
         }
         aggregate.set(node, tempAggregate);
         return tempAggregate;
     }
 
     aggregateNode(root);
+
     return aggregate;
 }
-
-

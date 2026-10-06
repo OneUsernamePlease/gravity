@@ -125,7 +125,7 @@ export class QuadTreeNode<T> {
 
         const position = this._tree.getPosition(element);
         if (children[0].hasWithinBounds(position)) { return children[0]; }
-        else if (children[1].hasWithinBounds(position)) {  return children[1]; }
+        else if (children[1].hasWithinBounds(position)) { return children[1]; }
         else if (children[2].hasWithinBounds(position)) { return children[2]; }
         else if (children[3].hasWithinBounds(position)) { return children[3]; }
         else { return null; }

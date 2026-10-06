@@ -186,6 +186,108 @@ test.describe("aggregate mass", () => {
             centerOfMass: { x: 99, y: 99 } 
         })
     });
+    
+    test("aggregate depth-2-tree", () => {
+        let testElementCounter = 0;
+        const treePosition = new Vector2D(0, 0);
+        const sideLength = 100;
+        const leafSize = 2;
+
+        const tree: QuadTree<TestElement> = new QuadTree(getElementPosition, treePosition, sideLength, leafSize);
+        const body1: TestElement = {
+            body: {
+                id: ++testElementCounter,
+                mass: 1
+            },
+            position: new Vector2D(1, 1),
+        }
+        const body2: TestElement = {
+            body: {
+                id: ++testElementCounter,
+                mass: 2
+            },
+            position: new Vector2D(15, 15),
+        }
+        const body3: TestElement = {
+            body: {
+                id: ++testElementCounter,
+                mass: 1
+            },
+            position: new Vector2D(49, 49),
+        }
+        const body4: TestElement = {
+            body: {
+                id: ++testElementCounter,
+                mass: 2
+            },
+            position: new Vector2D(99, 99),
+        }
+        const body5: TestElement = {
+            body: {
+                id: ++testElementCounter,
+                mass: 2
+            },
+            position: new Vector2D(90, 95),
+        }
+
+        tree.add(body1);
+        tree.add(body2);
+        tree.add(body3);
+        tree.add(body4);
+        tree.add(body5);
+
+        tree.printTree();
+
+        const massAggregate = aggregateQuadtree(tree);
+        const rootAggregate = massAggregate.get(tree.root);
+
+        const rootChildren = tree.root.getChildNodes()!;
+        const nwChildAggregate = massAggregate.get(rootChildren[0]);
+        const neChildAggregate = massAggregate.get(rootChildren[1]);
+        const swChildAggregate = massAggregate.get(rootChildren[2]);
+        const seChildAggregate = massAggregate.get(rootChildren[3]);
+        
+        const rootNwChildChildren = rootChildren[0].getChildNodes()!;
+        const nwNwChildAggregate = massAggregate.get(rootNwChildChildren[0]);
+        const nwNeChildAggregate = massAggregate.get(rootNwChildChildren[1]);
+        const nwSwChildAggregate = massAggregate.get(rootNwChildChildren[2]);
+        const nwSeChildAggregate = massAggregate.get(rootNwChildChildren[3]);
+
+        expect(rootAggregate).toEqual({
+            totalMass: 8,
+            centerOfMass: { x: 57.25, y: 58.5 }
+        });
+        expect(nwChildAggregate).toEqual({
+            totalMass: 4,
+            centerOfMass: { x: 20, y: 20 }
+        });
+        expect(neChildAggregate).toEqual({
+            totalMass: 0,
+            centerOfMass: { x: 0, y: 0 }
+        });
+        expect(swChildAggregate).toEqual({
+            totalMass: 0,
+            centerOfMass: { x: 0, y: 0 }
+        });
+        expect(seChildAggregate).toEqual({
+            totalMass: 4,
+            centerOfMass: { x: 94.5, y: 97 }
+        });
+        expect(nwNwChildAggregate).toEqual({
+            totalMass: 3,
+            centerOfMass: { x: 10.333333333333332, y: 10.333333333333332 }
+        });
+        expect(nwNeChildAggregate).toEqual({
+            totalMass: 0,
+            centerOfMass: { x: 0, y: 0 }
+        });
+        expect(nwSwChildAggregate).toEqual({
+            totalMass: 0,
+            centerOfMass: { x: 0, y: 0 }
+        });
+        expect(nwSeChildAggregate).toEqual({
+            totalMass: 1,
+            centerOfMass: { x: 49, y: 49 }
+        });
+    });
 });
-
-
