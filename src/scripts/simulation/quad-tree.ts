@@ -159,11 +159,11 @@ export class QuadTree<T> {
     constructor(
         public getPosition: GetPosition<T>,
         public position: Vector2D,
-        public sideLength: number,
+        private _sideLength: number,
         private _maxLeafSize: number = 8,
         private _maxDepth: number = 32,
     ) {
-        this.root = new QuadTreeNode<T>(position, sideLength, [], true, 0, this);
+        this.root = new QuadTreeNode<T>(position, _sideLength, [], true, 0, this);
     }
     public get maxLeafSize() {
         return this._maxLeafSize;
@@ -173,6 +173,12 @@ export class QuadTree<T> {
     }
     public add(data: T) {
         this.root.add(data);
+    }
+    public empty() {
+        this.root.data = [];
+    }
+    public resize(newSideLength: number) {
+        this._sideLength = newSideLength;
     }
     public printTree() {
         this.root.printNode();

@@ -1,36 +1,78 @@
 import { expect, test } from "vitest";
 import { QuadTree } from "../scripts/simulation/quad-tree";
 import { Vector2D } from "../scripts/util/vector2d";
-import { aggregateQuadtree } from "../scripts/simulation/barnes-hut";
+import { aggregateQuadtree, applyGravity } from "../scripts/simulation/barnes-hut";
+import { Physics } from "../scripts/simulation/physics";
 
-interface TestElement {
+interface TestBody {
     body: {
         id: number,
         mass: number
     },
     position: Vector2D,
 }
-const getElementPosition = (element: TestElement) => {
+interface TestObjectState {
+    body: {
+        id: number,
+        mass: number
+    },
+    position: Vector2D,
+    velocity: Vector2D,
+    acceleration: Vector2D,
+}
+const getElementPosition = (element: TestBody) => {
     return element.position;
+}
+const buildTree = (
+    quadTreeOptions: {
+        position: Vector2D,
+        sideLength: number,
+        leafSize: number,
+        maxDepth: number
+    },
+    ...bodies: TestBody[]
+): QuadTree<TestBody> => {
+    const quadTree = new QuadTree<TestBody>(
+        getElementPosition,
+        quadTreeOptions.position,
+        quadTreeOptions.sideLength,
+        quadTreeOptions.leafSize,
+        quadTreeOptions.maxDepth,
+    );
+
+    bodies.forEach((body) => {
+        quadTree.add(body);
+    });
+
+    return quadTree;
+}
+const gravityParameters = {
+    g: 1,
+    gravityLowerBounds: 1,
+    gravityRadiusExponent: 2,
+    gravityReferenceDistance: 400,
+    deltaTInMs: 20,
+    thetaThreshold: 0.5,
 }
 
 test.describe("aggregate mass", () => {
     test("aggregate tree with two elements at root depth", () => {
         let testElementCounter = 0;
-        const zeroVector = new Vector2D(0, 0);
-        const treePosition = new Vector2D(0, 0);
-        const sideLength = 100;
-        const leafSize = 2;
+        const treeOptions = {
+            position: new Vector2D(0, 0),
+            sideLength: 100,
+            leafSize: 2,
+            maxDepth: 32,
+        }
 
-        const tree: QuadTree<TestElement> = new QuadTree(getElementPosition, treePosition, sideLength, leafSize);
-        const body1: TestElement = {
+        const body1: TestBody = {
             body: {
                 id: ++testElementCounter,
                 mass: 1
             },
-            position: zeroVector,
+            position: new Vector2D(0, 0),
         }
-        const body2: TestElement = {
+        const body2: TestBody = {
             body: {
                 id: ++testElementCounter,
                 mass: 3
@@ -38,8 +80,7 @@ test.describe("aggregate mass", () => {
             position: new Vector2D(4, 0),
         }
 
-        tree.add(body1);
-        tree.add(body2);
+        const tree: QuadTree<TestBody> = buildTree(treeOptions, body1, body2);
 
         const massAggregate = aggregateQuadtree(tree);
         const rootAggregate = massAggregate.get(tree.root);
@@ -51,33 +92,35 @@ test.describe("aggregate mass", () => {
 
     test("aggregate tree with four elements at depth 1, one per leaf", () => {
         let testElementCounter = 0;
-        const treePosition = new Vector2D(0, 0);
-        const sideLength = 100;
-        const leafSize = 1;
+        const treeOptions = {
+            position: new Vector2D(0, 0),
+            sideLength: 100,
+            leafSize: 1,
+            maxDepth: 32
+        } 
 
-        const tree: QuadTree<TestElement> = new QuadTree(getElementPosition, treePosition, sideLength, leafSize);
-        const body1: TestElement = {
+        const body1: TestBody = {
             body: {
                 id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(1, 1),
         }
-        const body2: TestElement = {
+        const body2: TestBody = {
             body: {
                 id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(99, 1),
         }
-        const body3: TestElement = {
+        const body3: TestBody = {
             body: {
                 id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(1, 99),
         }
-        const body4: TestElement = {
+        const body4: TestBody = {
             body: {
                 id: ++testElementCounter,
                 mass: 1
@@ -85,10 +128,7 @@ test.describe("aggregate mass", () => {
             position: new Vector2D(99, 99),
         }
 
-        tree.add(body1);
-        tree.add(body2);
-        tree.add(body3);
-        tree.add(body4);
+        const tree = buildTree(treeOptions, body1, body2, body3, body4);
 
         const rootChildren = tree.root.getChildNodes()!;
         
@@ -124,26 +164,28 @@ test.describe("aggregate mass", () => {
 
     test("aggregate tree with elements at depth 1, more than one per leaf", () => {
         let testElementCounter = 0;
-        const treePosition = new Vector2D(0, 0);
-        const sideLength = 100;
-        const leafSize = 2;
+        const treeOptions = {
+            position: new Vector2D(0, 0),
+            sideLength: 100,
+            leafSize: 2,
+            maxDepth: 32,
+        }
 
-        const tree: QuadTree<TestElement> = new QuadTree(getElementPosition, treePosition, sideLength, leafSize);
-        const body1: TestElement = {
+        const body1: TestBody = {
             body: {
                 id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(1, 1),
         }
-        const body2: TestElement = {
+        const body2: TestBody = {
             body: {
                 id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(49, 49),
         }
-        const body3: TestElement = {
+        const body3: TestBody = {
             body: {
                 id: ++testElementCounter,
                 mass: 2
@@ -151,9 +193,7 @@ test.describe("aggregate mass", () => {
             position: new Vector2D(99, 99),
         }
 
-        tree.add(body1);
-        tree.add(body2);
-        tree.add(body3);
+        const tree = buildTree(treeOptions, body1, body2, body3);
 
         const rootChildren = tree.root.getChildNodes()!;
         
@@ -189,40 +229,42 @@ test.describe("aggregate mass", () => {
     
     test("aggregate depth-2-tree", () => {
         let testElementCounter = 0;
-        const treePosition = new Vector2D(0, 0);
-        const sideLength = 100;
-        const leafSize = 2;
+        const treeOptions = {
+            position: new Vector2D(0, 0),
+            sideLength: 100,
+            leafSize: 2,
+            maxDepth: 32,
+        }
 
-        const tree: QuadTree<TestElement> = new QuadTree(getElementPosition, treePosition, sideLength, leafSize);
-        const body1: TestElement = {
+        const body1: TestBody = {
             body: {
                 id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(1, 1),
         }
-        const body2: TestElement = {
+        const body2: TestBody = {
             body: {
                 id: ++testElementCounter,
                 mass: 2
             },
             position: new Vector2D(15, 15),
         }
-        const body3: TestElement = {
+        const body3: TestBody = {
             body: {
                 id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(49, 49),
         }
-        const body4: TestElement = {
+        const body4: TestBody = {
             body: {
                 id: ++testElementCounter,
                 mass: 2
             },
             position: new Vector2D(99, 99),
         }
-        const body5: TestElement = {
+        const body5: TestBody = {
             body: {
                 id: ++testElementCounter,
                 mass: 2
@@ -230,12 +272,9 @@ test.describe("aggregate mass", () => {
             position: new Vector2D(90, 95),
         }
 
-        tree.add(body1);
-        tree.add(body2);
-        tree.add(body3);
-        tree.add(body4);
-        tree.add(body5);
         
+        const tree = buildTree(treeOptions, body1, body2, body3, body4, body5);
+
         const massAggregate = aggregateQuadtree(tree);
         const rootAggregate = massAggregate.get(tree.root);
 
@@ -289,3 +328,45 @@ test.describe("aggregate mass", () => {
         });
     });
 });
+
+test.describe("barnes-hut gravity", () => {
+    test("two bodies, same leaf", () => {
+        let testElementCounter = 0;
+        const body1StartingX = 0;
+        const body2StaringX = 4;
+        const treeOptions = {
+            position: new Vector2D(0, 0),
+            sideLength: 100,
+            leafSize: 2,
+            maxDepth: 32,
+        }
+
+        const objectState1: TestObjectState = {
+            body: {
+                id: ++testElementCounter,
+                mass: 1
+            },
+            position: new Vector2D(body1StartingX, 0),
+            velocity: new Vector2D(),
+            acceleration: new Vector2D()
+        }
+        const objectState2: TestObjectState = {
+            body: {
+                id: ++testElementCounter,
+                mass: 3
+            },
+            position: new Vector2D(body2StaringX, 0),
+            velocity: new Vector2D(),
+            acceleration: new Vector2D()
+        }
+
+        const tree = buildTree(treeOptions, objectState1, objectState2);
+
+        applyGravity(tree, [objectState1, objectState2], gravityParameters);
+
+        expect(objectState1.position.x).toBeGreaterThan(body1StartingX);
+        expect(objectState1.position.x).toBeLessThan(body2StaringX);
+    })
+
+})
+

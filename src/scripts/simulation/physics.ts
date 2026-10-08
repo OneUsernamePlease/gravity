@@ -4,7 +4,9 @@ import { Vector2D } from "@/util/vector2d.js";
 export namespace Physics {
     interface BodyMassPosition {
         position: Vector2D;
-        mass: number;
+        body: {
+            mass: number;
+        }
     }
     /**
      * Calculates the force-vector between the bodies with the given ids
@@ -14,10 +16,9 @@ export namespace Physics {
      * @param gravityLowerBounds force calculation for distances lower than this, use the force at this distance. Ensures forces don't grow too big.
      * @param gravityExponent the exponent applied to the distance between the bodies. Ie.: G * (m1*m2 / r^exponent)
      * @param gravityReferenceDistance 
-     * @returns a vector representing the force applied ***to*** body with id i
+     * @returns a vector representing the force applied ***to*** body1 (of objectState1)
      */
     export function gravitationalForceBetweenBodies (
-        // REFACTOR ME: ObjectState has too much info, we just need position and mass.
         objectState1: BodyMassPosition,
         objectState2: BodyMassPosition,
         g: number,
@@ -42,7 +43,7 @@ export namespace Physics {
 
         // use effectiveG or this._g to toggle whether the G-compensation should be activated.
         // Oh yeah, and: REFACTOR ME, thats not a good way to toggle.
-        const netForceBetweenBodies: number = effectiveG * ((objectState1.mass * objectState2.mass)/Math.pow(distance, gravityRadiusExponent));
+        const netForceBetweenBodies: number = effectiveG * ((objectState1.body.mass * objectState2.body.mass)/Math.pow(distance, gravityRadiusExponent));
         const unitVectorIToJ = objectState2.position.subtract(objectState1.position).normalize();
         return unitVectorIToJ.scale(netForceBetweenBodies);
     }
