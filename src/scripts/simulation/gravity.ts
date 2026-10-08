@@ -4,9 +4,14 @@ import * as c from "@/const/const.js";
 import { clamp } from "@/util/util.js";
 import { SimplePerformance } from "@/util/simple-performance.js";
 import { Physics } from "./physics.js";
+import { QuadTree } from "./quad-tree.js";
+import { rebuildQuadtree, applyGravity } from "./barnes-hut.js";
+
+// BUGFIX ME: tree does not resize, when a body is outside the tree it crashes
 
 export class Gravity {
     private _simulationState: Map<number, ObjectState>;
+    private _quadTree: QuadTree<ObjectState>;
     private _nextId: number = 0;
     private _running: boolean;
     private _tickCount: number;
@@ -72,6 +77,15 @@ export class Gravity {
 // #endregion
     constructor() { 
         this._simulationState = new Map();
+        this._quadTree = new QuadTree(
+            (objectState: ObjectState) => {
+                return objectState.position;
+            },
+            new Vector2D(-1000, -1000),
+            2000,
+            2,
+            32
+        );
         this._nextId = 0;
         this._running = false;
         this._tickCount = 0;
@@ -92,6 +106,8 @@ export class Gravity {
         }
         const id = this._nextId++;
         this.simulationState.set(id, objectState);
+        this._quadTree.add(objectState);
+        // aggregateQuadtree(this._quadTree); // refactor me: discards the result
         this._cachedIds = Array.from(this.simulationState.keys());
         return this.simulationState.size;
     }
@@ -124,8 +140,19 @@ export class Gravity {
         this._performance.reset();
     }
     advanceTick() {
-        this.updateAccelerationVectors();
-        this.updateVelocitiesAndPositions();
+        // REFACTOR ME: array.from is just to get things working. Don't need to allocate one every frame.
+        // get rid of the map, or if that would be overall worse, build the tree from the map.
+        const objectStates = Array.from(this.simulationState.values());
+        
+        rebuildQuadtree(objectStates, this._quadTree);
+        applyGravity(this._quadTree, objectStates, {
+            g: this.g,
+            gravityLowerBounds: this.gravityLowerBounds,
+            gravityRadiusExponent: this.gravityExponent,
+            gravityReferenceDistance: this.gravityReferenceDistance,
+            deltaTInMs: this._tickLength,
+            thetaThreshold: 0.5
+        });
         if (this._collisionDetection) {
             this.handleCollisions();
         }
@@ -142,65 +169,6 @@ export class Gravity {
     private removeFromObjectStates(id: number) {
         this.simulationState.delete(id);
         this._cachedIds = Array.from(this.simulationState.keys());
-    }
-    private updateAccelerationVectors() {
-        const forces: Map<number, Vector2D> = this.calculateForces();
-
-        this.simulationState.forEach((objectState, id) => {
-            const totalForceOnBody = forces.get(id) || (new Vector2D(0, 0));
-            const newAcceleration = totalForceOnBody.scale(1 / objectState.body.mass);
-            objectState.acceleration = newAcceleration;
-        });
-    }
-    private calculateForces() {
-        const forces: Map<number, Vector2D> = new Map();
-        const ids = this._cachedIds;
-        
-        for (let i = 0; i < ids.length; i++) {
-            const idI = ids[i];
-            for (let j = i+1; j < ids.length; j++) {
-                const idJ = ids[j];
-                const forceOnI = this.calculateForceBetweenBodies(idI, idJ);
-                const forceOnJ = forceOnI.scale(-1);
-
-                forces.set(idI, (forces.get(idI) || new Vector2D(0, 0)).add(forceOnI));
-                forces.set(idJ, (forces.get(idJ) || new Vector2D(0, 0)).add(forceOnJ));
-            }
-        }
-        return forces;
-    }
-    /**
-     * Calculates the next **position** and **velocity** of the object in state, and updates objectState accordingly.
-     * @param objectState *ObjectState* containing the body
-     */
-    private updateVelocityAndPosition(objectState: ObjectState) {
-        const dt = this._tickLength / 1000;
-        if (!objectState.body.movable) { return; }
-        objectState.velocity = objectState.velocity.add(objectState.acceleration.scale(dt));
-        objectState.position = objectState.position.add(objectState.velocity.scale(dt));
-    }
-    private updateVelocitiesAndPositions() {
-        this.simulationState.forEach(objectState => {
-            this.updateVelocityAndPosition(objectState)
-        });
-    }
-    /**
-     * Calculates the force-vector between the bodies with the given ids
-     * @param gravityExponent the exponent applied to the distance between the bodies. Ie.: G * (m1*m2 / r^exponent)
-     * @returns a vector representing the force applied ***to*** body with id i
-     */
-    private calculateForceBetweenBodies(idI: number, idJ: number): Vector2D {
-        const objectStateI = this.simulationState.get(idI)!;
-        const objectStateJ = this.simulationState.get(idJ)!;
-
-        return Physics.gravitationalForceBetweenBodies(
-            { mass: objectStateI.body.mass, position: objectStateI.position },
-            { mass: objectStateJ.body.mass, position: objectStateJ.position },
-            this._g,
-            this.gravityLowerBounds,
-            this.gravityExponent,
-            this.gravityReferenceDistance
-        );
     }
     private handleCollisions() {
         const ids = this._cachedIds;

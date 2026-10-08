@@ -23,21 +23,17 @@ export class QuadTreeNode<T> {
     private set sideLength(length: number) {
         this._sideLength = length;
     }
-    private set isLeaf(leaf: boolean) {
-        this._isLeaf = leaf;
+    get isEmpty() {
+        return this._isLeaf && this.data.length === 0;
     }
 
-    private get isLeaf() {
+    public isLeafNode(): this is { data: Leaf<T> } {
         return this._isLeaf;
     }
-    get isEmpty() {
-        return this.isLeaf && this.data.length === 0;
+    public empty() {
+        this.data = [];
+        this._isLeaf = true;
     }
-
-    isLeafNode(): this is { data: Leaf<T> } {
-        return this.isLeaf;
-    }
-    
     /**
      * Adds an element. Traverses the tree and generates nodes if necessary.
      * @param element 
@@ -46,6 +42,12 @@ export class QuadTreeNode<T> {
     public add(element: T) {
         if (!this.hasWithinBounds(this._tree.getPosition(element))) {
             throw new Error(`Cannot add element ${element} that lies outside the node's bounds.`);
+        }
+
+        const addToChild = (element: T) => {
+            const targetChildNode = this.getChildNodeContaining(element);
+            if (!targetChildNode) throw new Error("No child-node containing the element found.");
+            targetChildNode.add(element);
         }
 
         if (this.isLeafNode()) {
@@ -60,7 +62,7 @@ export class QuadTreeNode<T> {
                 } else {
                     // subdivide -> recursively add to child
                     this.subdivide();
-                    this.add(element);
+                    addToChild(element);
                 }
             } else {
                 // has space? -> add
@@ -68,9 +70,7 @@ export class QuadTreeNode<T> {
             }
         } else {
             // internal? find targetChildNode -> Add recursively
-            const targetChildNode = this.getChildNodeContaining(element);
-            if (!targetChildNode) throw new Error("No child-node containing the element found.");
-            targetChildNode.add(element);
+            addToChild(element);
         }
     }
     /**
@@ -78,7 +78,7 @@ export class QuadTreeNode<T> {
      * @returns The generated Child-nodes. If no nodes a generated, return null
      */
     private subdivide(): QuadTreeNode<T>[] | null {
-        if (!this.isLeaf || this.isEmpty) {
+        if (!this._isLeaf || this.isEmpty) {
             return null;
         }
         
@@ -106,12 +106,12 @@ export class QuadTreeNode<T> {
         const children = [northWestLeaf, northEastLeaf, southWestLeaf, southEastLeaf];
         this.data = children;
         
-        this.isLeaf = false;
+        this._isLeaf = false;
 
         return children;
     }
     public getChildNodes(): QuadTreeNode<T>[] | null {
-        if (!this.isLeaf) {
+        if (!this.isLeafNode()) {
             return this.data as QuadTreeNode<T>[];
         } else {
             return null;
@@ -175,7 +175,7 @@ export class QuadTree<T> {
         this.root.add(data);
     }
     public empty() {
-        this.root.data = [];
+        this.root.empty();
     }
     public resize(newSideLength: number) {
         this._sideLength = newSideLength;

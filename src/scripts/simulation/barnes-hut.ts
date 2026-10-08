@@ -65,15 +65,6 @@ export class MassAggregator<T> implements Aggregator<T, MassAggregate> {
     }
 }
 export function rebuildQuadtree(objectStates: ObjectState[], quadtree: QuadTree<ObjectState>) {
-    if (quadtree === undefined) {
-        quadtree = new QuadTree<ObjectState>(
-            (object: {position: Vector2D}) => {return object.position},
-            new Vector2D(),
-            1000,
-            2,
-            32
-        )
-    }
     quadtree.empty();
     objectStates.forEach((objectState) => {
         quadtree.add(objectState);

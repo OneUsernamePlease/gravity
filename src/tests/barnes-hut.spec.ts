@@ -2,7 +2,6 @@ import { expect, test } from "vitest";
 import { QuadTree } from "../scripts/simulation/quad-tree";
 import { Vector2D } from "../scripts/util/vector2d";
 import { aggregateQuadtree, applyGravity } from "../scripts/simulation/barnes-hut";
-import { Physics } from "../scripts/simulation/physics";
 
 interface TestBody {
     body: {
@@ -47,7 +46,7 @@ const buildTree = (
     return quadTree;
 }
 const gravityParameters = {
-    g: 1,
+    g: 10,
     gravityLowerBounds: 1,
     gravityRadiusExponent: 2,
     gravityReferenceDistance: 400,
@@ -366,7 +365,115 @@ test.describe("barnes-hut gravity", () => {
 
         expect(objectState1.position.x).toBeGreaterThan(body1StartingX);
         expect(objectState1.position.x).toBeLessThan(body2StaringX);
-    })
+    });
 
+    test("two bodies, different leaf", () => {
+        let testElementCounter = 0;
+        const body1StartingX = 10;
+        const body2StaringX = 90;
+        const treeOptions = {
+            position: new Vector2D(0, 0),
+            sideLength: 100,
+            leafSize: 1,
+            maxDepth: 32,
+        }
+
+        const objectState1: TestObjectState = {
+            body: {
+                id: ++testElementCounter,
+                mass: 1
+            },
+            position: new Vector2D(body1StartingX, 0),
+            velocity: new Vector2D(),
+            acceleration: new Vector2D()
+        }
+        const objectState2: TestObjectState = {
+            body: {
+                id: ++testElementCounter,
+                mass: 3
+            },
+            position: new Vector2D(body2StaringX, 0),
+            velocity: new Vector2D(),
+            acceleration: new Vector2D()
+        }
+
+        const tree = buildTree(treeOptions, objectState1, objectState2);
+
+        applyGravity(tree, [objectState1, objectState2], gravityParameters);
+
+        expect(objectState1.position.x).toBeGreaterThan(body1StartingX);
+        expect(objectState1.position.x).toBeLessThan(body2StaringX);
+    });
+
+    test("four bodies, three of them clustered", () => {
+        let testElementCounter = 0;
+        const body1Starting = {x: 10, y: 10};
+        const body2Starting = {x: 91, y: 89};
+        const body3Starting = {x: 90, y: 90};
+        const body4Starting = {x: 89, y: 91};
+        const treeOptions = {
+            position: new Vector2D(0, 0),
+            sideLength: 100,
+            leafSize: 1,
+            maxDepth: 32,
+        }
+
+        const objectState1: TestObjectState = {
+            body: {
+                id: ++testElementCounter,
+                mass: 20
+            },
+            position: new Vector2D(body1Starting),
+            velocity: new Vector2D(),
+            acceleration: new Vector2D()
+        }
+        const objectState2: TestObjectState = {
+            body: {
+                id: ++testElementCounter,
+                mass: 1
+            },
+            position: new Vector2D(body2Starting),
+            velocity: new Vector2D(),
+            acceleration: new Vector2D()
+        }
+        const objectState3: TestObjectState = {
+            body: {
+                id: ++testElementCounter,
+                mass: 1
+            },
+            position: new Vector2D(body3Starting),
+            velocity: new Vector2D(),
+            acceleration: new Vector2D()
+        }
+        const objectState4: TestObjectState = {
+            body: {
+                id: ++testElementCounter,
+                mass: 1
+            },
+            position: new Vector2D(body4Starting),
+            velocity: new Vector2D(),
+            acceleration: new Vector2D()
+        }
+
+        const objectStates = [objectState1, objectState2, objectState3, objectState4];
+        
+        const gravityIterations = 500;
+        for (let i = 0; i < gravityIterations; i++) {
+            const tree = buildTree(treeOptions, ...objectStates);
+            applyGravity(tree, objectStates, gravityParameters);
+        }
+
+        expect(objectState1.position.x).toBeGreaterThan(body1Starting.x);
+        expect(objectState1.position.y).toBeGreaterThan(body1Starting.y);
+
+        expect(objectState2.position.x).toBeLessThan(body2Starting.x);
+        expect(objectState2.position.y).toBeLessThan(body2Starting.y);
+
+        expect(objectState3.position.x).toBeLessThan(body3Starting.x);
+        expect(objectState3.position.y).toBeLessThan(body3Starting.y);
+        
+        expect(objectState4.position.x).toBeLessThan(body4Starting.x);
+        expect(objectState4.position.y).toBeLessThan(body4Starting.y);
+    });
 })
 
