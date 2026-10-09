@@ -19,13 +19,29 @@ export class AnimationController {
     }
 //#endregion
    constructor(private _canvas: Canvas, private _app: App) {
-        this._animationSettings = { frameLength: 1000 / DEFAULT_FPS, displayVectors: true, tracePaths: true, displayCoordinateSystem: true };
+        this._animationSettings = {
+            frameLengthMs: 1000 / DEFAULT_FPS,
+            displayVectors: true,
+            tracePaths: true,
+            displayCoordinateSystem: true,
+            displayQuadTree: true 
+        };
         this._running = false;
     }
-    initialize(animationSettings: UIAnimationSettings) {
-        this._animationSettings.displayVectors = animationSettings.displayVectors;
-        this._animationSettings.tracePaths = animationSettings.tracePaths;
-        this._animationSettings.displayCoordinateSystem = animationSettings.displayCoordinateSystem;
+    initialize(animationSettings: Partial<UIAnimationSettings>) {
+        if (animationSettings.displayVectors !== undefined) {
+            this._animationSettings.displayVectors = animationSettings.displayVectors;
+        }
+        if (animationSettings.tracePaths !== undefined) {
+            this._animationSettings.tracePaths = animationSettings.tracePaths;
+        }
+        if (animationSettings.displayCoordinateSystem !== undefined) {
+            this._animationSettings.displayCoordinateSystem = animationSettings.displayCoordinateSystem;
+        }
+        if (animationSettings.displayQuadTree !== undefined) {
+            this._animationSettings.displayQuadTree = animationSettings.displayQuadTree;
+        }
+        
     }
     run() {
         if (this._running) {
@@ -34,7 +50,7 @@ export class AnimationController {
         this._running = true;
         const loop = () => {
             if (this._running) {
-                setTimeout(loop, this._animationSettings.frameLength);
+                setTimeout(loop, this._animationSettings.frameLengthMs);
                 this._canvas.drawFrame(this._app.currentSimulationState, this._animationSettings);
                 this._app.updateStatus();
             }

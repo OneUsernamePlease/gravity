@@ -1,3 +1,8 @@
+# IN PROGRESS
+- barnes-hut
+- floating-elements + better menus
+
+
 # TODO:
     - started adding visibility checks - did you finish those yet?
     - This architecture is beyond ass
@@ -23,9 +28,11 @@
     - mobile / responsive
     - worker threads
     - choose gravityLowerBounds (gravity.ts) dynamically depending on mass or whatever
-    - Testing: set the context such that CSS can be used (> body.ts) (works in browser context but not in node) - sadly, *environment: 'jsdom',* presents new problems
 
 # bugs
+    - post BARNES-HUT bugs
+        - immovable doesn't work
+            - should-be-immovable bodies collide -> crash
     - tooltip:
         - element mouseEnter -> prepare tooltip -> shows tooltip, mouse is now on tooltip -> moving mouse or clicking hides tooltip -> mouseEnter triggers again -> tooltip shows again
     - drawing Paths: adding segments (no camera change) to a persistent path looks slightly different from redrawing paths. could be just a difference in rasterization - drawing many short paths vs. drawing one long path
@@ -66,10 +73,10 @@
 - click on a body to see its properties.
 - speed up or slow down the sim.
 - display vectors DONE
-- display coordinate system
+- display coordinate system DONE
 - gravity between bodies
     - simple DONE
-    - barnes-Hut
+    - barnes-Hut DONE (almost)
 
 # cheat sheet
 switch (CanvasClickAction[selectedCanvasClickAction as keyof typeof CanvasClickAction]) {

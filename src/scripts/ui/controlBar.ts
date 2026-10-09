@@ -55,7 +55,7 @@ export class ControlBar {
     get selectedClickAction() {
         return this.getSelectedValue(this.clickAction) ?? this.clickAction.buttons[0].value;
     }
-    get animationSettings(): UIAnimationSettings {
+    get animationSettings(): Partial<UIAnimationSettings> {
         return {
             displayVectors: this.displayVectors,
             tracePaths: this.tracePaths,

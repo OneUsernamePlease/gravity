@@ -25,6 +25,12 @@ export class Canvas {
             context: backgroundCanvas.getContext("2d", { alpha: false })!
         });
 
+        const quadtreeCanvas = this.createLayer("z-5");
+        this._layers.set("quadtree", {
+            canvas: backgroundCanvas,
+            context: backgroundCanvas.getContext("2d")!
+        });
+
         const pathsCanvas = this.createLayer("z-10");
         this._layers.set("paths", {
             canvas: pathsCanvas,
@@ -63,6 +69,9 @@ export class Canvas {
     get backgroundContext() {
         return this._layers.get("background")!.context;
     }
+    get quadtreeContext() {
+        return this._layers.get("quadtree")!.context;
+    }
     get pathsContext() {
         return this._layers.get("paths")!.context;
     }
@@ -94,7 +103,7 @@ export class Canvas {
 //#endregion
     createLayer(zIndexClass: string): HTMLCanvasElement {
         if (!(/^z-0$|^z-[1-9]\d*$/.test(zIndexClass))) {
-            throw new Error("zIndex has to be a valid tailwind z-value (eg. 'z-0' or 'z-123'");
+            throw new Error(`zIndex/class: ${zIndexClass} invalid. Allowed values are eg. 'z-0' or 'z-123'`);
         }
 
         const canvas = document.createElement("canvas");
@@ -171,7 +180,6 @@ export class Canvas {
 //#region drawing stuff
     drawFrame(objectStates: Map<number, ObjectState>, animationSettings: AnimationSettings) {
         
-
         // bodies
         this.clearSimulation();
         this.drawBodies(objectStates);

@@ -43,7 +43,7 @@ export class UI {
     get selectedClickAction() {
         return this.controlBar.selectedClickAction;
     }
-    get animationSettings(): UIAnimationSettings {
+    get animationSettings(): Partial<UIAnimationSettings> {
         return {
             displayVectors: this.displayVectors,
             tracePaths: this.tracePaths,

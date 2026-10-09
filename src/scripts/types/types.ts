@@ -59,18 +59,19 @@ export interface CanvasSpace {
 }
 export interface AnimationSettings extends UIAnimationSettings {
     /** Animation-frame length in milliseconds */
-    frameLength: number;
+    frameLengthMs: number;
 }
 export interface UIAnimationSettings {
     displayVectors: boolean;
     tracePaths: boolean;
     displayCoordinateSystem: boolean;
+    displayQuadTree: boolean;
 }
 export interface CanvasLayer {
     canvas: HTMLCanvasElement;
     context: CanvasRenderingContext2D;
 }
-export type LayerName = 'background' | 'paths' | 'coordinateSystem' | 'simulation' | 'interaction';
+export type LayerName = 'background' | 'paths' | 'coordinateSystem' | 'simulation' | 'interaction' | 'quadtree';
 //#endregion
 
 //#region user-input-related

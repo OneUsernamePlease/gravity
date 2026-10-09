@@ -64,7 +64,7 @@ export class MassAggregator<T> implements Aggregator<T, MassAggregate> {
         }
     }
 }
-export function rebuildQuadtree(objectStates: ObjectState[], quadtree: QuadTree<ObjectState>) {
+export function rebuildQuadtree(quadtree: QuadTree<ObjectState>, objectStates: Map<number, ObjectState>) {
     quadtree.empty();
     objectStates.forEach((objectState) => {
         quadtree.add(objectState);
@@ -105,8 +105,8 @@ export function aggregateQuadtree(quadtree: QuadTree<ObjectState>): Map<QuadTree
     return aggregate;
 }
 export function applyGravity(
-    quadtree: QuadTree<ObjectState>,
-    objectStates: ObjectState[],
+    quadTree: QuadTree<ObjectState>,
+    simulationState: Map<number, ObjectState>,
     gravityParameters: {
         g: number,
         gravityLowerBounds: number,
@@ -116,7 +116,9 @@ export function applyGravity(
         thetaThreshold: number, // theta = (node side length) / (distance *body* to *center of mass of a node*); below threshold use node's mass aggregate
     }
 ) {
-    const treeAggregation = aggregateQuadtree(quadtree);
+    
+    rebuildQuadtree(quadTree, simulationState);
+    const treeAggregation = aggregateQuadtree(quadTree);
 
     const calculateForce = (node: QuadTreeNode<ObjectState>, targetObjectState: ObjectState): Vector2D => {
         const nodeAggregation = treeAggregation.get(node);
@@ -175,16 +177,16 @@ export function applyGravity(
         objectState.acceleration = force.scale(1 / objectState.body.mass);
         objectState.velocity = objectState.velocity.add(objectState.acceleration.scale(gravityParameters.deltaTInMs / 1000));
     }
-    const updatePositions = (objectStates: ObjectState[]) => {
+    const updatePositions = (objectStates: Map<number, ObjectState>) => {
         objectStates.forEach((objectState) => {
             objectState.position = objectState.position.add(objectState.velocity.scale(gravityParameters.deltaTInMs / 1000));
         })
     }
 
-    objectStates.forEach((objectState) => {
-        const appliedForce = calculateForce(quadtree.root, objectState);
+    simulationState.forEach((objectState) => {
+        const appliedForce = calculateForce(quadTree.root, objectState);
         setAccelerationAndVelocity(objectState, appliedForce);
     });
     
-    updatePositions(objectStates);
+    updatePositions(simulationState);
 }

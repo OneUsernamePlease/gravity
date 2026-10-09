@@ -41,6 +41,8 @@ export class QuadTreeNode<T> {
      */
     public add(element: T) {
         if (!this.hasWithinBounds(this._tree.getPosition(element))) {
+            // refactor me: resize right here
+            
             throw new Error(`Cannot add element ${element} that lies outside the node's bounds.`);
         }
 
