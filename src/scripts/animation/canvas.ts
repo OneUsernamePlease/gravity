@@ -1,12 +1,13 @@
 import { Vector2D } from "@/util/vector2d.js";
-import { BACKGROUND_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_SEGMENT_MIN_LENGTH, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS, PATH_ALPHA } from "@/const/const.js";
-import { AnimationSettings, CanvasLayer, CanvasSpace, LayerName, ObjectState, PathCoordinate, Rectangle } from "@/types/types.js";
+import { BACKGROUND_COLOR, MAX_ZOOM, MIN_ZOOM, PATH_SEGMENT_MIN_LENGTH, PATH_THICKNESS, VECTOR_COLORS, VECTOR_THICKNESS, PATH_ALPHA, QUADTREE_COLOR } from "@/const/const.js";
+import { AnimationSettings, CanvasLayer, CanvasSpace, LayerName, ObjectState, PathCoordinate } from "@/types/types.js";
 import { Path, Paths } from "@/animation/paths.js";
 import { clamp } from "@/util/util.js";
 import { App } from "@/app/app.js";
 import { setColorAlpha } from "@/animation/animation-utils.js";
 import { CoordinateSystem } from "@/animation/coordinate-system.js";
 import * as draw from "@/animation/draw-utils.js";
+import { Quadtree } from "@/simulation/quad-tree.js";
 
 export class Canvas {
     private _layers: Map<LayerName, CanvasLayer> = new Map();
@@ -17,7 +18,6 @@ export class Canvas {
     private _paths: Paths;
     private _cameraChange = true;
     private _coordinateSystem: CoordinateSystem;
-    private _simulationVisibleRectangle: Rectangle;
     constructor(private _canvasParent: HTMLDivElement, private _app: App) {
         const backgroundCanvas = this.createLayer("z-0");
         this._layers.set("background", {
@@ -25,31 +25,31 @@ export class Canvas {
             context: backgroundCanvas.getContext("2d", { alpha: false })!
         });
 
-        const quadtreeCanvas = this.createLayer("z-5");
+        const quadtreeCanvas = this.createLayer("z-10");
         this._layers.set("quadtree", {
-            canvas: backgroundCanvas,
-            context: backgroundCanvas.getContext("2d")!
+            canvas: quadtreeCanvas,
+            context: quadtreeCanvas.getContext("2d")!
         });
 
-        const pathsCanvas = this.createLayer("z-10");
+        const pathsCanvas = this.createLayer("z-20");
         this._layers.set("paths", {
             canvas: pathsCanvas,
             context: pathsCanvas.getContext("2d")!
         });
 
-        const coordinateSystemCanvas = this.createLayer("z-20");
+        const coordinateSystemCanvas = this.createLayer("z-30");
         this._layers.set("coordinateSystem", {
             canvas: coordinateSystemCanvas,
             context: coordinateSystemCanvas.getContext("2d")!
         })
 
-        const simulationCanvas = this.createLayer("z-30");
+        const simulationCanvas = this.createLayer("z-40");
         this._layers.set("simulation", {
             canvas: simulationCanvas,
             context: simulationCanvas.getContext("2d")!
         });
 
-        const interactionCanvas = this.createLayer("z-40");
+        const interactionCanvas = this.createLayer("z-50");
         this._layers.set("interaction", {
             canvas: interactionCanvas,
             context: interactionCanvas.getContext("2d")!
@@ -60,7 +60,6 @@ export class Canvas {
 
         this._paths = new Paths();
         this._coordinateSystem = new CoordinateSystem(this.coordinateSystemContext, this);
-        this._simulationVisibleRectangle = draw.getVisibleRectangle(this._canvasSpace.currentZoom, this._canvasSpace.origin, this.simulationContext);
     }
 //#region get, set
     get interactionCanvas() {
@@ -178,7 +177,7 @@ export class Canvas {
     }
 //#endregion
 //#region drawing stuff
-    drawFrame(objectStates: Map<number, ObjectState>, animationSettings: AnimationSettings) {
+    drawFrame(objectStates: Map<number, ObjectState>, quadtree: Quadtree<ObjectState>, animationSettings: AnimationSettings) {
         
         // bodies
         this.clearSimulation();
@@ -193,7 +192,7 @@ export class Canvas {
         if (animationSettings.tracePaths) {
             if (this._cameraChange) {
                 this._paths.addSegments(objectStates);
-                this.clearPathContext();
+                this.clearPaths();
                 this.drawPaths(this._paths);
             } else {
                 const previousState = this._paths.pathEnds;
@@ -210,11 +209,37 @@ export class Canvas {
             }
         }
 
+        // quad-tree
+        if (animationSettings.displayQuadtree) {
+            this.clearQuadtree();
+            this.drawQuadtree(quadtree);
+        }
+
         this._cameraChange = false;
     }
     redrawCoordinateSystem() {
         this._coordinateSystem.clearContext();
         this._coordinateSystem.draw();
+    }
+    private drawQuadtree(tree: Quadtree<ObjectState>) {
+        const nodeBorders: [Vector2D, Vector2D][] = [];
+        const nodes = tree.getAllNodes();
+
+        nodes.forEach((node) => {
+            const nodeTopLeft: Vector2D = node.position
+            const nodeTopRight: Vector2D = new Vector2D(node.position.x + node.sideLength, node.position.y);
+            const nodeBottomLeft: Vector2D = new Vector2D(node.position.x, node.position.y + node.sideLength);
+            const nodeBottomRight: Vector2D = new Vector2D(node.position.x + node.sideLength, node.position.y + node.sideLength);
+
+            nodeBorders.push(
+                [nodeTopLeft, nodeTopRight],
+                [nodeTopLeft, nodeBottomLeft],
+                [nodeBottomLeft, nodeBottomRight],
+                [nodeTopRight, nodeBottomRight]
+            );
+        })
+
+        draw.drawLineBatch(nodeBorders, QUADTREE_COLOR, 1, this.quadtreeContext);
     }
     private drawBodies(objectStates: Map<number, ObjectState>) {
         objectStates.forEach(objectState => {
@@ -250,11 +275,14 @@ export class Canvas {
     clearCoordinateSystem() {
         this.clear(this.coordinateSystemContext);
     }
-    clearPathContext() {
+    clearPaths() {
         this.clear(this.pathsContext);
     }
+    clearQuadtree() {
+        this.clear(this.quadtreeContext);
+    }
     resetPaths() {
-        this.clearPathContext();
+        this.clearPaths();
         this._paths.reset();
     }
     fillBackground(

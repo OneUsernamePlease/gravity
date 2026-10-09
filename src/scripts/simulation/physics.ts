@@ -51,15 +51,9 @@ export namespace Physics {
     * @param restitution number between 0 (perfectly inelastic) and 1 (perfectly elastic)
     */
     export function elasticCollision(body1: ObjectState, body2: ObjectState, restitution: number = 1) {
-        const lowerBounds = 1;
-
         // normal vector between the bodies
         const displacement = body1.position.displacementVector(body2.position);
-        const distance = displacement.magnitude(); 
-        if (distance <= lowerBounds || distance === 0) {
-            return; 
-        }
-        const normalizedDisplacement = displacement.scale(1 / distance);
+        const normalizedDisplacement = displacement.normalize();
 
         // relative velocity along the normalDisplacement?
         const relativeVelocity = body2.velocity.subtract(body1.velocity);

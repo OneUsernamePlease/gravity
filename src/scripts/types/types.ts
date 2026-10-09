@@ -61,7 +61,7 @@ export interface AnimationSettings {
     displayVectors: boolean;
     tracePaths: boolean;
     displayCoordinateSystem: boolean;
-    displayQuadTree: boolean;
+    displayQuadtree: boolean;
 }
 export interface CanvasLayer {
     canvas: HTMLCanvasElement;

@@ -24,6 +24,9 @@ export class App {
     get currentSimulationState() {
         return this._gravity.simulationState;
     }
+    get currentQuadtree() {
+        return this._gravity.quadtree;
+    }
     get currentTick(): number {
         return this._gravity.tick;
     }
@@ -136,6 +139,9 @@ export class App {
     }
     setDisplayCoordinateSystem(displayCoordinateSystem: boolean) {
         this._animation.setDisplayCoordinateSystem(displayCoordinateSystem);
+    }
+    setDisplayQuadtree(displayQuadtree: boolean) {
+        this._animation.setDisplayQuadtree(displayQuadtree);
     }
 // UI related
     updateStatus() {

@@ -1,5 +1,5 @@
 import { Vector2D } from "@/util/vector2d.js";
-import { QuadTree, QuadTreeNode } from "./quad-tree.js";
+import { Quadtree, QuadtreeNode } from "./quad-tree.js";
 import { ObjectState } from "@/types/types.js";
 import { Physics } from "./physics.js";
 
@@ -64,15 +64,15 @@ export class MassAggregator<T> implements Aggregator<T, MassAggregate> {
         }
     }
 }
-export function rebuildQuadtree(quadtree: QuadTree<ObjectState>, objectStates: Map<number, ObjectState>) {
+export function rebuildQuadtree(quadtree: Quadtree<ObjectState>, objectStates: Map<number, ObjectState>) {
     quadtree.empty();
     objectStates.forEach((objectState) => {
         quadtree.add(objectState);
     });
 }
-export function aggregateQuadtree(quadtree: QuadTree<ObjectState>): Map<QuadTreeNode<ObjectState>, MassAggregate> {
+export function aggregateQuadtree(quadtree: Quadtree<ObjectState>): Map<QuadtreeNode<ObjectState>, MassAggregate> {
     const root = quadtree.root;
-    const aggregate: Map<QuadTreeNode<ObjectState>, MassAggregate> = new Map();
+    const aggregate: Map<QuadtreeNode<ObjectState>, MassAggregate> = new Map();
     const aggregator: MassAggregator<ObjectState> = new MassAggregator<ObjectState> (
         (objectState: ObjectState) => {
             return objectState.body.mass;
@@ -83,7 +83,7 @@ export function aggregateQuadtree(quadtree: QuadTree<ObjectState>): Map<QuadTree
     );
     
     // builds the aggregate-map by recursively aggregating from the passed node downwards
-    const aggregateNode = (node: QuadTreeNode<ObjectState>): MassAggregate => {
+    const aggregateNode = (node: QuadtreeNode<ObjectState>): MassAggregate => {
         let tempAggregate = aggregate.get(node) || aggregator.empty();
         if (node.isLeafNode()) {
             node.data.forEach((objectState) => {
@@ -105,7 +105,7 @@ export function aggregateQuadtree(quadtree: QuadTree<ObjectState>): Map<QuadTree
     return aggregate;
 }
 export function applyGravity(
-    quadTree: QuadTree<ObjectState>,
+    quadtree: Quadtree<ObjectState>,
     simulationState: Map<number, ObjectState>,
     gravityParameters: {
         g: number,
@@ -117,10 +117,10 @@ export function applyGravity(
     }
 ) {
     
-    rebuildQuadtree(quadTree, simulationState);
-    const treeAggregation = aggregateQuadtree(quadTree);
+    rebuildQuadtree(quadtree, simulationState);
+    const treeAggregation = aggregateQuadtree(quadtree);
 
-    const calculateForce = (node: QuadTreeNode<ObjectState>, targetObjectState: ObjectState): Vector2D => {
+    const calculateForce = (node: QuadtreeNode<ObjectState>, targetObjectState: ObjectState): Vector2D => {
         const nodeAggregation = treeAggregation.get(node);
         if (nodeAggregation === undefined) {
             throw new Error(`node-aggregate is missing for ${node.toString()}`);
@@ -175,16 +175,23 @@ export function applyGravity(
     }
     const setAccelerationAndVelocity = (objectState: ObjectState, force: Vector2D) => {
         objectState.acceleration = force.scale(1 / objectState.body.mass);
-        objectState.velocity = objectState.velocity.add(objectState.acceleration.scale(gravityParameters.deltaTInMs / 1000));
+        if (objectState.body.movable) {
+            objectState.velocity = objectState.velocity.add(objectState.acceleration.scale(gravityParameters.deltaTInMs / 1000));
+        } else {
+            // REFACTOR ME: this does not need to happen every tick
+            objectState.velocity = new Vector2D(0, 0);
+        }
     }
     const updatePositions = (objectStates: Map<number, ObjectState>) => {
         objectStates.forEach((objectState) => {
-            objectState.position = objectState.position.add(objectState.velocity.scale(gravityParameters.deltaTInMs / 1000));
+            if (objectState.body.movable) {
+                objectState.position = objectState.position.add(objectState.velocity.scale(gravityParameters.deltaTInMs / 1000));
+            }
         })
     }
 
     simulationState.forEach((objectState) => {
-        const appliedForce = calculateForce(quadTree.root, objectState);
+        const appliedForce = calculateForce(quadtree.root, objectState);
         setAccelerationAndVelocity(objectState, appliedForce);
     });
     

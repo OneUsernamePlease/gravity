@@ -1,9 +1,8 @@
 import { expect, test } from "vitest";
-import { QuadTree } from "../scripts/simulation/quad-tree.js";
+import { Quadtree } from "../scripts/simulation/quad-tree.js";
 import { Vector2D } from "../scripts/util/vector2d.js";
 
 interface TestElement {
-    id: number,
     position: Vector2D
 }
 const getElementPosition = (element: TestElement) => {
@@ -15,11 +14,11 @@ test.describe("build a tree", () => {
         const treePosition = new Vector2D(0, 0);
         const sideLength = 100;
         const leafSize = 2;
-        const tree: QuadTree<TestElement> = new QuadTree(getElementPosition, treePosition, sideLength, leafSize);
+        const tree: Quadtree<TestElement> = new Quadtree(getElementPosition, treePosition, sideLength, leafSize);
     
-        tree.add({id: ++testElementCounter, position: new Vector2D(10, 1) });
-        tree.add({id: ++testElementCounter, position: new Vector2D(10.5, 1) });
-        tree.add({id: ++testElementCounter, position: new Vector2D(11, 1) });
+        tree.add({position: new Vector2D(10, 1) });
+        tree.add({position: new Vector2D(10.5, 1) });
+        tree.add({position: new Vector2D(11, 1) });
     
         const nodes = tree.getAllNodes();
 
@@ -32,11 +31,11 @@ test.describe("build a tree", () => {
         const treePosition = new Vector2D(0, 0);
         const sideLength = 100;
         const leafSize = 2;
-        const tree: QuadTree<TestElement> = new QuadTree(getElementPosition, treePosition, sideLength, leafSize);
+        const tree: Quadtree<TestElement> = new Quadtree(getElementPosition, treePosition, sideLength, leafSize);
     
-        tree.add({id: ++testElementCounter, position: new Vector2D(10, 10) });
-        tree.add({id: ++testElementCounter, position: new Vector2D(13, 13) });
-        tree.add({id: ++testElementCounter, position: new Vector2D(14, 14) });
+        tree.add({position: new Vector2D(10, 10) });
+        tree.add({position: new Vector2D(13, 13) });
+        tree.add({position: new Vector2D(14, 14) });
 
         const nodes = tree.getAllNodes();
         

@@ -14,6 +14,7 @@ export class ControlBar {
     private displayVectorsCheckbox: HTMLInputElement;
     private tracePathsCheckbox: HTMLInputElement;
     private displayCoordinateSystemCheckbox: HTMLInputElement;
+    private displayQuadtreeCheckbox: HTMLInputElement;
     private collisionDetectionCheckbox: HTMLInputElement;
     private elasticCollisionsCheckbox: HTMLInputElement;
     private gravitationalConstantInput: HTMLInputElement;
@@ -45,6 +46,9 @@ export class ControlBar {
     }
     get displayCoordinateSystem() {
         return this.displayCoordinateSystemCheckbox.checked;
+    }
+    get displayQuadtree() {
+        return this.displayQuadtreeCheckbox.checked;
     }
     get mass() {
         return util.getInputNumber(this.massInput);
@@ -86,6 +90,7 @@ export class ControlBar {
         this.displayVectorsCheckbox             = document.getElementById("cbxDisplayVectors")! as HTMLInputElement;
         this.tracePathsCheckbox                 = document.getElementById("cbxTracePaths")! as HTMLInputElement;
         this.displayCoordinateSystemCheckbox    = document.getElementById("cbxDisplayCoordinateSystem")! as HTMLInputElement;
+        this.displayQuadtreeCheckbox            = document.getElementById("cbxDisplayQuadtree")! as HTMLInputElement;
         this.collisionDetectionCheckbox         = document.getElementById("cbxCollisions")! as HTMLInputElement;
         this.elasticCollisionsCheckbox          = document.getElementById("cbxElasticCollisions")! as HTMLInputElement;
         this.gravitationalConstantInput         = document.getElementById("numberG")! as HTMLInputElement;
@@ -121,6 +126,7 @@ export class ControlBar {
         });
         this.tracePathsCheckbox.addEventListener("change", () => this.cbxTracePathsChanged());
         this.displayCoordinateSystemCheckbox.addEventListener("change", () => this.cbxDisplayCoordinateSystemChanged());
+        this.displayQuadtreeCheckbox.addEventListener("change", () => this.cbxDisplayQuadtreeChanged());
         this.collisionDetectionCheckbox.addEventListener("change", () => this.cbxCollisionsChanged());
         this.elasticCollisionsCheckbox.addEventListener("change", () => this.cbxCollisionsChanged());
         this.gravitationalConstantInput.addEventListener("change", () => this.numberInputGChanged());
@@ -202,6 +208,9 @@ export class ControlBar {
     }
     cbxDisplayCoordinateSystemChanged() {
         this.app.setDisplayCoordinateSystem(this.displayCoordinateSystem);
+    }
+    cbxDisplayQuadtreeChanged() {
+        this.app.setDisplayQuadtree(this.displayQuadtree);
     }
     cbxCollisionsChanged() {
         const checked = this.collisionDetectionCheckbox.checked;

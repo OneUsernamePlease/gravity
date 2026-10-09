@@ -4,14 +4,14 @@ import * as c from "@/const/const.js";
 import { clamp } from "@/util/util.js";
 import { SimplePerformance } from "@/util/simple-performance.js";
 import { Physics } from "./physics.js";
-import { QuadTree } from "./quad-tree.js";
+import { Quadtree } from "./quad-tree.js";
 import { applyGravity } from "./barnes-hut.js";
 
 // BUGFIX ME: tree does not resize, when a body is outside the tree it crashes
 
 export class Gravity {
     private _simulationState: Map<number, ObjectState>;
-    private _quadTree: QuadTree<ObjectState>;
+    private _quadtree: Quadtree<ObjectState>;
     private _nextId: number = 0;
     private _running: boolean;
     private _tickCount: number;
@@ -22,7 +22,7 @@ export class Gravity {
     private _gravityRadiusExponent: number = 1;
     private _gravityReferenceDistance: number = 400;
     private _performance: SimplePerformance = new SimplePerformance();
-    private readonly gravityLowerBounds: number = 1; // force calculations for distances lower than this number are skipped
+    private readonly gravityLowerBounds: number = 1; // forces do not grow larger than for distances lower than this number
     private _cachedIds: number[] = [];
     private _bodiesBoundingBox: Rectangle = {
         minX: 0,
@@ -34,6 +34,9 @@ export class Gravity {
 //#region get, set
     get simulationState() {
         return this._simulationState;
+    }
+    get quadtree() {
+        return this._quadtree;
     }
     get tick() {
         return this._tickCount;
@@ -84,7 +87,7 @@ export class Gravity {
 // #endregion
     constructor() { 
         this._simulationState = new Map();
-        this._quadTree = new QuadTree(
+        this._quadtree = new Quadtree(
             (objectState: ObjectState) => {
                 return objectState.position;
             },
@@ -137,7 +140,7 @@ export class Gravity {
         }
         this.updateBoundingBox(objectState);
         this.simulationState.set(this._nextId++, objectState);
-        this._quadTree.add(objectState);
+        this._quadtree.add(objectState);
         this._cachedIds = Array.from(this.simulationState.keys());
         return this.simulationState.size;
     }
@@ -170,7 +173,7 @@ export class Gravity {
         this._performance.reset();
     }
     advanceTick() {        
-        applyGravity(this._quadTree, this.simulationState, {
+        applyGravity(this._quadtree, this.simulationState, {
             g: this.g,
             gravityLowerBounds: this.gravityLowerBounds,
             gravityRadiusExponent: this.gravityExponent,

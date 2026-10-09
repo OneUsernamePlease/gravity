@@ -23,7 +23,7 @@ export class AnimationController {
             displayVectors: true,
             tracePaths: true,
             displayCoordinateSystem: true,
-            displayQuadTree: true 
+            displayQuadtree: true 
         };
         this._running = false;
     }
@@ -37,8 +37,8 @@ export class AnimationController {
         if (animationSettings.displayCoordinateSystem !== undefined) {
             this._animationSettings.displayCoordinateSystem = animationSettings.displayCoordinateSystem;
         }
-        if (animationSettings.displayQuadTree !== undefined) {
-            this._animationSettings.displayQuadTree = animationSettings.displayQuadTree;
+        if (animationSettings.displayQuadtree !== undefined) {
+            this._animationSettings.displayQuadtree = animationSettings.displayQuadtree;
         }
         
     }
@@ -49,7 +49,7 @@ export class AnimationController {
         this._running = true;
         const loop = () => {
             if (this._running) {
-                this._canvas.drawFrame(this._app.currentSimulationState, this._animationSettings);
+                this._canvas.drawFrame(this._app.currentSimulationState, this._app.currentQuadtree, this._animationSettings);
                 this._app.updateStatus();
                 requestAnimationFrame(loop);
             }
@@ -77,6 +77,12 @@ export class AnimationController {
             this.resetCoordinateSystem();
         } else {
             this._canvas.redrawCoordinateSystem();
+        }
+    }
+    setDisplayQuadtree(displayQuadtree: boolean) {
+        this._animationSettings.displayQuadtree = displayQuadtree;
+        if (!displayQuadtree) {
+            this._canvas.clearQuadtree();
         }
     }
     resetCoordinateSystem() {

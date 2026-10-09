@@ -1,19 +1,34 @@
+btw: search the codebase for *REFACTOR ME* or *BUGFIX ME* to find stuff to do
+
 # IN PROGRESS
 - barnes-hut
+    - resize quadtree
+    - probably a lot left to improve
 - floating-elements + better menus
 
 
 # TODO:
+    - barnes-hut & quadtree
+        - child nodes positions should be clear (NE, NW, SE, SW), instead of just an array
+            - then the quadtree animation can be improved
+        - the tests are a mess after switching from ObjectState[] to Map<number, ObjectState> and should be cleaned
+            - some also fail, error in the tests
     - started adding visibility checks - did you finish those yet?
     - This architecture is beyond ass
         - animation-controller should be able to be removed. run the loop in app.
         - app does not need to be a class
     - redo and activate visibility checks
-    - PATHS
-        - OPTIMIZATIONS:
+    - ANIMATION OPTIMIZATIONS
+        - PATHS:
             - split a path into subPaths AND THEN
             - cache subpath-boundingBox
                 - add visibility checks
+        - QUADTREE:
+            - every node draws all four sides.
+                - draw root,
+                - NE: draw right, bottom borders
+                - NW: draw bottom
+                - SW: draw right
     - improve the UI
         - give ui elements an optional property "tooltipText". use this instead of creating the tooltip individually for elements
         - small controlBar using icons, which opens floating panels containing the controls
@@ -28,9 +43,6 @@
     - choose gravityLowerBounds (gravity.ts) dynamically depending on mass or whatever
 
 # bugs
-    - post BARNES-HUT bugs
-        - immovable doesn't work
-            - should-be-immovable bodies collide -> crash
     - tooltip:
         - element mouseEnter -> prepare tooltip -> shows tooltip, mouse is now on tooltip -> moving mouse or clicking hides tooltip -> mouseEnter triggers again -> tooltip shows again
     - drawing Paths: adding segments (no camera change) to a persistent path looks slightly different from redrawing paths. could be just a difference in rasterization - drawing many short paths vs. drawing one long path

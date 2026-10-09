@@ -26,6 +26,7 @@ export const VECTOR_COLORS: Map<AnimatedVector, {hex: string, name: string}> = n
 export const COORDINATE_SYSTEM_AXIS_COLOR = "#aaaaaaff";
 export const COORDINATE_SYSTEM_TEXT_COLOR = "#aaaaaaff";
 export const COORDINATE_SYSTEM_GRID_COLOR = "#888888ff";
+export const QUADTREE_COLOR = "#88bb77ff";
 export const COORDINATE_SYSTEM_AXIS_DASH_LENGTH = 16;
 
 //#endregion

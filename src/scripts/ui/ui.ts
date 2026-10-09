@@ -34,6 +34,9 @@ export class UI {
     private get displayCoordinateSystem() {
         return this.controlBar.displayCoordinateSystem;
     }
+    private get displayQuadtree() {
+        return this.controlBar.displayQuadtree;
+    }
     private get mass() {
         return this.controlBar.mass;
     }
@@ -48,6 +51,7 @@ export class UI {
             displayVectors: this.displayVectors,
             tracePaths: this.tracePaths,
             displayCoordinateSystem: this.displayCoordinateSystem,
+            displayQuadtree: this.displayQuadtree
         };
     }
     get simulationSettings(): SimulationSettings {
