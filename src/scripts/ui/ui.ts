@@ -1,4 +1,4 @@
-import { UIAnimationSettings, SimulationSettings } from "@/types/types.js";
+import { AnimationSettings, SimulationSettings } from "@/types/types.js";
 import { App } from "@/app/app.js";
 import { StatusBar } from "@/ui/statusBar.js";
 import { TopMenu } from "@/ui/topMenu.js";
@@ -43,7 +43,7 @@ export class UI {
     get selectedClickAction() {
         return this.controlBar.selectedClickAction;
     }
-    get animationSettings(): Partial<UIAnimationSettings> {
+    get animationSettings(): Partial<AnimationSettings> {
         return {
             displayVectors: this.displayVectors,
             tracePaths: this.tracePaths,

@@ -1,5 +1,5 @@
 import * as util from "@/util/util.js";
-import { RadioButtonGroup, SimulationSettings, UIAnimationSettings } from "@/types/types.js";
+import { RadioButtonGroup, SimulationSettings, AnimationSettings } from "@/types/types.js";
 import { App } from "@/app/app.js";
 import { UI } from "@/ui/ui.js";
 import { Vector2D } from "@/util/vector2d.js";
@@ -55,7 +55,7 @@ export class ControlBar {
     get selectedClickAction() {
         return this.getSelectedValue(this.clickAction) ?? this.clickAction.buttons[0].value;
     }
-    get animationSettings(): Partial<UIAnimationSettings> {
+    get animationSettings(): Partial<AnimationSettings> {
         return {
             displayVectors: this.displayVectors,
             tracePaths: this.tracePaths,

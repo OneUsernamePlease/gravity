@@ -1,6 +1,6 @@
-import { DEFAULT_FPS, DEFAULT_SCROLL_RATE } from "@/const/const.js";
+import { DEFAULT_SCROLL_RATE } from "@/const/const.js";
 import { Canvas } from "@/animation/canvas.js";
-import { AnimationSettings, UIAnimationSettings } from "@/types/types.js";
+import { AnimationSettings } from "@/types/types.js";
 import { Vector2D } from "@/util/vector2d.js";
 import { App } from "@/app/app.js";
 
@@ -20,7 +20,6 @@ export class AnimationController {
 //#endregion
    constructor(private _canvas: Canvas, private _app: App) {
         this._animationSettings = {
-            frameLengthMs: 1000 / DEFAULT_FPS,
             displayVectors: true,
             tracePaths: true,
             displayCoordinateSystem: true,
@@ -28,7 +27,7 @@ export class AnimationController {
         };
         this._running = false;
     }
-    initialize(animationSettings: Partial<UIAnimationSettings>) {
+    initialize(animationSettings: Partial<AnimationSettings>) {
         if (animationSettings.displayVectors !== undefined) {
             this._animationSettings.displayVectors = animationSettings.displayVectors;
         }
@@ -50,12 +49,12 @@ export class AnimationController {
         this._running = true;
         const loop = () => {
             if (this._running) {
-                setTimeout(loop, this._animationSettings.frameLengthMs);
                 this._canvas.drawFrame(this._app.currentSimulationState, this._animationSettings);
                 this._app.updateStatus();
+                requestAnimationFrame(loop);
             }
         };
-        loop();
+        requestAnimationFrame(loop);
     }
     stop() {
         this._running = false;

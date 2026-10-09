@@ -23,8 +23,6 @@
     - don't just calculate forces only before advancing a tick  
         - at every change (body placed, g changed)
         - suggestion: change the PAUSE to MOVEMENT-DISABLED, -> keep calculating but don't update positions.
-    - rendering optimizations:
-        - animationFrames
     - mobile / responsive
     - worker threads
     - choose gravityLowerBounds (gravity.ts) dynamically depending on mass or whatever

@@ -57,11 +57,7 @@ export interface CanvasSpace {
     origin: Vector2D; // the canvas' origin in simulation space
     currentZoom: number; // simulationUnits (meter) per canvasUnit
 }
-export interface AnimationSettings extends UIAnimationSettings {
-    /** Animation-frame length in milliseconds */
-    frameLengthMs: number;
-}
-export interface UIAnimationSettings {
+export interface AnimationSettings {
     displayVectors: boolean;
     tracePaths: boolean;
     displayCoordinateSystem: boolean;
