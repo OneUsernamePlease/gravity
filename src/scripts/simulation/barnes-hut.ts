@@ -91,10 +91,10 @@ export function aggregateQuadtree(quadtree: Quadtree<ObjectState>): Map<Quadtree
             });
         } else {
             const children = node.getChildNodes();
-            children?.forEach((child) => {
-                const childNodeAggregate = aggregateNode(child);
-                tempAggregate = aggregator.combine(childNodeAggregate, tempAggregate);
-            });
+            tempAggregate = aggregator.combine(aggregateNode(children?.NW!), tempAggregate);
+            tempAggregate = aggregator.combine(aggregateNode(children?.NE!), tempAggregate);
+            tempAggregate = aggregator.combine(aggregateNode(children?.SW!), tempAggregate);
+            tempAggregate = aggregator.combine(aggregateNode(children?.SE!), tempAggregate);
         }
         aggregate.set(node, tempAggregate);
         return tempAggregate;
@@ -155,11 +155,12 @@ export function applyGravity(
             ) {
                 let force = new Vector2D();
                 const children = node.getChildNodes()!;
-
-                children.forEach((child) => {
-                    force = force.add(calculateForce(child, targetObjectState));
-                });
                 
+                force = force.add(calculateForce(children.NW, targetObjectState));
+                force = force.add(calculateForce(children.NE, targetObjectState));
+                force = force.add(calculateForce(children.SW, targetObjectState));
+                force = force.add(calculateForce(children.SE, targetObjectState));
+
                 return force;
             } else {
                 return Physics.gravitationalForceBetweenBodies(
