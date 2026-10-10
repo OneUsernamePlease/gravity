@@ -10,13 +10,8 @@ test.describe("Bounding Box", () => {
     });
 
     test.describe("constructor", () => {
-        test("construct to 0", () => {
-            expect(boundingBox.box).toEqual({
-                minX: 0,
-                minY: 0,
-                maxX: 0,
-                maxY: 0,
-            });
+        test("construct to null", () => {
+            expect(boundingBox.box).toBeNull();
             expect(boundingBox.padding).toBe(0);
         });
     
@@ -24,12 +19,7 @@ test.describe("Bounding Box", () => {
             boundingBox = new BoundingBox({ padding: 5 });
     
             expect(boundingBox.padding).toBe(5);
-            expect(boundingBox.box).toEqual({
-                minX: -5,
-                minY: -5,
-                maxX: 5,
-                maxY: 5,
-            });
+            expect(boundingBox.box).toBeNull();
         });
 
         test("construct with box", () => {
@@ -66,40 +56,16 @@ test.describe("Bounding Box", () => {
     });
 
     test.describe("reset", () => {
-        test("reset to padding", () => {
+        test("reset to null", () => {
             boundingBox = new BoundingBox({ padding: 5 });
 
-            boundingBox.box.minX = -100;
-            boundingBox.box.minY = -100;
-            boundingBox.box.maxX = 100;
-            boundingBox.box.maxY = 100;
+            boundingBox.update({position: new Vector2D()})
+
+            expect(boundingBox.box).not.toBeNull();
 
             boundingBox.reset();
-
-            expect(boundingBox.box).toEqual({
-                minX: -5,
-                minY: -5,
-                maxX: 5,
-                maxY: 5,
-            });
-        });
-
-        test("reset to padding = 0", () => {
-            boundingBox = new BoundingBox();
-
-            boundingBox.box.minX = -100;
-            boundingBox.box.minY = -100;
-            boundingBox.box.maxX = 100;
-            boundingBox.box.maxY = 100;
-
-            boundingBox.reset();
-
-            expect(boundingBox.box).toEqual({
-                minX: 0,
-                minY: 0,
-                maxX: 0,
-                maxY: 0,
-            });
+            
+            expect(boundingBox.box).toBeNull();
         });
     });
 
@@ -108,29 +74,38 @@ test.describe("Bounding Box", () => {
             boundingBox = new BoundingBox({ padding: 2 });
         });
 
-        test("updating maxX, maxY expands box", () => {
+        test("insert first element updates correctly", () => {
+            
+            expect(boundingBox.box).toBeNull();
+            
             boundingBox.update({
                 position: new Vector2D(10, 15),
             });
 
             expect(boundingBox.box).toEqual({
-                minX: -2,
-                minY: -2,
+                minX: 8,
+                minY: 13,
                 maxX: 12,
                 maxY: 17,
             })
         });
 
-        test("updating minX, minY expands box", () => {
+        test("insert more elements updates correctly", () => {
+            
+            expect(boundingBox.box).toBeNull();
+            
             boundingBox.update({
-                position: new Vector2D(-10, -15),
+                position: new Vector2D(10, 15),
+            });            
+            boundingBox.update({
+                position: new Vector2D(8, 19),
             });
 
             expect(boundingBox.box).toEqual({
-                minX: -12,
-                minY: -17,
-                maxX: 2,
-                maxY: 2,
+                minX: 6,
+                minY: 13,
+                maxX: 12,
+                maxY: 21,
             })
         });
         

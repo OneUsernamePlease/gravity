@@ -24,17 +24,25 @@ test.describe("Gravitational Force Between Bodies", () => {
         const zeroVector = new Vector2D();
         const g = 50;
         const lowerBounds = 1;
-        const body1 = {
+        const state1 = {
             mass,
             position: zeroVector,
         }
-        const body2 = {
+        const state2 = {
             mass,
             position: zeroVector.add(new Vector2D(referenceDistance, 0)),
         }
 
-        const expectedForce: Vector2D = Physics.gravitationalForceBetweenBodies(body1, body2, g, lowerBounds, 2, referenceDistance);
-        const actualForce: Vector2D = Physics.gravitationalForceBetweenBodies(body1, body2, g, lowerBounds, exponent, referenceDistance);
+        const expectedForce: Vector2D = Physics.gravitationalForceBetweenBodies(
+            {body: state1, position: state1.position},
+            {body: state2, position: state2.position},
+            g, lowerBounds, 2, referenceDistance);
+
+        const actualForce: Vector2D = Physics.gravitationalForceBetweenBodies(
+            {body: state1, position: state1.position},
+            {body: state2, position: state2.position},
+            g, lowerBounds, exponent, referenceDistance);
+            
         expect(actualForce, `exponent ${exponent} resulted in a different force.`).toEqual(expectedForce);
     })
 });

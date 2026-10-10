@@ -204,8 +204,7 @@ export class Canvas {
         // coordinate system
         if (animationSettings.displayCoordinateSystem) {
             if (this._cameraChange) {
-                this._coordinateSystem.clearContext();
-                this._coordinateSystem.draw();
+                this.redrawCoordinateSystem();
             }
         }
 

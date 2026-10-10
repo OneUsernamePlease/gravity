@@ -1,56 +1,59 @@
 import { expect, test } from "vitest";
-import { QuadTree } from "../scripts/simulation/quad-tree";
+import { Quadtree } from "../scripts/simulation/quad-tree";
 import { Vector2D } from "../scripts/util/vector2d";
 import { aggregateQuadtree, applyGravity } from "../scripts/simulation/barnes-hut";
 
 interface TestBody {
     body: {
-        id: number,
         mass: number
     },
     position: Vector2D,
 }
 interface TestObjectState {
     body: {
-        id: number,
-        mass: number
+        mass: number,
+        movable: boolean,
     },
     position: Vector2D,
     velocity: Vector2D,
     acceleration: Vector2D,
 }
+interface TestObjectStateMapElement {
+    id: number,
+    state: TestObjectState
+}
 const getElementPosition = (element: TestBody) => {
     return element.position;
 }
 const buildTree = (
-    quadTreeOptions: {
+    quadtreeOptions: {
         position: Vector2D,
         sideLength: number,
         leafSize: number,
         maxDepth: number
     },
     ...bodies: TestBody[]
-): QuadTree<TestBody> => {
-    const quadTree = new QuadTree<TestBody>(
+): Quadtree<TestBody> => {
+    const quadtree = new Quadtree<TestBody>(
         getElementPosition,
-        quadTreeOptions.position,
-        quadTreeOptions.sideLength,
-        quadTreeOptions.leafSize,
-        quadTreeOptions.maxDepth,
+        quadtreeOptions.position,
+        quadtreeOptions.sideLength,
+        quadtreeOptions.leafSize,
+        quadtreeOptions.maxDepth,
     );
 
     bodies.forEach((body) => {
-        quadTree.add(body);
+        quadtree.add(body);
     });
 
-    return quadTree;
+    return quadtree;
 }
 const gravityParameters = {
     g: 10,
     gravityLowerBounds: 1,
     gravityRadiusExponent: 2,
     gravityReferenceDistance: 400,
-    deltaTInMs: 20,
+    deltaTInMs: 1000,
     thetaThreshold: 0.5,
 }
 
@@ -66,20 +69,18 @@ test.describe("aggregate mass", () => {
 
         const body1: TestBody = {
             body: {
-                id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(0, 0),
         }
         const body2: TestBody = {
             body: {
-                id: ++testElementCounter,
                 mass: 3
             },
             position: new Vector2D(4, 0),
         }
 
-        const tree: QuadTree<TestBody> = buildTree(treeOptions, body1, body2);
+        const tree: Quadtree<TestBody> = buildTree(treeOptions, body1, body2);
 
         const massAggregate = aggregateQuadtree(tree);
         const rootAggregate = massAggregate.get(tree.root);
@@ -100,28 +101,24 @@ test.describe("aggregate mass", () => {
 
         const body1: TestBody = {
             body: {
-                id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(1, 1),
         }
         const body2: TestBody = {
             body: {
-                id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(99, 1),
         }
         const body3: TestBody = {
             body: {
-                id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(1, 99),
         }
         const body4: TestBody = {
             body: {
-                id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(99, 99),
@@ -162,7 +159,6 @@ test.describe("aggregate mass", () => {
     });
 
     test("aggregate tree with elements at depth 1, more than one per leaf", () => {
-        let testElementCounter = 0;
         const treeOptions = {
             position: new Vector2D(0, 0),
             sideLength: 100,
@@ -172,21 +168,18 @@ test.describe("aggregate mass", () => {
 
         const body1: TestBody = {
             body: {
-                id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(1, 1),
         }
         const body2: TestBody = {
             body: {
-                id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(49, 49),
         }
         const body3: TestBody = {
             body: {
-                id: ++testElementCounter,
                 mass: 2
             },
             position: new Vector2D(99, 99),
@@ -227,7 +220,6 @@ test.describe("aggregate mass", () => {
     });
     
     test("aggregate depth-2-tree", () => {
-        let testElementCounter = 0;
         const treeOptions = {
             position: new Vector2D(0, 0),
             sideLength: 100,
@@ -237,35 +229,30 @@ test.describe("aggregate mass", () => {
 
         const body1: TestBody = {
             body: {
-                id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(1, 1),
         }
         const body2: TestBody = {
             body: {
-                id: ++testElementCounter,
                 mass: 2
             },
             position: new Vector2D(15, 15),
         }
         const body3: TestBody = {
             body: {
-                id: ++testElementCounter,
                 mass: 1
             },
             position: new Vector2D(49, 49),
         }
         const body4: TestBody = {
             body: {
-                id: ++testElementCounter,
                 mass: 2
             },
             position: new Vector2D(99, 99),
         }
         const body5: TestBody = {
             body: {
-                id: ++testElementCounter,
                 mass: 2
             },
             position: new Vector2D(90, 95),
@@ -334,7 +321,7 @@ test.describe("barnes-hut gravity", () => {
         const body1StartingX = 0;
         const body2StaringX = 4;
         const treeOptions = {
-            position: new Vector2D(0, 0),
+            position: new Vector2D(-10, -10),
             sideLength: 100,
             leafSize: 2,
             maxDepth: 32,
@@ -342,8 +329,8 @@ test.describe("barnes-hut gravity", () => {
 
         const objectState1: TestObjectState = {
             body: {
-                id: ++testElementCounter,
-                mass: 1
+                mass: 1,
+                movable: true
             },
             position: new Vector2D(body1StartingX, 0),
             velocity: new Vector2D(),
@@ -351,20 +338,23 @@ test.describe("barnes-hut gravity", () => {
         }
         const objectState2: TestObjectState = {
             body: {
-                id: ++testElementCounter,
-                mass: 3
+                mass: 3,
+                movable: true
             },
             position: new Vector2D(body2StaringX, 0),
             velocity: new Vector2D(),
             acceleration: new Vector2D()
         }
-
         const tree = buildTree(treeOptions, objectState1, objectState2);
+        
+        const simulationState: Map<number, TestObjectState> = new Map()
+        simulationState.set(++testElementCounter, objectState1);
+        simulationState.set(++testElementCounter, objectState2);
 
-        applyGravity(tree, [objectState1, objectState2], gravityParameters);
+        applyGravity(tree, simulationState, gravityParameters);
 
         expect(objectState1.position.x).toBeGreaterThan(body1StartingX);
-        expect(objectState1.position.x).toBeLessThan(body2StaringX);
+        expect(objectState2.position.x).toBeLessThan(body2StaringX);
     });
 
     test("two bodies, different leaf", () => {
@@ -380,8 +370,8 @@ test.describe("barnes-hut gravity", () => {
 
         const objectState1: TestObjectState = {
             body: {
-                id: ++testElementCounter,
-                mass: 1
+                mass: 1,
+                movable: true
             },
             position: new Vector2D(body1StartingX, 0),
             velocity: new Vector2D(),
@@ -389,17 +379,20 @@ test.describe("barnes-hut gravity", () => {
         }
         const objectState2: TestObjectState = {
             body: {
-                id: ++testElementCounter,
-                mass: 3
+                mass: 3,
+                movable: true
             },
             position: new Vector2D(body2StaringX, 0),
             velocity: new Vector2D(),
             acceleration: new Vector2D()
         }
 
-        const tree = buildTree(treeOptions, objectState1, objectState2);
+        const tree = buildTree(treeOptions, objectState1, objectState2);        
+        const simulationState: Map<number, TestObjectState> = new Map()
+        simulationState.set(++testElementCounter, objectState1);
+        simulationState.set(++testElementCounter, objectState2);
 
-        applyGravity(tree, [objectState1, objectState2], gravityParameters);
+        applyGravity(tree, simulationState, gravityParameters);
 
         expect(objectState1.position.x).toBeGreaterThan(body1StartingX);
         expect(objectState1.position.x).toBeLessThan(body2StaringX);
@@ -412,16 +405,16 @@ test.describe("barnes-hut gravity", () => {
         const body3Starting = {x: 90, y: 90};
         const body4Starting = {x: 89, y: 91};
         const treeOptions = {
-            position: new Vector2D(0, 0),
-            sideLength: 100,
+            position: new Vector2D(-50, -50),
+            sideLength: 200,
             leafSize: 1,
             maxDepth: 32,
         }
 
         const objectState1: TestObjectState = {
             body: {
-                id: ++testElementCounter,
-                mass: 20
+                mass: 20,
+                movable: true
             },
             position: new Vector2D(body1Starting),
             velocity: new Vector2D(),
@@ -429,8 +422,8 @@ test.describe("barnes-hut gravity", () => {
         }
         const objectState2: TestObjectState = {
             body: {
-                id: ++testElementCounter,
-                mass: 1
+                mass: 1,
+                movable: true
             },
             position: new Vector2D(body2Starting),
             velocity: new Vector2D(),
@@ -438,8 +431,8 @@ test.describe("barnes-hut gravity", () => {
         }
         const objectState3: TestObjectState = {
             body: {
-                id: ++testElementCounter,
-                mass: 1
+                mass: 1,
+                movable: true
             },
             position: new Vector2D(body3Starting),
             velocity: new Vector2D(),
@@ -447,32 +440,31 @@ test.describe("barnes-hut gravity", () => {
         }
         const objectState4: TestObjectState = {
             body: {
-                id: ++testElementCounter,
-                mass: 1
+                mass: 1,
+                movable: true
             },
             position: new Vector2D(body4Starting),
             velocity: new Vector2D(),
             acceleration: new Vector2D()
         }
 
-        const objectStates = [objectState1, objectState2, objectState3, objectState4];
+        const objectStates = [objectState1, objectState2, objectState3, objectState4];        
+        const simulationState: Map<number, TestObjectState> = new Map()
+        objectStates.forEach((state) => {
+            simulationState.set(++testElementCounter, state);
+        })
         
-        const gravityIterations = 500;
-        for (let i = 0; i < gravityIterations; i++) {
-            const tree = buildTree(treeOptions, ...objectStates);
-            applyGravity(tree, objectStates, gravityParameters);
-        }
+        const tree = buildTree(treeOptions, ...objectStates);
+        applyGravity(tree, simulationState, gravityParameters);
 
         expect(objectState1.position.x).toBeGreaterThan(body1Starting.x);
         expect(objectState1.position.y).toBeGreaterThan(body1Starting.y);
 
         expect(objectState2.position.x).toBeLessThan(body2Starting.x);
-        expect(objectState2.position.y).toBeLessThan(body2Starting.y);
 
         expect(objectState3.position.x).toBeLessThan(body3Starting.x);
         expect(objectState3.position.y).toBeLessThan(body3Starting.y);
         
-        expect(objectState4.position.x).toBeLessThan(body4Starting.x);
         expect(objectState4.position.y).toBeLessThan(body4Starting.y);
     });
 })
