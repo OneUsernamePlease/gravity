@@ -90,7 +90,7 @@ export class Gravity {
             32
         );
         this._bodiesBoundingBox = new BoundingBox({
-            padding: 200,
+            padding: 100,
             box: null,
         })
 

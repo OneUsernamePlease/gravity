@@ -72,9 +72,9 @@ export class StatusBar {
             this.render(state);
         });
 
-        this.bar.addEventListener("contextmenu", (ev) => {
-            this.leftClick(ev);
-        });
+        // this.bar.addEventListener("contextmenu", (ev) => {
+        //     this.leftClick(ev);
+        // });
     }
     destroy() {
         this.unsubscribe();
