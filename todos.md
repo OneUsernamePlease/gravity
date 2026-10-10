@@ -3,6 +3,7 @@ btw: search the codebase for *REFACTOR ME* or *BUGFIX ME* to find stuff to do
 # IN PROGRESS
 - barnes-hut
     - resize quadtree
+        
     - probably a lot left to improve
 - floating-elements + better menus
 
@@ -13,6 +14,7 @@ btw: search the codebase for *REFACTOR ME* or *BUGFIX ME* to find stuff to do
             - then the quadtree animation can be improved
         - the tests are a mess after switching from ObjectState[] to Map<number, ObjectState> and should be cleaned
             - some also fail, error in the tests
+        - add an optional maxSize
     - started adding visibility checks - did you finish those yet?
     - This architecture is beyond ass
         - animation-controller should be able to be removed. run the loop in app.

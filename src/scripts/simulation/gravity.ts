@@ -1,13 +1,12 @@
-import { ObjectState, Rectangle, SimulationSettings } from "@/types/types.js";
+import { ObjectState, SimulationSettings } from "@/types/types.js";
 import { Vector2D } from "@/util/vector2d.js";
 import * as c from "@/const/const.js";
 import { clamp } from "@/util/util.js";
 import { SimplePerformance } from "@/util/simple-performance.js";
 import { Physics } from "./physics.js";
 import { Quadtree } from "./quad-tree.js";
-import { applyGravity } from "./barnes-hut.js";
-
-// BUGFIX ME: tree does not resize, when a body is outside the tree it crashes
+import { applyGravity, rebuildQuadtree } from "./barnes-hut.js";
+import { BoundingBox } from "@/util/bounding-box.js";
 
 export class Gravity {
     private _simulationState: Map<number, ObjectState>;
@@ -24,13 +23,7 @@ export class Gravity {
     private _performance: SimplePerformance = new SimplePerformance();
     private readonly gravityLowerBounds: number = 1; // forces do not grow larger than for distances lower than this number
     private _cachedIds: number[] = [];
-    private _bodiesBoundingBox: Rectangle = {
-        minX: 0,
-        minY: 0,
-        maxX: 0,
-        maxY: 0
-    }
-    private _bodiesBoundingBoxPadding = 200;
+    private _bodiesBoundingBox: BoundingBox;
 //#region get, set
     get simulationState() {
         return this._simulationState;
@@ -85,17 +78,22 @@ export class Gravity {
         this._elasticCollisions = elastic;
     }
 // #endregion
-    constructor() { 
+    constructor() {
         this._simulationState = new Map();
         this._quadtree = new Quadtree(
             (objectState: ObjectState) => {
                 return objectState.position;
             },
-            new Vector2D(-1000, -1000),
-            2000,
+            new Vector2D(),
+            0,
             1,
             32
         );
+        this._bodiesBoundingBox = new BoundingBox({
+            padding: 200,
+            box: null,
+        })
+
         this._nextId = 0;
         this._running = false;
         this._tickCount = 0;
@@ -111,37 +109,26 @@ export class Gravity {
         if (settings.gravitationalConstant !== undefined)    this.g = settings.gravitationalConstant;
     }
     setBoundingBox(simulationState: Map<number, ObjectState>) {
+        this._bodiesBoundingBox.reset();
+
         simulationState.forEach((objectState) => {
-            this.updateBoundingBox(objectState);
+            this._bodiesBoundingBox.update(objectState);
         })
     }
-    updateBoundingBox(objectState: ObjectState) {
-        const position = objectState.position;
-        const newLeftBorder = position.x - this._bodiesBoundingBoxPadding;
-        const newRightBorder = position.x + this._bodiesBoundingBoxPadding;
-        const newTopBorder = position.y - this._bodiesBoundingBoxPadding;
-        const newBottomBorder = position.y + this._bodiesBoundingBoxPadding;
-        
-        if (newLeftBorder < this._bodiesBoundingBox.minX) {
-            this._bodiesBoundingBox.minX = newLeftBorder;
-        } else if (newRightBorder > this._bodiesBoundingBox.maxX) {
-            this._bodiesBoundingBox.maxX = newRightBorder;
-        }
-
-        if (newTopBorder < this._bodiesBoundingBox.minY) {
-            this._bodiesBoundingBox.minY = newTopBorder;
-        } else if (newBottomBorder > this._bodiesBoundingBox.maxY) {
-            this._bodiesBoundingBox.maxY = newBottomBorder;
-        }
-    }
+    
     addObject(objectState: ObjectState): number  {
         if (!objectState.body.movable) {
             objectState.velocity = new Vector2D(0, 0);
         }
-        this.updateBoundingBox(objectState);
         this.simulationState.set(this._nextId++, objectState);
+        
+        this._bodiesBoundingBox.update(objectState);
+        this._quadtree.setBoundsFromRect(this._bodiesBoundingBox.box);
+        rebuildQuadtree(this.quadtree, this.simulationState);
         this._quadtree.add(objectState);
+
         this._cachedIds = Array.from(this.simulationState.keys());
+
         return this.simulationState.size;
     }
     stop() {
@@ -169,6 +156,8 @@ export class Gravity {
     }
     reset() {
         this.clearObjects();
+        this._bodiesBoundingBox.reset();
+        this.quadtree.reset()
         this._tickCount = 0;
         this._performance.reset();
     }
@@ -184,6 +173,9 @@ export class Gravity {
         if (this._collisionDetection) {
             this.handleCollisions();
         }
+
+        this.setBoundingBox(this.simulationState);
+        this._quadtree.setBoundsFromRect(this._bodiesBoundingBox.box);
 
         this._performance.measure();
 
