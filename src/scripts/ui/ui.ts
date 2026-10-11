@@ -74,7 +74,7 @@ export class UI {
 //#region initialize
     constructor(private app: App) {
         this.controlBar = new ControlBar(this, this.app);
-        this.statusBar = new StatusBar(this.app.status, "BodyCount", "TickInfo", "Zoom", "CanvasSize");
+        this.statusBar = new StatusBar(this.app.status, "BodyCount", "TickInfo", "Zoom");
         this.topMenu = new TopMenu(this, this.app);
 
         document.addEventListener("mousemove", () => { this.hideTooltip(); })

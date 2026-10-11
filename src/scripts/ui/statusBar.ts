@@ -1,4 +1,4 @@
-import { MenuItem, PerformanceInfo, StatusBarFieldType } from "@/types/types.js";
+import { MenuItem, PerformanceInfo } from "@/types/types.js";
 import { Vector2D } from "@/util/vector2d.js";
 import { Popover } from "@/ui/popover.js";
 
@@ -54,14 +54,19 @@ export class StatusStore {
         });
     }
 }
-
+const statusBarFields: Record<string, string> = {
+    "BodyCount": "Number of Bodies",
+    "TickInfo": "Ticks",
+    "Zoom": "Zoom",
+    "CanvasSize": "Size"
+}
 export class StatusBar {
     private readonly bar: HTMLDivElement;
-    private readonly fields = new Map<StatusBarFieldType, HTMLSpanElement>();
+    private readonly fields = new Map<keyof typeof statusBarFields, HTMLSpanElement>();
     private readonly popover = new Popover({ alignment: "top" });
     private readonly unsubscribe: () => void;
 
-    constructor(private readonly status: StatusStore, ...fields: StatusBarFieldType[]) {
+    constructor(private readonly status: StatusStore, ...fields: (keyof typeof statusBarFields)[]) {
         this.bar = document.getElementById("statusBar") as HTMLDivElement;
 
         for (const field of fields) {
@@ -72,15 +77,24 @@ export class StatusBar {
             this.render(state);
         });
 
-        // this.bar.addEventListener("contextmenu", (ev) => {
-        //     this.leftClick(ev);
-        // });
+        this.bar.addEventListener("contextmenu", (ev) => {
+            this.leftClick(ev);
+        });
     }
     destroy() {
         this.unsubscribe();
         this.popover.close();
     }
-    private createField(field: StatusBarFieldType) {
+    toggle(...fields: (keyof typeof statusBarFields)[]) {
+        for (const field of fields) {
+            if (this.fields.has(field)) {
+                this.removeField(field);
+            } else {
+                this.createField(field);
+            }
+        }
+    }
+    private createField(field: keyof typeof statusBarFields) {
         if (this.fields.has(field)) {
             return;
         }
@@ -91,21 +105,15 @@ export class StatusBar {
         this.bar.appendChild(span);
         this.fields.set(field, span);
     }
-    private removeField(field: StatusBarFieldType) {
+    private removeField(field: keyof typeof statusBarFields) {
         const element = this.fields.get(field);
         if (!element) { return; }
 
         element.remove();
         this.fields.delete(field);
     }
-    toggle(...fields: StatusBarFieldType[]) {
-        for (const field of fields) {
-            if (this.fields.has(field)) {
-                this.removeField(field);
-            } else {
-                this.createField(field);
-            }
-        }
+    private isFieldVisible(field: keyof typeof statusBarFields): boolean {
+        return this.fields.has(field);
     }
     private render(state: Status) {
         if (state.zoom !== undefined) {
@@ -145,7 +153,7 @@ export class StatusBar {
     }
     private setStatusMessage(
         message: string,
-        field: StatusBarFieldType,
+        field: keyof typeof statusBarFields,
     ) {
         const element = this.fields.get(field);
 
@@ -169,11 +177,20 @@ export class StatusBar {
         this.popover.close();
     }
     private generateEntries(): MenuItem[] {
-        return [
-            {
-                label: "Do Nothing",
-                action: () => {},
-            },
-        ];
+        const entries: MenuItem[] = [];
+
+        Object.keys(statusBarFields).forEach((key) => {
+            entries.push({
+                label: this.generateToggleEntryText(key),
+                action: () => {
+                    this.toggle(key)
+                }
+            });
+        })
+        
+        return entries;
+    }
+    private generateToggleEntryText(field: keyof typeof statusBarFields): string {
+        return `${this.isFieldVisible(field) ? "Hide" : "Show"} ${statusBarFields[field]}`
     }
 }

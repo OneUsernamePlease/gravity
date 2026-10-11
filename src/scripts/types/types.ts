@@ -98,7 +98,6 @@ export interface Rectangle {
 //#endregion
 
 //#region UI
-export type StatusBarFieldType = "BodyCount" | "TickInfo" | "Zoom" | "CanvasSize";
 export type OnOverflow = "shift" | "flip" | "none";
 export type Alignment = "top-left" | "top" | "top-right" | "right" | "bottom-right" | "bottom" | "bottom-left" | "left";
 export type PopoverOptions = {
@@ -125,7 +124,10 @@ export interface MenuItem {
 }
 //#endregion
 
+//#region other
 export interface PerformanceInfo {
     ticksLastSecond?: number;
     averageTicksPerSecond?: number;
 }
+
+//#endregion

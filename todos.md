@@ -1,20 +1,21 @@
 btw: search the codebase for *REFACTOR ME* or *BUGFIX ME* to find stuff to do
 
 # IN PROGRESS
-- barnes-hut
-    - resize quadtree
-        
-    - probably a lot left to improve
 - floating-elements + better menus
+    - Stats bar
+        - status bar fields fixed order
+        - status bar opens my context menu when left clicked everywhere, not just on text
+        - split tickCount - Performance into two fields
+        - contextMenu is too wide
+    - 
 
 
 # TODO:
     - barnes-hut & quadtree
-        - child nodes positions should be clear (NE, NW, SE, SW), instead of just an array
-            - then the quadtree animation can be improved
-        - the tests are a mess after switching from ObjectState[] to Map<number, ObjectState> and should be cleaned
-            - some also fail, error in the tests
         - add an optional maxSize
+        - cache the tree somehow??
+        - use WASM for the tree + calculations
+            - go or zig and no generic tree
     - started adding visibility checks - did you finish those yet?
     - This architecture is beyond ass
         - animation-controller should be able to be removed. run the loop in app.
@@ -25,12 +26,6 @@ btw: search the codebase for *REFACTOR ME* or *BUGFIX ME* to find stuff to do
             - split a path into subPaths AND THEN
             - cache subpath-boundingBox
                 - add visibility checks
-        - QUADTREE:
-            - every node draws all four sides.
-                - draw root,
-                - NE: draw right, bottom borders
-                - NW: draw bottom
-                - SW: draw right
     - improve the UI
         - give ui elements an optional property "tooltipText". use this instead of creating the tooltip individually for elements
         - small controlBar using icons, which opens floating panels containing the controls
