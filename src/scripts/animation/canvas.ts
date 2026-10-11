@@ -7,7 +7,7 @@ import { App } from "@/app/app.js";
 import { setColorAlpha } from "@/animation/animation-utils.js";
 import { CoordinateSystem } from "@/animation/coordinate-system.js";
 import * as draw from "@/animation/draw-utils.js";
-import { Quadtree } from "@/simulation/quad-tree.js";
+import { Quadtree, QuadtreeNode } from "@/simulation/quad-tree.js";
 
 export class Canvas {
     private _layers: Map<LayerName, CanvasLayer> = new Map();
@@ -224,7 +224,7 @@ export class Canvas {
         const nodeBorders: [Vector2D, Vector2D][] = [];
         const nodes = tree.getAllNodes();
 
-        nodes.forEach((node) => {
+        const batchRoot = (node: QuadtreeNode<ObjectState>) => {
             const nodeTopLeft: Vector2D = node.position
             const nodeTopRight: Vector2D = new Vector2D(node.position.x + node.sideLength, node.position.y);
             const nodeBottomLeft: Vector2D = new Vector2D(node.position.x, node.position.y + node.sideLength);
@@ -236,6 +236,47 @@ export class Canvas {
                 [nodeBottomLeft, nodeBottomRight],
                 [nodeTopRight, nodeBottomRight]
             );
+        }
+        const batchNw = (node: QuadtreeNode<ObjectState>) => {
+            const nodeTopRight: Vector2D = new Vector2D(node.position.x + node.sideLength, node.position.y);
+            const nodeBottomLeft: Vector2D = new Vector2D(node.position.x, node.position.y + node.sideLength);
+            const nodeBottomRight: Vector2D = new Vector2D(node.position.x + node.sideLength, node.position.y + node.sideLength);
+            
+            nodeBorders.push(
+                [nodeBottomLeft, nodeBottomRight],
+                [nodeTopRight, nodeBottomRight]
+            );
+        }
+        const batchNe = (node: QuadtreeNode<ObjectState>) => {
+            const nodeBottomLeft: Vector2D = new Vector2D(node.position.x, node.position.y + node.sideLength);
+            const nodeBottomRight: Vector2D = new Vector2D(node.position.x + node.sideLength, node.position.y + node.sideLength);
+
+            nodeBorders.push(
+                [nodeBottomLeft, nodeBottomRight]
+            );
+        }
+        const batchSw = (node: QuadtreeNode<ObjectState>) => {
+            const nodeTopRight: Vector2D = new Vector2D(node.position.x + node.sideLength, node.position.y);
+            const nodeBottomRight: Vector2D = new Vector2D(node.position.x + node.sideLength, node.position.y + node.sideLength);
+
+            nodeBorders.push(
+                [nodeTopRight, nodeBottomRight]
+            );
+        }
+
+        nodes.forEach((node) => {
+            if (node.isRoot) {
+                batchRoot(node);
+                return;
+            }
+
+            if (node.nodeType === "NW") {
+                batchNw(node);
+            } else if (node.nodeType === "NE") {
+                batchNe(node);                
+            } else if (node.nodeType === "SW") {
+                batchSw(node);
+            }
         })
 
         draw.drawLineBatch(nodeBorders, QUADTREE_COLOR, 1, this.quadtreeContext);
