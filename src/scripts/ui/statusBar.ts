@@ -186,8 +186,8 @@ export class StatusBar {
                     this.toggle(key)
                 }
             });
-        })
-        
+        });
+
         return entries;
     }
     private generateToggleEntryText(field: keyof typeof statusBarFields): string {
