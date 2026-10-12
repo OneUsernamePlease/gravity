@@ -13,6 +13,7 @@ export class UI {
     private topMenu: TopMenu;
     private controlBar: ControlBar;
     private tooltip: Tooltip = new Tooltip();
+    private _hasOpenPopover: boolean = false;
 //#endregion
 //#region get, set
     // get all the values
@@ -70,11 +71,14 @@ export class UI {
     get zoom() {
         return this.app.currentZoom;
     }
+    get hasOpenPopover() {
+        return this._hasOpenPopover;
+    }
 //#endregion
 //#region initialize
     constructor(private app: App) {
         this.controlBar = new ControlBar(this, this.app);
-        this.statusBar = new StatusBar(this.app.status, "BodyCount", "TickInfo", "Zoom");
+        this.statusBar = new StatusBar(this.app.status, "BodyCount", "Ticks", "Performance", "Zoom");
         this.topMenu = new TopMenu(this, this.app);
 
         document.addEventListener("mousemove", () => { this.hideTooltip(); })

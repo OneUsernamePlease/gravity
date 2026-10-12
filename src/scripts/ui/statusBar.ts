@@ -9,10 +9,8 @@ export type Status = {
         width: number;
         height: number;
     };
-    tickInfo?: {
-        tickCount: number;
-        performanceInfo?: PerformanceInfo;
-    };
+    ticks?: number;
+    performance?: PerformanceInfo;
 };
 
 export class StatusStore {
@@ -45,20 +43,24 @@ export class StatusStore {
             canvasSize: { width, height },
         });
     }
-    setTickInfo(tickCount: number, performanceInfo?: PerformanceInfo) {
+    setTickInfo(tickCount: number) {
         this.setState({
-            tickInfo: {
-                tickCount,
-                performanceInfo,
-            },
+            ticks: tickCount,
+        });
+    }
+    setPerformance(performance: PerformanceInfo) {
+        this.setState({
+            performance: { ticksLastSecond: performance.ticksLastSecond }
         });
     }
 }
-const statusBarFields: Record<string, string> = {
-    "BodyCount": "Number of Bodies",
-    "TickInfo": "Ticks",
-    "Zoom": "Zoom",
-    "CanvasSize": "Size"
+type StatusBarField = "BodyCount" | "Ticks" | "Performance" | "Zoom" | "CanvasSize";
+const statusBarFields: Record<StatusBarField, { name: string, position: number }> = {
+    "BodyCount": { name: "Number of Bodies", position: 1},
+    "Ticks": { name: "Ticks", position: 2},
+    "Performance": { name: "Performance", position: 3},
+    "Zoom": { name: "Zoom", position: 4},
+    "CanvasSize": { name: "Size", position: 5}
 }
 export class StatusBar {
     private readonly bar: HTMLDivElement;
@@ -139,16 +141,17 @@ export class StatusBar {
             );
         }
 
-        if (state.tickInfo !== undefined) {
-            const { tickCount, performanceInfo } = state.tickInfo;
+        if (state.ticks !== undefined) {
+            const message = `Tick: ${state.ticks}`;
 
-            let message = `Simulation Tick: ${tickCount}`;
+            this.setStatusMessage(message, "Ticks");
+        }
 
-            if (performanceInfo?.ticksLastSecond !== undefined) {
-                message += `, Ticks/s: ${performanceInfo.ticksLastSecond.toFixed(1)}`;
-            }
-
-            this.setStatusMessage(message, "TickInfo");
+        if (state.performance !== undefined) {
+            if (!state.performance.ticksLastSecond) return;
+            
+            const message = `Ticks/s: ${state.performance.ticksLastSecond.toFixed(1)}`;   
+            this.setStatusMessage(message, "Performance");
         }
     }
     private setStatusMessage(
@@ -180,10 +183,11 @@ export class StatusBar {
         const entries: MenuItem[] = [];
 
         Object.keys(statusBarFields).forEach((key) => {
+            const field = key as keyof typeof statusBarFields
             entries.push({
-                label: this.generateToggleEntryText(key),
+                label: this.generateToggleEntryText(field),
                 action: () => {
-                    this.toggle(key)
+                    this.toggle(field);
                 }
             });
         });
@@ -191,6 +195,6 @@ export class StatusBar {
         return entries;
     }
     private generateToggleEntryText(field: keyof typeof statusBarFields): string {
-        return `${this.isFieldVisible(field) ? "Hide" : "Show"} ${statusBarFields[field]}`
+        return `${this.isFieldVisible(field) ? "Hide" : "Show"} ${statusBarFields[field].name}`
     }
 }

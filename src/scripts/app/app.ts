@@ -84,7 +84,8 @@ export class App {
     advanceOneTick() {
         this._gravity.advanceTick();
         
-        this.status.setTickInfo(this.currentTick, this.simulationMetrics);
+        this.status.setTickInfo(this.currentTick);
+        this.status.setPerformance(this.simulationMetrics);
         this.status.setBodyCount(this.currentSimulationState.size);
     }
     resetSimulation() {
@@ -145,14 +146,11 @@ export class App {
     }
 // UI related
     updateStatus() {
-        this.status.setTickInfo(
-            this.currentTick,
-            this.simulationMetrics,
-        );
+        this.status.setTickInfo(this.currentTick);
 
-        this.status.setBodyCount(
-            this.currentSimulationState.size,
-        );
+        this.status.setPerformance(this.simulationMetrics);
+
+        this.status.setBodyCount(this.currentSimulationState.size);
 
         this.status.setZoom(this.currentZoom);
     }

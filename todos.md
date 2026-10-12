@@ -40,6 +40,10 @@ btw: search the codebase for *REFACTOR ME* or *BUGFIX ME* to find stuff to do
     - choose gravityLowerBounds (gravity.ts) dynamically depending on mass or whatever
 
 # bugs
+    - measuring performance
+        - set ticks/s to null while paused
+        - measure and expose ticks/s while <1 second passed
+        - average ticks are messed up after pausing
     - tooltip:
         - element mouseEnter -> prepare tooltip -> shows tooltip, mouse is now on tooltip -> moving mouse or clicking hides tooltip -> mouseEnter triggers again -> tooltip shows again
     - drawing Paths: adding segments (no camera change) to a persistent path looks slightly different from redrawing paths. could be just a difference in rasterization - drawing many short paths vs. drawing one long path
